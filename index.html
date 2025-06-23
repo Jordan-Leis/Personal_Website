@@ -152,6 +152,101 @@
             overflow: hidden;
         }
 
+        /* Desktop Icons */
+        .desktop-icons {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: calc(100vh - 60px);
+            pointer-events: none;
+            z-index: 500;
+        }
+
+        .desktop-icon {
+            position: absolute;
+            width: 80px;
+            height: 100px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: pointer;
+            pointer-events: auto;
+            transition: all 0.2s ease;
+            user-select: none;
+        }
+
+        .desktop-icon:hover {
+            transform: scale(1.05);
+        }
+
+        .desktop-icon.selected {
+            background: rgba(0, 207, 255, 0.2);
+            border-radius: 8px;
+            border: 1px solid var(--accent-cyber);
+        }
+
+        .icon-image {
+            width: 48px;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            background: rgba(22, 22, 39, 0.8);
+            border-radius: 8px;
+            border: 1px solid var(--terminal-border);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            transition: all 0.2s ease;
+        }
+
+        .desktop-icon:hover .icon-image {
+            box-shadow: 0 6px 20px rgba(126, 224, 129, 0.3);
+            border-color: var(--accent-energy);
+        }
+
+        .icon-label {
+            color: var(--text-primary);
+            font-size: 0.75rem;
+            text-align: center;
+            background: rgba(13, 17, 23, 0.8);
+            padding: 0.2rem 0.4rem;
+            border-radius: 4px;
+            border: 1px solid rgba(48, 54, 61, 0.5);
+            max-width: 80px;
+            word-wrap: break-word;
+            line-height: 1.2;
+        }
+
+        .desktop-icon.selected .icon-label {
+            background: rgba(0, 207, 255, 0.2);
+            border-color: var(--accent-cyber);
+        }
+
+        /* Desktop Clock */
+        .desktop-clock {
+            position: absolute;
+            top: 2rem;
+            right: 2rem;
+            background: rgba(13, 17, 23, 0.8);
+            border: 1px solid var(--terminal-border);
+            border-radius: 8px;
+            padding: 1rem;
+            color: var(--accent-energy);
+            font-size: 1.2rem;
+            font-weight: 600;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            z-index: 600;
+        }
+
+        .desktop-clock .date {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            text-align: center;
+            margin-top: 0.25rem;
+        }
+
         /* Taskbar */
         .taskbar {
             position: fixed;
@@ -209,6 +304,12 @@
             border-color: var(--accent-cyber);
         }
 
+        .taskbar-item.minimized {
+            opacity: 0.6;
+            background: rgba(255, 189, 46, 0.2);
+            border-color: var(--accent-warning);
+        }
+
         /* Window System */
         .window {
             position: absolute;
@@ -229,6 +330,10 @@
 
         .window.minimized {
             display: none;
+        }
+
+        .window.maximized {
+            border-radius: 0;
         }
 
         .window-header {
@@ -456,6 +561,7 @@
             border-radius: 8px;
             padding: 1.5rem;
             transition: all 0.3s ease;
+            cursor: pointer;
         }
 
         .project-card:hover {
@@ -569,6 +675,13 @@
             box-shadow: 0 10px 25px rgba(126, 224, 129, 0.3);
         }
 
+        /* Animations */
+        @keyframes windowShake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-2px); }
+            75% { transform: translateX(2px); }
+        }
+
         /* Responsive Design */
         @media (max-width: 768px) {
             .window {
@@ -616,6 +729,50 @@
     <!-- Desktop -->
     <div class="desktop" id="desktop">
         
+        <!-- Desktop Clock -->
+        <div class="desktop-clock" id="desktop-clock">
+            <div class="time">--:--:--</div>
+            <div class="date">--- --, ----</div>
+        </div>
+
+        <!-- Desktop Icons -->
+        <div class="desktop-icons">
+            <div class="desktop-icon" data-window="about-window" style="top: 100px; left: 50px;">
+                <div class="icon-image">👨‍💻</div>
+                <div class="icon-label">About.exe</div>
+            </div>
+            
+            <div class="desktop-icon" data-window="projects-window" style="top: 100px; left: 200px;">
+                <div class="icon-image">📁</div>
+                <div class="icon-label">Projects</div>
+            </div>
+            
+            <div class="desktop-icon" data-window="contact-window" style="top: 100px; left: 350px;">
+                <div class="icon-image">📞</div>
+                <div class="icon-label">Contact.json</div>
+            </div>
+            
+            <div class="desktop-icon" data-action="resume" style="top: 250px; left: 50px;">
+                <div class="icon-image">📄</div>
+                <div class="icon-label">Resume.pdf</div>
+            </div>
+            
+            <div class="desktop-icon" data-action="github" style="top: 250px; left: 200px;">
+                <div class="icon-image">🐙</div>
+                <div class="icon-label">GitHub.link</div>
+            </div>
+            
+            <div class="desktop-icon" data-action="linkedin" style="top: 250px; left: 350px;">
+                <div class="icon-image">💼</div>
+                <div class="icon-label">LinkedIn.url</div>
+            </div>
+
+            <div class="desktop-icon" data-action="terminal" style="top: 400px; left: 50px;">
+                <div class="icon-image">⚡</div>
+                <div class="icon-label">Terminal.sh</div>
+            </div>
+        </div>
+
         <!-- Hero/Main Window -->
         <div class="window hero-window active" id="hero-window">
             <div class="window-header">
@@ -713,7 +870,7 @@
             <div class="window-content">
                 <h2 style="color: var(--accent-energy); margin-bottom: 2rem; text-align: center;">Featured Projects</h2>
                 <div class="projects-grid">
-                    <div class="project-card">
+                    <div class="project-card" data-url="#">
                         <div class="project-icon">🔋</div>
                         <h3 class="project-title">Microgrid RL Optimizer</h3>
                         <p class="project-subtitle">Technical Project Manager • Wat.AI Research</p>
@@ -726,7 +883,7 @@
                         </div>
                     </div>
                     
-                    <div class="project-card">
+                    <div class="project-card" data-url="https://github.com/Jordan-Leis/Traffic-Light-Control-Unit">
                         <div class="project-icon">🚦</div>
                         <h3 class="project-title">FPGA Traffic Controller</h3>
                         <p class="project-subtitle">Hardware + Software Integration</p>
@@ -739,7 +896,7 @@
                         </div>
                     </div>
                     
-                    <div class="project-card">
+                    <div class="project-card" data-url="#">
                         <div class="project-icon">🔬</div>
                         <h3 class="project-title">NRC Airflow Research</h3>
                         <p class="project-subtitle">Research Assistant • Control Systems</p>
@@ -752,7 +909,7 @@
                         </div>
                     </div>
                     
-                    <div class="project-card">
+                    <div class="project-card" data-url="https://github.com/Jordan-Leis/OpenParliment_Bill_Scraper">
                         <div class="project-icon">🏛️</div>
                         <h3 class="project-title">OpenParliament Scraper</h3>
                         <p class="project-subtitle">ML Engineer • Civic Technology</p>
@@ -815,7 +972,7 @@
                     <a href="https://github.com/Jordan-Leis" class="contact-btn">
                         <span>🐙 View Code</span>
                     </a>
-                    <a href="#" class="contact-btn">
+                    <a href="#" class="contact-btn" id="resume-btn">
                         <span>📄 Download Resume</span>
                     </a>
                 </div>
@@ -839,9 +996,18 @@
     </div>
 
     <script>
-        // Window Management System
+        // Global variables
         let activeWindow = null;
         let dragData = {
+            isDragging: false,
+            startX: 0,
+            startY: 0,
+            startLeft: 0,
+            startTop: 0,
+            element: null
+        };
+        let selectedIcon = null;
+        let iconDragData = {
             isDragging: false,
             startX: 0,
             startY: 0,
@@ -918,6 +1084,7 @@
             updateTaskbar();
         }
 
+        // Window drag functions
         function startDrag(e, window) {
             dragData.isDragging = true;
             dragData.element = window;
@@ -944,7 +1111,7 @@
             // Boundary constraints
             const windowRect = dragData.element.getBoundingClientRect();
             const maxLeft = window.innerWidth - windowRect.width;
-            const maxTop = window.innerHeight - windowRect.height - 60; // Account for taskbar
+            const maxTop = window.innerHeight - windowRect.height - 60;
 
             newLeft = Math.max(0, Math.min(newLeft, maxLeft));
             newTop = Math.max(0, Math.min(newTop, maxTop));
@@ -963,8 +1130,8 @@
             dragData.element = null;
         }
 
+        // Window management functions
         function bringToFront(window) {
-            // Find highest z-index
             let maxZ = 1000;
             document.querySelectorAll('.window').forEach(w => {
                 const z = parseInt(w.style.zIndex || 1000);
@@ -981,7 +1148,6 @@
             window.classList.remove('active');
             window.classList.add('minimized');
             
-            // If this was the active window, activate another one
             if (activeWindow === windowId) {
                 const openWindows = document.querySelectorAll('.window.active');
                 if (openWindows.length > 0) {
@@ -1008,7 +1174,6 @@
             const window = document.getElementById(windowId);
             
             if (window.classList.contains('maximized')) {
-                // Restore
                 window.classList.remove('maximized');
                 window.style.width = '';
                 window.style.height = '';
@@ -1016,7 +1181,6 @@
                 window.style.left = '';
                 window.style.transform = '';
             } else {
-                // Maximize
                 window.classList.add('maximized');
                 window.style.width = '95vw';
                 window.style.height = 'calc(95vh - 60px)';
@@ -1030,10 +1194,8 @@
             const window = document.getElementById(windowId);
             
             if (window.classList.contains('active')) {
-                // If already active, minimize it
                 minimizeWindow(windowId);
             } else {
-                // Restore and bring to front
                 window.classList.remove('minimized');
                 window.classList.add('active');
                 bringToFront(window);
@@ -1047,10 +1209,8 @@
                 const windowId = item.getAttribute('data-window');
                 const window = document.getElementById(windowId);
                 
-                // Remove all states
                 item.classList.remove('active', 'minimized');
                 
-                // Add appropriate state
                 if (window.classList.contains('active')) {
                     if (activeWindow === windowId) {
                         item.classList.add('active');
@@ -1061,23 +1221,199 @@
             });
         }
 
-        // Enhanced visual effects
+        // Desktop icons functionality
+        function initializeDesktopIcons() {
+            const icons = document.querySelectorAll('.desktop-icon');
+
+            icons.forEach(icon => {
+                // Double-click to open
+                icon.addEventListener('dblclick', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    openIconTarget(icon);
+                });
+
+                // Single click to select
+                icon.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    selectIcon(icon);
+                });
+
+                // Drag functionality
+                icon.addEventListener('mousedown', (e) => {
+                    if (e.button === 0) {
+                        startIconDrag(e, icon);
+                        selectIcon(icon);
+                    }
+                });
+            });
+
+            // Global click to deselect
+            document.addEventListener('click', (e) => {
+                if (!e.target.closest('.desktop-icon')) {
+                    deselectAllIcons();
+                }
+            });
+
+            // Global mouse events for icon dragging
+            document.addEventListener('mousemove', handleIconDrag);
+            document.addEventListener('mouseup', stopIconDrag);
+        }
+
+        function selectIcon(icon) {
+            deselectAllIcons();
+            icon.classList.add('selected');
+            selectedIcon = icon;
+        }
+
+        function deselectAllIcons() {
+            document.querySelectorAll('.desktop-icon').forEach(icon => {
+                icon.classList.remove('selected');
+            });
+            selectedIcon = null;
+        }
+
+        function openIconTarget(icon) {
+            const windowId = icon.getAttribute('data-window');
+            const action = icon.getAttribute('data-action');
+
+            if (windowId) {
+                const window = document.getElementById(windowId);
+                window.classList.remove('minimized');
+                window.classList.add('active');
+                bringToFront(window);
+                updateTaskbar();
+            } else if (action) {
+                switch(action) {
+                    case 'resume':
+                        alert('Resume download - add your resume PDF link here!');
+                        break;
+                    case 'github':
+                        window.open('https://github.com/Jordan-Leis', '_blank');
+                        break;
+                    case 'linkedin':
+                        window.open('https://www.linkedin.com/in/jordan-leis/', '_blank');
+                        break;
+                    case 'terminal':
+                        toggleWindow('hero-window');
+                        updateTaskbar();
+                        break;
+                }
+            }
+
+            // Opening animation
+            icon.style.transform = 'scale(1.2)';
+            setTimeout(() => {
+                icon.style.transform = '';
+            }, 200);
+        }
+
+        function startIconDrag(e, icon) {
+            iconDragData.isDragging = true;
+            iconDragData.element = icon;
+            iconDragData.startX = e.clientX;
+            iconDragData.startY = e.clientY;
+            
+            const rect = icon.getBoundingClientRect();
+            iconDragData.startLeft = rect.left;
+            iconDragData.startTop = rect.top;
+
+            icon.style.cursor = 'grabbing';
+            icon.style.zIndex = '1000';
+            document.body.style.userSelect = 'none';
+        }
+
+        function handleIconDrag(e) {
+            if (!iconDragData.isDragging || !iconDragData.element) return;
+
+            const deltaX = e.clientX - iconDragData.startX;
+            const deltaY = e.clientY - iconDragData.startY;
+
+            let newLeft = iconDragData.startLeft + deltaX;
+            let newTop = iconDragData.startTop + deltaY;
+
+            // Boundary constraints
+            const desktop = document.getElementById('desktop');
+            const desktopRect = desktop.getBoundingClientRect();
+            const iconRect = iconDragData.element.getBoundingClientRect();
+
+            newLeft = Math.max(0, Math.min(newLeft, desktopRect.width - iconRect.width));
+            newTop = Math.max(0, Math.min(newTop, desktopRect.height - iconRect.height - 60));
+
+            // Grid snapping
+            const gridSize = 100;
+            const snappedLeft = Math.round(newLeft / gridSize) * gridSize;
+            const snappedTop = Math.round(newTop / gridSize) * gridSize;
+
+            if (Math.abs(newLeft - snappedLeft) < 20) newLeft = snappedLeft;
+            if (Math.abs(newTop - snappedTop) < 20) newTop = snappedTop;
+
+            iconDragData.element.style.left = newLeft + 'px';
+            iconDragData.element.style.top = newTop + 'px';
+        }
+
+        function stopIconDrag() {
+            if (iconDragData.element) {
+                iconDragData.element.style.cursor = '';
+                iconDragData.element.style.zIndex = '';
+            }
+            document.body.style.userSelect = '';
+            iconDragData.isDragging = false;
+            iconDragData.element = null;
+        }
+
+        // Project card clicks
+        function initializeProjectCards() {
+            document.querySelectorAll('.project-card').forEach(card => {
+                card.addEventListener('click', () => {
+                    const url = card.getAttribute('data-url');
+                    if (url && url !== '#') {
+                        window.open(url, '_blank');
+                    }
+                });
+            });
+        }
+
+        // Resume button functionality
+        function initializeResumeButton() {
+            document.getElementById('resume-btn').addEventListener('click', (e) => {
+                e.preventDefault();
+                alert('Resume download - add your resume PDF link here!');
+            });
+        }
+
+        // Desktop Clock
+        function updateClock() {
+            const now = new Date();
+            const timeElement = document.querySelector('.desktop-clock .time');
+            const dateElement = document.querySelector('.desktop-clock .date');
+            
+            if (timeElement && dateElement) {
+                const timeString = now.toLocaleTimeString('en-US', { 
+                    hour12: false,
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit'
+                });
+                
+                const dateString = now.toLocaleDateString('en-US', {
+                    weekday: 'short',
+                    month: 'short',
+                    day: 'numeric',
+                    year: 'numeric'
+                });
+                
+                timeElement.textContent = timeString;
+                dateElement.textContent = dateString;
+            }
+        }
+
+        // Window effects
         function addWindowEffects() {
             const windows = document.querySelectorAll('.window');
             
             windows.forEach(window => {
-                // Add glow effect when focused
-                window.addEventListener('mouseenter', () => {
-                    if (window.classList.contains('active')) {
-                        window.style.boxShadow = '0 15px 35px rgba(0, 0, 0, 0.5), 0 0 20px rgba(126, 224, 129, 0.3)';
-                    }
-                });
-                
-                window.addEventListener('mouseleave', () => {
-                    window.style.boxShadow = '0 15px 35px rgba(0, 0, 0, 0.5)';
-                });
-
-                // Window shake effect for close button
                 const closeBtn = window.querySelector('.window-control.close');
                 closeBtn.addEventListener('mouseenter', () => {
                     window.style.animation = 'windowShake 0.5s ease-in-out';
@@ -1089,48 +1425,26 @@
             });
         }
 
-        // Add shake animation
-        const style = document.createElement('style');
-        style.textContent = `
-            @keyframes windowShake {
-                0%, 100% { transform: translateX(0); }
-                25% { transform: translateX(-2px); }
-                75% { transform: translateX(2px); }
-            }
-            
-            .taskbar-item.minimized {
-                opacity: 0.6;
-                background: rgba(255, 189, 46, 0.2);
-                border-color: var(--accent-warning);
-            }
-            
-            .window.maximized {
-                border-radius: 0;
-            }
-        `;
-        document.head.appendChild(style);
-
-        // Initialize everything when page loads
+        // Initialize everything
         document.addEventListener('DOMContentLoaded', () => {
             initializeWindows();
+            initializeDesktopIcons();
+            initializeProjectCards();
+            initializeResumeButton();
             addWindowEffects();
             
-            // Add some initial randomization to window positions
-            const windows = document.querySelectorAll('.window:not(.hero-window)');
-            windows.forEach((window, index) => {
-                const randomX = Math.random() * 200;
-                const randomY = Math.random() * 100;
-                const currentLeft = parseInt(window.style.left || 0);
-                const currentTop = parseInt(window.style.top || 0);
-                
-                window.style.left = (currentLeft + randomX) + 'px';
-                window.style.top = (currentTop + randomY) + 'px';
+            // Start clock
+            setInterval(updateClock, 1000);
+            updateClock();
+
+            // Start with all windows closed except main terminal
+            document.querySelectorAll('.window:not(.hero-window)').forEach(window => {
+                closeWindow(window.id);
             });
         });
 
         // Keyboard shortcuts
         document.addEventListener('keydown', (e) => {
-            // Alt + Tab to cycle windows
             if (e.altKey && e.key === 'Tab') {
                 e.preventDefault();
                 const activeWindows = Array.from(document.querySelectorAll('.window.active'));
@@ -1141,17 +1455,8 @@
                 }
             }
             
-            // Escape to close active window
             if (e.key === 'Escape' && activeWindow) {
                 closeWindow(activeWindow);
-            }
-        });
-
-        // Resume download functionality
-        document.querySelector('a[href="#"]').addEventListener('click', (e) => {
-            if (e.target.textContent.includes('Resume')) {
-                e.preventDefault();
-                alert('Resume download functionality - add your resume PDF here!');
             }
         });
     </script>
