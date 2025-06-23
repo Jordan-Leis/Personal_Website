@@ -1,0 +1,1159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jordan Leis - Electrical Engineer & AI Researcher</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        :root {
+            --bg-primary: #0a0a0f;
+            --bg-secondary: #161627;
+            --bg-tertiary: #1a1a2e;
+            --terminal-bg: #0d1117;
+            --terminal-border: #30363d;
+            --text-primary: #f0f6fc;
+            --text-secondary: #c9d1d9;
+            --text-muted: #8b949e;
+            --accent-energy: #7ee081;
+            --accent-cyber: #00cfff;
+            --accent-purple: #adbcff;
+            --accent-danger: #ff7b72;
+            --accent-warning: #ffbd2e;
+        }
+        
+        body {
+            font-family: 'JetBrains Mono', monospace;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            overflow: hidden;
+            line-height: 1.6;
+            height: 100vh;
+        }
+
+        /* Animated Background */
+        .animated-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -2;
+            background: linear-gradient(
+                45deg,
+                var(--bg-primary) 0%,
+                #0f0f1a 25%,
+                var(--bg-secondary) 50%,
+                #1a1a2e 75%,
+                var(--bg-primary) 100%
+            );
+            background-size: 400% 400%;
+            animation: gradientShift 15s ease infinite;
+        }
+        
+        @keyframes gradientShift {
+            0%, 100% { background-position: 0% 50%; }
+            25% { background-position: 100% 50%; }
+            50% { background-position: 100% 100%; }
+            75% { background-position: 0% 100%; }
+        }
+
+        /* Circuit Pattern */
+        .circuit-pattern {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            opacity: 0.05;
+            background-image: 
+                radial-gradient(circle at 25% 25%, var(--accent-energy) 2px, transparent 2px),
+                radial-gradient(circle at 75% 75%, var(--accent-cyber) 2px, transparent 2px),
+                linear-gradient(var(--accent-purple) 1px, transparent 1px),
+                linear-gradient(90deg, var(--accent-energy) 1px, transparent 1px);
+            background-size: 100px 100px, 100px 100px, 50px 50px, 50px 50px;
+            animation: circuitFlow 20s linear infinite;
+        }
+        
+        @keyframes circuitFlow {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(50px, 50px); }
+        }
+
+        /* Floating Shapes */
+        .floating-shapes {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+        }
+        
+        .shape {
+            position: absolute;
+            opacity: 0.1;
+            animation: float 8s ease-in-out infinite;
+        }
+        
+        .shape:nth-child(1) {
+            top: 10%;
+            left: 10%;
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(45deg, var(--accent-energy), transparent);
+            clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+            animation-delay: 0s;
+        }
+        
+        .shape:nth-child(2) {
+            top: 70%;
+            right: 10%;
+            width: 80px;
+            height: 80px;
+            border: 2px solid var(--accent-cyber);
+            border-radius: 50%;
+            animation-delay: 2s;
+        }
+        
+        .shape:nth-child(3) {
+            top: 40%;
+            left: 80%;
+            width: 50px;
+            height: 50px;
+            background: var(--accent-purple);
+            clip-path: polygon(20% 0%, 80% 0%, 100% 100%, 0% 100%);
+            animation-delay: 4s;
+        }
+        
+        @keyframes float {
+            0%, 100% { 
+                transform: translateY(0px) rotate(0deg); 
+                opacity: 0.1; 
+            }
+            50% { 
+                transform: translateY(-30px) rotate(180deg); 
+                opacity: 0.3; 
+            }
+        }
+
+        /* Desktop/Workspace */
+        .desktop {
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Taskbar */
+        .taskbar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 60px;
+            background: rgba(13, 17, 23, 0.9);
+            backdrop-filter: blur(20px);
+            border-top: 1px solid var(--terminal-border);
+            z-index: 2000;
+            display: flex;
+            align-items: center;
+            padding: 0 2rem;
+            gap: 1rem;
+        }
+
+        .taskbar-logo {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--accent-energy);
+        }
+
+        .taskbar-logo::before {
+            content: '$ ';
+            color: var(--accent-cyber);
+        }
+
+        .taskbar-items {
+            display: flex;
+            gap: 0.5rem;
+            flex: 1;
+        }
+
+        .taskbar-item {
+            background: rgba(48, 54, 61, 0.5);
+            border: 1px solid var(--terminal-border);
+            border-radius: 6px;
+            padding: 0.5rem 1rem;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+
+        .taskbar-item:hover {
+            background: rgba(126, 224, 129, 0.1);
+            color: var(--accent-energy);
+            border-color: var(--accent-energy);
+        }
+
+        .taskbar-item.active {
+            background: rgba(0, 207, 255, 0.2);
+            color: var(--accent-cyber);
+            border-color: var(--accent-cyber);
+        }
+
+        /* Window System */
+        .window {
+            position: absolute;
+            background: var(--terminal-bg);
+            border: 1px solid var(--terminal-border);
+            border-radius: 8px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            min-width: 400px;
+            min-height: 300px;
+            display: none;
+        }
+
+        .window.active {
+            display: block;
+            z-index: 1001;
+        }
+
+        .window.minimized {
+            display: none;
+        }
+
+        .window-header {
+            background: var(--bg-secondary);
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid var(--terminal-border);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            cursor: move;
+            user-select: none;
+        }
+
+        .window-controls {
+            display: flex;
+            gap: 0.3rem;
+        }
+
+        .window-control {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .window-control:hover {
+            transform: scale(1.2);
+        }
+
+        .window-control.close {
+            background: #ff5f56;
+        }
+
+        .window-control.minimize {
+            background: #ffbd2e;
+        }
+
+        .window-control.maximize {
+            background: #27ca3f;
+        }
+
+        .window-title {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            flex: 1;
+        }
+
+        .window-content {
+            padding: 2rem;
+            height: calc(100% - 60px);
+            overflow-y: auto;
+        }
+
+        /* Specific Window Styles */
+        .hero-window {
+            width: 800px;
+            height: 600px;
+            top: 10%;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .about-window {
+            width: 700px;
+            height: 500px;
+            top: 15%;
+            left: 20%;
+        }
+
+        .projects-window {
+            width: 900px;
+            height: 700px;
+            top: 10%;
+            right: 10%;
+        }
+
+        .contact-window {
+            width: 600px;
+            height: 400px;
+            bottom: 20%;
+            left: 15%;
+        }
+
+        /* Terminal Content Styles */
+        .ascii-art {
+            color: var(--accent-energy);
+            font-size: 0.4rem;
+            white-space: pre;
+            margin-bottom: 2rem;
+            text-align: center;
+            text-shadow: 0 0 15px rgba(126, 224, 129, 0.4);
+            animation: asciiGlow 6s ease-in-out infinite;
+            font-weight: 600;
+        }
+        
+        @keyframes asciiGlow {
+            0%, 100% { 
+                opacity: 0.9; 
+                text-shadow: 0 0 15px rgba(126, 224, 129, 0.4);
+            }
+            50% { 
+                opacity: 1; 
+                text-shadow: 0 0 25px rgba(126, 224, 129, 0.8);
+            }
+        }
+
+        .terminal-line {
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+        }
+
+        .prompt {
+            color: var(--accent-purple);
+            font-weight: 600;
+        }
+        
+        .command {
+            color: var(--accent-cyber);
+            font-weight: 500;
+        }
+        
+        .output {
+            color: var(--text-secondary);
+            margin-left: 2rem;
+            line-height: 1.6;
+        }
+        
+        .success {
+            color: var(--accent-energy);
+            font-weight: 500;
+        }
+        
+        .highlight {
+            color: var(--accent-cyber);
+            font-weight: 600;
+        }
+
+        /* About Section Styles */
+        .about-content {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        .about-avatar {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, var(--accent-energy), var(--accent-cyber));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            margin: 0 auto 1rem;
+            animation: avatarFloat 6s ease-in-out infinite;
+            box-shadow: 0 0 30px rgba(126, 224, 129, 0.3);
+        }
+
+        @keyframes avatarFloat {
+            0%, 100% { 
+                transform: translateY(0px) scale(1);
+                box-shadow: 0 0 30px rgba(126, 224, 129, 0.3);
+            }
+            50% { 
+                transform: translateY(-5px) scale(1.05);
+                box-shadow: 0 5px 40px rgba(126, 224, 129, 0.5);
+            }
+        }
+
+        .status-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: rgba(126, 224, 129, 0.1);
+            padding: 0.4rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            color: var(--accent-energy);
+            border: 1px solid rgba(126, 224, 129, 0.3);
+            margin: 0 auto;
+        }
+
+        .status-dot {
+            width: 6px;
+            height: 6px;
+            background: var(--accent-energy);
+            border-radius: 50%;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.7; transform: scale(0.95); }
+        }
+
+        .about-text h2 {
+            color: var(--text-primary);
+            font-size: 1.8rem;
+            margin-bottom: 1rem;
+            background: linear-gradient(45deg, var(--accent-energy), var(--accent-cyber));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .about-text p {
+            color: var(--text-secondary);
+            line-height: 1.7;
+            margin-bottom: 1rem;
+            font-size: 0.95rem;
+        }
+
+        /* Projects Grid */
+        .projects-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .project-card {
+            background: rgba(48, 54, 61, 0.3);
+            border: 1px solid var(--terminal-border);
+            border-radius: 8px;
+            padding: 1.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .project-card:hover {
+            border-color: var(--accent-energy);
+            box-shadow: 0 10px 25px rgba(126, 224, 129, 0.2);
+            transform: translateY(-5px);
+        }
+
+        .project-icon {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        .project-title {
+            color: var(--text-primary);
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .project-subtitle {
+            color: var(--accent-energy);
+            font-size: 0.85rem;
+            margin-bottom: 1rem;
+        }
+
+        .project-description {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            line-height: 1.6;
+            margin-bottom: 1rem;
+        }
+
+        .project-tech {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.3rem;
+        }
+
+        .tech-tag {
+            background: rgba(0, 207, 255, 0.1);
+            color: var(--accent-cyber);
+            padding: 0.2rem 0.6rem;
+            border-radius: 3px;
+            font-size: 0.75rem;
+            border: 1px solid rgba(0, 207, 255, 0.2);
+        }
+
+        /* Contact Grid */
+        .contact-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .contact-card {
+            background: rgba(48, 54, 61, 0.3);
+            border: 1px solid var(--terminal-border);
+            border-radius: 8px;
+            padding: 1.5rem;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .contact-card:hover {
+            border-color: var(--accent-cyber);
+            transform: translateY(-5px);
+        }
+
+        .contact-icon {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+            display: block;
+        }
+
+        .contact-card h3 {
+            color: var(--accent-cyber);
+            margin-bottom: 0.5rem;
+            font-size: 1rem;
+        }
+
+        .contact-card p {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .contact-buttons {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .contact-btn {
+            background: linear-gradient(45deg, var(--accent-energy), var(--accent-cyber));
+            color: var(--bg-primary);
+            padding: 0.8rem 1.5rem;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .contact-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(126, 224, 129, 0.3);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .window {
+                min-width: 300px;
+                width: 90vw !important;
+                height: 80vh !important;
+                top: 10% !important;
+                left: 5% !important;
+                right: 5% !important;
+                transform: none !important;
+            }
+            
+            .taskbar {
+                padding: 0 1rem;
+            }
+            
+            .taskbar-item {
+                padding: 0.3rem 0.8rem;
+                font-size: 0.8rem;
+            }
+            
+            .about-content {
+                grid-template-columns: 1fr;
+                text-align: center;
+            }
+            
+            .ascii-art {
+                font-size: 0.25rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Animated Background -->
+    <div class="animated-bg"></div>
+    <div class="circuit-pattern"></div>
+    
+    <!-- Floating Shapes -->
+    <div class="floating-shapes">
+        <div class="shape"></div>
+        <div class="shape"></div>
+        <div class="shape"></div>
+    </div>
+
+    <!-- Desktop -->
+    <div class="desktop" id="desktop">
+        
+        <!-- Hero/Main Window -->
+        <div class="window hero-window active" id="hero-window">
+            <div class="window-header">
+                <div class="window-controls">
+                    <div class="window-control close" data-action="close"></div>
+                    <div class="window-control minimize" data-action="minimize"></div>
+                    <div class="window-control maximize" data-action="maximize"></div>
+                </div>
+                <div class="window-title">jordan@waterloo:~$ building_the_future.sh</div>
+            </div>
+            <div class="window-content">
+                <div class="ascii-art">
+     ██╗ ██████╗ ██████╗ ██████╗  █████╗ ███╗   ██╗    ██╗     ███████╗██╗███████╗
+     ██║██╔═══██╗██╔══██╗██╔══██╗██╔══██╗████╗  ██║    ██║     ██╔════╝██║██╔════╝
+     ██║██║   ██║██████╔╝██║  ██║███████║██╔██╗ ██║    ██║     █████╗  ██║███████╗
+██   ██║██║   ██║██╔══██╗██║  ██║██╔══██║██║╚██╗██║    ██║     ██╔══╝  ██║╚════██║
+╚█████╔╝╚██████╔╝██║  ██║██████╔╝██║  ██║██║ ╚████║    ███████╗███████╗██║███████║
+ ╚════╝  ╚═════╝ ╚═╝  ╚═╝╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═══╝    ╚══════╝╚══════╝╚═╝╚══════╝</div>
+
+                <div class="terminal-line">
+                    <span class="prompt">jordan@waterloo:~$</span> <span class="command">whoami</span>
+                </div>
+                <div class="terminal-line">
+                    <div class="output">Electrical Engineering Student @ University of Waterloo<br>
+                    Research Assistant @ <span class="highlight">National Research Council of Canada</span><br>
+                    Technical Project Manager @ <span class="highlight">Wat.AI</span><br>
+                    Teaching Assistant for ECE 150 (C++)</div>
+                </div>
+
+                <div class="terminal-line">
+                    <span class="prompt">jordan@waterloo:~$</span> <span class="command">cat mission.txt</span>
+                </div>
+                <div class="terminal-line">
+                    <div class="output">Building intelligent systems that bridge <span class="success">hardware</span> and <span class="success">software</span><br>
+                    to solve real-world challenges in <span class="success">energy</span>, <span class="success">education</span>, and <span class="success">civic technology</span></div>
+                </div>
+
+                <div class="terminal-line">
+                    <span class="prompt">jordan@waterloo:~$</span> <span class="command">ls current_projects/ --impact</span>
+                </div>
+                <div class="terminal-line">
+                    <div class="output success">✓ microgrid_rl_optimizer/     <span class="highlight"># Bringing energy to Sub-Saharan Africa</span><br>
+                    ✓ nrc_airflow_research/      <span class="highlight"># Advancing building standards</span><br>
+                    ✓ traffic_fpga_controller/   <span class="highlight"># Smart traffic optimization</span><br>
+                    ✓ openparliament_scraper/    <span class="highlight"># Enhancing civic transparency</span></div>
+                </div>
+
+                <div class="terminal-line">
+                    <span class="prompt">jordan@waterloo:~$</span> <span class="command">echo "Ready to build the future together"</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- About Window -->
+        <div class="window about-window" id="about-window">
+            <div class="window-header">
+                <div class="window-controls">
+                    <div class="window-control close" data-action="close"></div>
+                    <div class="window-control minimize" data-action="minimize"></div>
+                    <div class="window-control maximize" data-action="maximize"></div>
+                </div>
+                <div class="window-title">about_jordan.sh</div>
+            </div>
+            <div class="window-content">
+                <div class="about-content">
+                    <div class="about-visual">
+                        <div class="about-avatar">🚀</div>
+                        <div class="status-indicator">
+                            <div class="status-dot"></div>
+                            Available for Internships
+                        </div>
+                    </div>
+                    <div class="about-text">
+                        <h2>Building Tomorrow's Tech Today</h2>
+                        <p>I'm a <span class="highlight">second-year Electrical Engineering student</span> at the University of Waterloo with a passion for building systems that solve meaningful problems — from embedded hardware to AI-driven decision-making.</p>
+                        
+                        <p>Currently working as a <span class="highlight">Research Assistant at the National Research Council</span>, where I engineer airflow testing systems and develop control software. I also lead a <span class="highlight">12-member AI research team at Wat.AI</span>, developing reinforcement learning agents for renewable energy optimization in Sub-Saharan Africa.</p>
+                        
+                        <p>From <span class="highlight">FPGA traffic control systems</span> to <span class="highlight">PID pressure control with LabVIEW</span>, I love bridging the gap between theoretical knowledge and practical impact. Whether it's teaching 400+ students C++, scraping parliamentary data for transparency, or designing PCBs for solar cars, I'm driven by the belief that technology should empower and create positive change.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Projects Window -->
+        <div class="window projects-window" id="projects-window">
+            <div class="window-header">
+                <div class="window-controls">
+                    <div class="window-control close" data-action="close"></div>
+                    <div class="window-control minimize" data-action="minimize"></div>
+                    <div class="window-control maximize" data-action="maximize"></div>
+                </div>
+                <div class="window-title">projects_portfolio.exe</div>
+            </div>
+            <div class="window-content">
+                <h2 style="color: var(--accent-energy); margin-bottom: 2rem; text-align: center;">Featured Projects</h2>
+                <div class="projects-grid">
+                    <div class="project-card">
+                        <div class="project-icon">🔋</div>
+                        <h3 class="project-title">Microgrid RL Optimizer</h3>
+                        <p class="project-subtitle">Technical Project Manager • Wat.AI Research</p>
+                        <p class="project-description">Leading development of reinforcement learning agents for autonomous renewable energy optimization in rural Sub-Saharan Africa. Integrated NASA POWER API for real-world weather simulation.</p>
+                        <div class="project-tech">
+                            <span class="tech-tag">Python</span>
+                            <span class="tech-tag">TensorFlow</span>
+                            <span class="tech-tag">Gymnasium</span>
+                            <span class="tech-tag">NASA API</span>
+                        </div>
+                    </div>
+                    
+                    <div class="project-card">
+                        <div class="project-icon">🚦</div>
+                        <h3 class="project-title">FPGA Traffic Controller</h3>
+                        <p class="project-subtitle">Hardware + Software Integration</p>
+                        <p class="project-description">Intelligent traffic light control system designed in VHDL for Altera Max 10 FPGA. Features Mealy state machine with pedestrian push-button integration.</p>
+                        <div class="project-tech">
+                            <span class="tech-tag">VHDL</span>
+                            <span class="tech-tag">FPGA</span>
+                            <span class="tech-tag">Quartus</span>
+                            <span class="tech-tag">Hardware</span>
+                        </div>
+                    </div>
+                    
+                    <div class="project-card">
+                        <div class="project-icon">🔬</div>
+                        <h3 class="project-title">NRC Airflow Research</h3>
+                        <p class="project-subtitle">Research Assistant • Control Systems</p>
+                        <p class="project-description">Engineered plenum chamber experiment with custom instrumentation and PID pressure control system in LabVIEW. Contributing to new CSA airflow standards.</p>
+                        <div class="project-tech">
+                            <span class="tech-tag">LabVIEW</span>
+                            <span class="tech-tag">CRBasic</span>
+                            <span class="tech-tag">PID Control</span>
+                            <span class="tech-tag">DAQ</span>
+                        </div>
+                    </div>
+                    
+                    <div class="project-card">
+                        <div class="project-icon">🏛️</div>
+                        <h3 class="project-title">OpenParliament Scraper</h3>
+                        <p class="project-subtitle">ML Engineer • Civic Technology</p>
+                        <p class="project-description">Automated legislative bill analysis system extracting metadata and voting patterns from Canadian Parliament. Enabled AI training datasets for transparency research.</p>
+                        <div class="project-tech">
+                            <span class="tech-tag">Python</span>
+                            <span class="tech-tag">Selenium</span>
+                            <span class="tech-tag">BeautifulSoup</span>
+                            <span class="tech-tag">Data Analysis</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Contact Window -->
+        <div class="window contact-window" id="contact-window">
+            <div class="window-header">
+                <div class="window-controls">
+                    <div class="window-control close" data-action="close"></div>
+                    <div class="window-control minimize" data-action="minimize"></div>
+                    <div class="window-control maximize" data-action="maximize"></div>
+                </div>
+                <div class="window-title">contact_info.json</div>
+            </div>
+            <div class="window-content">
+                <h2 style="color: var(--accent-cyber); margin-bottom: 1rem; text-align: center;">Let's Connect!</h2>
+                <p style="color: var(--text-secondary); text-align: center; margin-bottom: 2rem;">Ready to discuss internships, research opportunities, or build something impactful together?</p>
+                
+                <div class="contact-grid">
+                    <div class="contact-card">
+                        <span class="contact-icon">📧</span>
+                        <h3>Email</h3>
+                        <p>Direct communication for opportunities</p>
+                    </div>
+                    <div class="contact-card">
+                        <span class="contact-icon">💼</span>
+                        <h3>LinkedIn</h3>
+                        <p>Professional network and updates</p>
+                    </div>
+                    <div class="contact-card">
+                        <span class="contact-icon">🐙</span>
+                        <h3>GitHub</h3>
+                        <p>Open source projects and code</p>
+                    </div>
+                    <div class="contact-card">
+                        <span class="contact-icon">📄</span>
+                        <h3>Resume</h3>
+                        <p>Detailed experience and skills</p>
+                    </div>
+                </div>
+                
+                <div class="contact-buttons">
+                    <a href="mailto:jordan.jay.leis@gmail.com" class="contact-btn">
+                        <span>📧 Get In Touch</span>
+                    </a>
+                    <a href="https://www.linkedin.com/in/jordan-leis/" class="contact-btn">
+                        <span>💼 Connect</span>
+                    </a>
+                    <a href="https://github.com/Jordan-Leis" class="contact-btn">
+                        <span>🐙 View Code</span>
+                    </a>
+                    <a href="#" class="contact-btn">
+                        <span>📄 Download Resume</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Taskbar -->
+    <div class="taskbar">
+        <div class="taskbar-logo">jordan.leis</div>
+        <div class="taskbar-items">
+            <div class="taskbar-item active" data-window="hero-window">Terminal</div>
+            <div class="taskbar-item" data-window="about-window">About</div>
+            <div class="taskbar-item" data-window="projects-window">Projects</div>
+            <div class="taskbar-item" data-window="contact-window">Contact</div>
+        </div>
+        <div style="margin-left: auto; color: var(--text-muted); font-size: 0.8rem;">
+            Ready to build the future 🚀
+        </div>
+    </div>
+
+    <script>
+        // Window Management System
+        let activeWindow = null;
+        let dragData = {
+            isDragging: false,
+            startX: 0,
+            startY: 0,
+            startLeft: 0,
+            startTop: 0,
+            element: null
+        };
+
+        // Initialize window system
+        function initializeWindows() {
+            const windows = document.querySelectorAll('.window');
+            const taskbarItems = document.querySelectorAll('.taskbar-item');
+
+            // Set initial z-index values
+            windows.forEach((window, index) => {
+                window.style.zIndex = 1000 + index;
+            });
+
+            // Setup window controls
+            windows.forEach(window => {
+                const controls = window.querySelectorAll('.window-control');
+                const header = window.querySelector('.window-header');
+
+                // Window control actions
+                controls.forEach(control => {
+                    control.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        const action = control.getAttribute('data-action');
+                        const windowId = window.id;
+
+                        switch(action) {
+                            case 'close':
+                                closeWindow(windowId);
+                                break;
+                            case 'minimize':
+                                minimizeWindow(windowId);
+                                break;
+                            case 'maximize':
+                                toggleMaximize(windowId);
+                                break;
+                        }
+                    });
+                });
+
+                // Make window draggable
+                header.addEventListener('mousedown', (e) => {
+                    if (e.target.classList.contains('window-control')) return;
+                    
+                    startDrag(e, window);
+                    bringToFront(window);
+                });
+
+                // Click to focus
+                window.addEventListener('mousedown', () => {
+                    bringToFront(window);
+                });
+            });
+
+            // Taskbar item clicks
+            taskbarItems.forEach(item => {
+                item.addEventListener('click', () => {
+                    const windowId = item.getAttribute('data-window');
+                    toggleWindow(windowId);
+                    updateTaskbar();
+                });
+            });
+
+            // Global mouse events for dragging
+            document.addEventListener('mousemove', handleDrag);
+            document.addEventListener('mouseup', stopDrag);
+
+            // Initial state
+            bringToFront(document.getElementById('hero-window'));
+            updateTaskbar();
+        }
+
+        function startDrag(e, window) {
+            dragData.isDragging = true;
+            dragData.element = window;
+            dragData.startX = e.clientX;
+            dragData.startY = e.clientY;
+            
+            const rect = window.getBoundingClientRect();
+            dragData.startLeft = rect.left;
+            dragData.startTop = rect.top;
+
+            window.style.cursor = 'grabbing';
+            document.body.style.userSelect = 'none';
+        }
+
+        function handleDrag(e) {
+            if (!dragData.isDragging || !dragData.element) return;
+
+            const deltaX = e.clientX - dragData.startX;
+            const deltaY = e.clientY - dragData.startY;
+
+            let newLeft = dragData.startLeft + deltaX;
+            let newTop = dragData.startTop + deltaY;
+
+            // Boundary constraints
+            const windowRect = dragData.element.getBoundingClientRect();
+            const maxLeft = window.innerWidth - windowRect.width;
+            const maxTop = window.innerHeight - windowRect.height - 60; // Account for taskbar
+
+            newLeft = Math.max(0, Math.min(newLeft, maxLeft));
+            newTop = Math.max(0, Math.min(newTop, maxTop));
+
+            dragData.element.style.left = newLeft + 'px';
+            dragData.element.style.top = newTop + 'px';
+            dragData.element.style.transform = 'none';
+        }
+
+        function stopDrag() {
+            if (dragData.element) {
+                dragData.element.style.cursor = '';
+            }
+            document.body.style.userSelect = '';
+            dragData.isDragging = false;
+            dragData.element = null;
+        }
+
+        function bringToFront(window) {
+            // Find highest z-index
+            let maxZ = 1000;
+            document.querySelectorAll('.window').forEach(w => {
+                const z = parseInt(w.style.zIndex || 1000);
+                if (z > maxZ) maxZ = z;
+            });
+
+            window.style.zIndex = maxZ + 1;
+            activeWindow = window.id;
+            updateTaskbar();
+        }
+
+        function closeWindow(windowId) {
+            const window = document.getElementById(windowId);
+            window.classList.remove('active');
+            window.classList.add('minimized');
+            
+            // If this was the active window, activate another one
+            if (activeWindow === windowId) {
+                const openWindows = document.querySelectorAll('.window.active');
+                if (openWindows.length > 0) {
+                    bringToFront(openWindows[0]);
+                } else {
+                    activeWindow = null;
+                }
+            }
+            updateTaskbar();
+        }
+
+        function minimizeWindow(windowId) {
+            const window = document.getElementById(windowId);
+            window.classList.remove('active');
+            window.classList.add('minimized');
+            
+            if (activeWindow === windowId) {
+                activeWindow = null;
+            }
+            updateTaskbar();
+        }
+
+        function toggleMaximize(windowId) {
+            const window = document.getElementById(windowId);
+            
+            if (window.classList.contains('maximized')) {
+                // Restore
+                window.classList.remove('maximized');
+                window.style.width = '';
+                window.style.height = '';
+                window.style.top = '';
+                window.style.left = '';
+                window.style.transform = '';
+            } else {
+                // Maximize
+                window.classList.add('maximized');
+                window.style.width = '95vw';
+                window.style.height = 'calc(95vh - 60px)';
+                window.style.top = '2.5vh';
+                window.style.left = '2.5vw';
+                window.style.transform = 'none';
+            }
+        }
+
+        function toggleWindow(windowId) {
+            const window = document.getElementById(windowId);
+            
+            if (window.classList.contains('active')) {
+                // If already active, minimize it
+                minimizeWindow(windowId);
+            } else {
+                // Restore and bring to front
+                window.classList.remove('minimized');
+                window.classList.add('active');
+                bringToFront(window);
+            }
+        }
+
+        function updateTaskbar() {
+            const taskbarItems = document.querySelectorAll('.taskbar-item');
+            
+            taskbarItems.forEach(item => {
+                const windowId = item.getAttribute('data-window');
+                const window = document.getElementById(windowId);
+                
+                // Remove all states
+                item.classList.remove('active', 'minimized');
+                
+                // Add appropriate state
+                if (window.classList.contains('active')) {
+                    if (activeWindow === windowId) {
+                        item.classList.add('active');
+                    }
+                } else if (window.classList.contains('minimized')) {
+                    item.classList.add('minimized');
+                }
+            });
+        }
+
+        // Enhanced visual effects
+        function addWindowEffects() {
+            const windows = document.querySelectorAll('.window');
+            
+            windows.forEach(window => {
+                // Add glow effect when focused
+                window.addEventListener('mouseenter', () => {
+                    if (window.classList.contains('active')) {
+                        window.style.boxShadow = '0 15px 35px rgba(0, 0, 0, 0.5), 0 0 20px rgba(126, 224, 129, 0.3)';
+                    }
+                });
+                
+                window.addEventListener('mouseleave', () => {
+                    window.style.boxShadow = '0 15px 35px rgba(0, 0, 0, 0.5)';
+                });
+
+                // Window shake effect for close button
+                const closeBtn = window.querySelector('.window-control.close');
+                closeBtn.addEventListener('mouseenter', () => {
+                    window.style.animation = 'windowShake 0.5s ease-in-out';
+                });
+                
+                closeBtn.addEventListener('mouseleave', () => {
+                    window.style.animation = '';
+                });
+            });
+        }
+
+        // Add shake animation
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes windowShake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-2px); }
+                75% { transform: translateX(2px); }
+            }
+            
+            .taskbar-item.minimized {
+                opacity: 0.6;
+                background: rgba(255, 189, 46, 0.2);
+                border-color: var(--accent-warning);
+            }
+            
+            .window.maximized {
+                border-radius: 0;
+            }
+        `;
+        document.head.appendChild(style);
+
+        // Initialize everything when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeWindows();
+            addWindowEffects();
+            
+            // Add some initial randomization to window positions
+            const windows = document.querySelectorAll('.window:not(.hero-window)');
+            windows.forEach((window, index) => {
+                const randomX = Math.random() * 200;
+                const randomY = Math.random() * 100;
+                const currentLeft = parseInt(window.style.left || 0);
+                const currentTop = parseInt(window.style.top || 0);
+                
+                window.style.left = (currentLeft + randomX) + 'px';
+                window.style.top = (currentTop + randomY) + 'px';
+            });
+        });
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            // Alt + Tab to cycle windows
+            if (e.altKey && e.key === 'Tab') {
+                e.preventDefault();
+                const activeWindows = Array.from(document.querySelectorAll('.window.active'));
+                if (activeWindows.length > 1) {
+                    const currentIndex = activeWindows.findIndex(w => w.id === activeWindow);
+                    const nextIndex = (currentIndex + 1) % activeWindows.length;
+                    bringToFront(activeWindows[nextIndex]);
+                }
+            }
+            
+            // Escape to close active window
+            if (e.key === 'Escape' && activeWindow) {
+                closeWindow(activeWindow);
+            }
+        });
+
+        // Resume download functionality
+        document.querySelector('a[href="#"]').addEventListener('click', (e) => {
+            if (e.target.textContent.includes('Resume')) {
+                e.preventDefault();
+                alert('Resume download functionality - add your resume PDF here!');
+            }
+        });
+    </script>
+</body>
+</html>
