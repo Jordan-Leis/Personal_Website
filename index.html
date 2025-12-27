@@ -677,10 +677,11 @@
 
         /* Animations */
         @keyframes windowShake {
-            0%, 100% { transform: translateX(0); }
-            25% { transform: translateX(-2px); }
-            75% { transform: translateX(2px); }
-        }
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-2px); }
+    75% { transform: translateX(2px); }
+}
+
 
         /* Responsive Design */
         @media (max-width: 768px) {
@@ -1416,11 +1417,13 @@
             windows.forEach(window => {
                 const closeBtn = window.querySelector('.window-control.close');
                 closeBtn.addEventListener('mouseenter', () => {
-                    window.style.animation = 'windowShake 0.5s ease-in-out';
+                    window.querySelector('.window-header').style.animation =
+    'windowShake 0.5s ease-in-out';
                 });
                 
                 closeBtn.addEventListener('mouseleave', () => {
-                    window.style.animation = '';
+                    window.querySelector('.window-header').style.animation = '';
+
                 });
             });
         }
