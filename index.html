@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Jordan Leis - Electrical Engineer & AI Researcher</title>
+    <title>Jordan Leis - ML Engineer & Cansbridge Fellow</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&display=swap');
         
@@ -214,8 +214,10 @@
             padding: 0.2rem 0.4rem;
             border-radius: 4px;
             border: 1px solid rgba(48, 54, 61, 0.5);
-            max-width: 80px;
-            word-wrap: break-word;
+            max-width: 100px;
+            overflow-wrap: break-word;
+            word-break: keep-all;
+            hyphens: none;
             line-height: 1.2;
         }
 
@@ -625,11 +627,18 @@
             padding: 1.5rem;
             text-align: center;
             transition: all 0.3s ease;
+            cursor: pointer;
         }
 
         .contact-card:hover {
             border-color: var(--accent-cyber);
             transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 207, 255, 0.2);
+        }
+
+        .contact-card:active {
+            transform: translateY(-2px);
+            transition: transform 0.1s ease;
         }
 
         .contact-icon {
@@ -647,32 +656,6 @@
         .contact-card p {
             color: var(--text-muted);
             font-size: 0.85rem;
-        }
-
-        .contact-buttons {
-            display: flex;
-            gap: 1rem;
-            flex-wrap: wrap;
-            justify-content: center;
-        }
-
-        .contact-btn {
-            background: linear-gradient(45deg, var(--accent-energy), var(--accent-cyber));
-            color: var(--bg-primary);
-            padding: 0.8rem 1.5rem;
-            border-radius: 6px;
-            text-decoration: none;
-            font-weight: 600;
-            font-size: 0.9rem;
-            transition: all 0.3s ease;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .contact-btn:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 10px 25px rgba(126, 224, 129, 0.3);
         }
 
         /* Animations */
@@ -797,10 +780,10 @@
                     <span class="prompt">jordan@waterloo:~$</span> <span class="command">whoami</span>
                 </div>
                 <div class="terminal-line">
-                    <div class="output">Electrical Engineering Student @ University of Waterloo<br>
-                    Research Assistant @ <span class="highlight">National Research Council of Canada</span><br>
-                    Technical Project Manager @ <span class="highlight">Wat.AI</span><br>
-                    Teaching Assistant for ECE 150 (C++)</div>
+                    <div class="output">Electrical Engineering Student (3rd Year) @ University of Waterloo<br>
+                    Machine Learning Engineer Intern @ <span class="highlight">Health Canada (PMRA)</span><br>
+                    VP Services @ <span class="highlight">UWaterloo Engineering Society</span><br>
+                    Technical Project Manager @ <span class="highlight">Wat.AI</span></div>
                 </div>
 
                 <div class="terminal-line">
@@ -816,9 +799,9 @@
                 </div>
                 <div class="terminal-line">
                     <div class="output success">✓ microgrid_rl_optimizer/     <span class="highlight"># Bringing energy to Sub-Saharan Africa</span><br>
-                    ✓ nrc_airflow_research/      <span class="highlight"># Advancing building standards</span><br>
-                    ✓ traffic_fpga_controller/   <span class="highlight"># Smart traffic optimization</span><br>
-                    ✓ openparliament_scraper/    <span class="highlight"># Enhancing civic transparency</span></div>
+                    ✓ health_canada_ai/          <span class="highlight"># AI for regulatory science</span><br>
+                    ✓ coursify_nlp/              <span class="highlight"># Natural language course scheduling</span><br>
+                    ✓ political_chatbot_rag/     <span class="highlight"># Civic transparency through AI</span></div>
                 </div>
 
                 <div class="terminal-line">
@@ -843,16 +826,18 @@
                         <div class="about-avatar">🚀</div>
                         <div class="status-indicator">
                             <div class="status-dot"></div>
-                            Available for Internships
+                            Currently @ PMRA • Cansbridge Fellow 2026
                         </div>
                     </div>
                     <div class="about-text">
                         <h2>Building Tomorrow's Tech Today</h2>
-                        <p>I'm a <span class="highlight">second-year Electrical Engineering student</span> at the University of Waterloo with a passion for building systems that solve meaningful problems — from embedded hardware to AI-driven decision-making.</p>
-                        
-                        <p>Currently working as a <span class="highlight">Research Assistant at the National Research Council</span>, where I engineer airflow testing systems and develop control software. I also lead a <span class="highlight">12-member AI research team at Wat.AI</span>, developing reinforcement learning agents for renewable energy optimization in Sub-Saharan Africa.</p>
-                        
-                        <p>From <span class="highlight">FPGA traffic control systems</span> to <span class="highlight">PID pressure control with LabVIEW</span>, I love bridging the gap between theoretical knowledge and practical impact. Whether it's teaching 400+ students C++, scraping parliamentary data for transparency, or designing PCBs for solar cars, I'm driven by the belief that technology should empower and create positive change.</p>
+                        <p>I'm a <span class="highlight">third-year Electrical Engineering student</span> at the University of Waterloo with a passion for building systems that solve meaningful problems — from embedded hardware to AI-driven decision-making.</p>
+
+                        <p>Currently working as a <span class="highlight">Machine Learning Engineer Intern at Health Canada (PMRA)</span>, where I apply AI to regulatory science and public health challenges. I also lead an <span class="highlight">11-person AI research team at Wat.AI</span>, developing reinforcement learning agents for renewable energy optimization in Sub-Saharan Africa.</p>
+
+                        <p>As a <span class="highlight">Cansbridge Fellow</span>, I've received a $10,000 fellowship supporting an upcoming Asia internship (September-December 2026), fostering cross-cultural technical collaboration. I also serve as <span class="highlight">VP Services for the UWaterloo Engineering Society</span>, where I work to improve the student experience for the entire engineering community.</p>
+
+                        <p>From <span class="highlight">FPGA traffic control systems</span> to <span class="highlight">natural language course scheduling</span>, I love bridging the gap between theoretical knowledge and practical impact. Whether it's teaching C++, building political transparency tools with RAG, or designing motion control systems, I'm driven by the belief that technology should empower and create positive change.</p>
                     </div>
                 </div>
             </div>
@@ -884,42 +869,42 @@
                         </div>
                     </div>
                     
-                    <div class="project-card" data-url="https://github.com/Jordan-Leis/Traffic-Light-Control-Unit">
-                        <div class="project-icon">🚦</div>
-                        <h3 class="project-title">FPGA Traffic Controller</h3>
-                        <p class="project-subtitle">Hardware + Software Integration</p>
-                        <p class="project-description">Intelligent traffic light control system designed in VHDL for Altera Max 10 FPGA. Features Mealy state machine with pedestrian push-button integration.</p>
-                        <div class="project-tech">
-                            <span class="tech-tag">VHDL</span>
-                            <span class="tech-tag">FPGA</span>
-                            <span class="tech-tag">Quartus</span>
-                            <span class="tech-tag">Hardware</span>
-                        </div>
-                    </div>
-                    
-                    <div class="project-card" data-url="#">
-                        <div class="project-icon">🔬</div>
-                        <h3 class="project-title">NRC Airflow Research</h3>
-                        <p class="project-subtitle">Research Assistant • Control Systems</p>
-                        <p class="project-description">Engineered plenum chamber experiment with custom instrumentation and PID pressure control system in LabVIEW. Contributing to new CSA airflow standards.</p>
-                        <div class="project-tech">
-                            <span class="tech-tag">LabVIEW</span>
-                            <span class="tech-tag">CRBasic</span>
-                            <span class="tech-tag">PID Control</span>
-                            <span class="tech-tag">DAQ</span>
-                        </div>
-                    </div>
-                    
-                    <div class="project-card" data-url="https://github.com/Jordan-Leis/OpenParliment_Bill_Scraper">
+                    <div class="project-card" data-url="https://github.com/Madhav-Malhotra/political-chatbot">
                         <div class="project-icon">🏛️</div>
-                        <h3 class="project-title">OpenParliament Scraper</h3>
-                        <p class="project-subtitle">ML Engineer • Civic Technology</p>
-                        <p class="project-description">Automated legislative bill analysis system extracting metadata and voting patterns from Canadian Parliament. Enabled AI training datasets for transparency research.</p>
+                        <h3 class="project-title">Political Chatbot</h3>
+                        <p class="project-subtitle">First Author • RAG Architecture</p>
+                        <p class="project-description">Developed an AI-powered political chatbot using RAG (Retrieval Augmented Generation) for accurate legislative Q&A. Led webscraping, architecture design, and evaluation methodology as first author on research paper.</p>
                         <div class="project-tech">
                             <span class="tech-tag">Python</span>
-                            <span class="tech-tag">Selenium</span>
-                            <span class="tech-tag">BeautifulSoup</span>
-                            <span class="tech-tag">Data Analysis</span>
+                            <span class="tech-tag">RAG</span>
+                            <span class="tech-tag">Webscraping</span>
+                            <span class="tech-tag">LLMs</span>
+                        </div>
+                    </div>
+                    
+                    <div class="project-card" data-url="https://github.com/Jordan-Leis/Course-Selector">
+                        <div class="project-icon">📚</div>
+                        <h3 class="project-title">Coursify</h3>
+                        <p class="project-subtitle">Solo Project • Natural Language Scheduling</p>
+                        <p class="project-description">Built an intelligent course scheduling system for Waterloo Engineering students using natural language processing. Allows students to build their schedules conversationally by expressing interests and requirements, powered by LLMs.</p>
+                        <div class="project-tech">
+                            <span class="tech-tag">LLMs</span>
+                            <span class="tech-tag">NLP</span>
+                            <span class="tech-tag">Python</span>
+                            <span class="tech-tag">API Design</span>
+                        </div>
+                    </div>
+                    
+                    <div class="project-card" data-url="https://github.com/Jordan-Leis/LaserCal-Embedded-Motion-Control-and-Sensor-Integration">
+                        <div class="project-icon">🎯</div>
+                        <h3 class="project-title">LaserCal</h3>
+                        <p class="project-subtitle">Embedded Systems • Motion Control</p>
+                        <p class="project-description">Demonstrates motion control and sensor processing in a Qt/C++ application. Emulates a two-axis stage with linear and circular moves, synthetic laser displacement readings with moving average filtering, and automated calibration stored in SQLite.</p>
+                        <div class="project-tech">
+                            <span class="tech-tag">Qt</span>
+                            <span class="tech-tag">C++</span>
+                            <span class="tech-tag">QML</span>
+                            <span class="tech-tag">SQLite</span>
                         </div>
                     </div>
                 </div>
@@ -938,44 +923,29 @@
             </div>
             <div class="window-content">
                 <h2 style="color: var(--accent-cyber); margin-bottom: 1rem; text-align: center;">Let's Connect!</h2>
-                <p style="color: var(--text-secondary); text-align: center; margin-bottom: 2rem;">Ready to discuss internships, research opportunities, or build something impactful together?</p>
+                <p style="color: var(--text-secondary); text-align: center; margin-bottom: 2rem;">Interested in collaboration, research opportunities, or discussing innovative projects? Click any card below to connect!</p>
                 
                 <div class="contact-grid">
-                    <div class="contact-card">
+                    <div class="contact-card" data-url="mailto:jordan.jay.leis@gmail.com">
                         <span class="contact-icon">📧</span>
                         <h3>Email</h3>
                         <p>Direct communication for opportunities</p>
                     </div>
-                    <div class="contact-card">
+                    <div class="contact-card" data-url="https://www.linkedin.com/in/jordan-leis/">
                         <span class="contact-icon">💼</span>
                         <h3>LinkedIn</h3>
                         <p>Professional network and updates</p>
                     </div>
-                    <div class="contact-card">
+                    <div class="contact-card" data-url="https://github.com/Jordan-Leis">
                         <span class="contact-icon">🐙</span>
                         <h3>GitHub</h3>
                         <p>Open source projects and code</p>
                     </div>
-                    <div class="contact-card">
+                    <div class="contact-card" data-url="https://drive.google.com/file/d/1jHbSPjZX3hLAVGLmC30Kj_MwDdtXkR9Z/view?usp=sharing">
                         <span class="contact-icon">📄</span>
                         <h3>Resume</h3>
                         <p>Detailed experience and skills</p>
                     </div>
-                </div>
-                
-                <div class="contact-buttons">
-                    <a href="mailto:jordan.jay.leis@gmail.com" class="contact-btn">
-                        <span>📧 Get In Touch</span>
-                    </a>
-                    <a href="https://www.linkedin.com/in/jordan-leis/" class="contact-btn">
-                        <span>💼 Connect</span>
-                    </a>
-                    <a href="https://github.com/Jordan-Leis" class="contact-btn">
-                        <span>🐙 View Code</span>
-                    </a>
-                    <a href="https://drive.google.com/file/d/1UD8GCysle1SRm5yMgnRKOeAm5hduwOPX/view?usp=sharing" class="contact-btn" id="resume-btn">
-                        <span>📄 Download Resume</span>
-                    </a>
                 </div>
             </div>
         </div>
@@ -1288,7 +1258,7 @@
             } else if (action) {
                 switch(action) {
                     case 'resume':
-                        window.open('https://drive.google.com/file/d/1UD8GCysle1SRm5yMgnRKOeAm5hduwOPX/view?usp=sharing', '_blank');
+                        window.open('https://drive.google.com/file/d/1jHbSPjZX3hLAVGLmC30Kj_MwDdtXkR9Z/view?usp=sharing', '_blank');
                         break;
                     case 'github':
                         window.open('https://github.com/Jordan-Leis', '_blank');
@@ -1376,11 +1346,19 @@
             });
         }
 
-        // Resume button functionality
-        function initializeResumeButton() {
-            document.getElementById('resume-btn').addEventListener('click', (e) => {
-                e.preventDefault();
-                alert('Resume download - add your resume PDF link here!');
+        // Contact card clicks
+        function initializeContactCards() {
+            document.querySelectorAll('.contact-card').forEach(card => {
+                card.addEventListener('click', () => {
+                    const url = card.getAttribute('data-url');
+                    if (url) {
+                        if (url.startsWith('mailto:')) {
+                            window.location.href = url;
+                        } else {
+                            window.open(url, '_blank');
+                        }
+                    }
+                });
             });
         }
 
@@ -1433,9 +1411,9 @@
             initializeWindows();
             initializeDesktopIcons();
             initializeProjectCards();
-            initializeResumeButton();
+            initializeContactCards();
             addWindowEffects();
-            
+
             // Start clock
             setInterval(updateClock, 1000);
             updateClock();
