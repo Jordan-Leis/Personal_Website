@@ -37,11 +37,11 @@ jobs:
           if grep -q '{{\|{%' _site/index.html; then echo "Liquid leaked into index.html"; exit 1; fi
           if [ "${{ matrix.posts }}" = "seeded" ]; then
             test -f _site/blog/hello-world/index.html
-            grep -q 'post-entry' _site/index.html
+            grep -q 'class="post-entry"' _site/index.html
             grep -q 'class="highlight"' _site/blog/hello-world/index.html
           else
             grep -q 'directory is empty' _site/index.html
-            ! grep -q 'post-entry' _site/index.html
+            ! grep -q 'class="post-entry"' _site/index.html
           fi
 
       - uses: actions/upload-artifact@v4
