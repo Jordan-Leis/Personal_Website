@@ -1,0 +1,50 @@
+# Builds the site with GitHub's own Pages builder so a branch can be
+# verified before merging. Does not deploy — production still uses the
+# legacy Pages build from main.
+name: jekyll-check
+
+on:
+  push:
+    branches-ignore: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        posts: [seeded, empty]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Remove posts (empty-state check)
+        if: matrix.posts == 'empty'
+        run: rm -rf _posts
+
+      - uses: actions/jekyll-build-pages@v1
+        with:
+          source: ./
+          destination: ./_site
+
+      - name: Sanity checks
+        run: |
+          set -e
+          test -f _site/index.html
+          test -f _site/CNAME
+          test -f _site/cracked-profiles/privacy/index.html
+          test -f _site/blog/index.html
+          if grep -q '{{\|{%' _site/index.html; then echo "Liquid leaked into index.html"; exit 1; fi
+          if [ "${{ matrix.posts }}" = "seeded" ]; then
+            test -f _site/blog/hello-world/index.html
+            grep -q 'post-entry' _site/index.html
+            grep -q 'class="highlight"' _site/blog/hello-world/index.html
+          else
+            grep -q 'directory is empty' _site/index.html
+            ! grep -q 'post-entry' _site/index.html
+          fi
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: site-${{ matrix.posts }}
+          path: _site
