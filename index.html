@@ -1,9 +1,12 @@
+---
+---
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Jordan Leis - ML Engineer & Cansbridge Fellow</title>
+    <title>Jordan Leis — FPGA / RTL Engineer</title>
+    <meta name="description" content="Electrical Engineering student at the University of Waterloo. Building pipelined accelerators in SystemVerilog after AI research ran into a hardware wall. Cansbridge Fellow.">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&display=swap');
         
@@ -401,23 +404,30 @@
 
         .about-window {
             width: 700px;
-            height: 500px;
+            height: 640px;
             top: 15%;
             left: 20%;
         }
 
         .projects-window {
             width: 900px;
-            height: 700px;
+            height: 760px;
             top: 10%;
             right: 10%;
         }
 
         .contact-window {
             width: 600px;
-            height: 400px;
+            height: 620px;
             bottom: 20%;
             left: 15%;
+        }
+
+        .posts-window {
+            width: 700px;
+            height: 480px;
+            top: 20%;
+            left: 25%;
         }
 
         /* Terminal Content Styles */
@@ -658,6 +668,90 @@
             font-size: 0.85rem;
         }
 
+        /* Terminal blocks: tree listings, git log, the ask */
+        .output.tree {
+            white-space: pre;
+            overflow-x: auto;
+            font-size: 0.85rem;
+            font-family: inherit;
+        }
+
+        .output.ask {
+            white-space: pre-wrap;
+            font-family: inherit;
+        }
+
+        .output a {
+            color: var(--accent-cyber);
+            text-decoration: none;
+            border-bottom: 1px solid rgba(0, 207, 255, 0.3);
+        }
+
+        .output a:hover {
+            color: var(--accent-energy);
+            border-bottom-color: var(--accent-energy);
+        }
+
+        .dir-comment {
+            color: var(--text-muted);
+        }
+
+        /* Project tiers */
+        .project-group {
+            margin-bottom: 2rem;
+        }
+
+        .project-group .terminal-line {
+            margin-bottom: 1rem;
+        }
+
+        .project-card.compact {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: baseline;
+            gap: 0.25rem 1rem;
+            padding: 0.75rem 1rem;
+        }
+
+        .project-card.compact:hover {
+            transform: none;
+        }
+
+        .project-card.compact .project-title {
+            margin-bottom: 0;
+            font-size: 0.95rem;
+        }
+
+        .project-card.compact .project-description {
+            margin-bottom: 0;
+            font-size: 0.85rem;
+            flex: 1 1 300px;
+        }
+
+        /* Blog listing */
+        .post-entry {
+            display: block;
+            color: var(--text-secondary);
+            text-decoration: none;
+            padding: 0.35rem 0;
+            font-size: 0.9rem;
+            transition: color 0.2s ease;
+        }
+
+        .post-entry:hover {
+            color: var(--accent-energy);
+        }
+
+        .post-entry:hover .highlight {
+            color: var(--accent-energy);
+        }
+
+        .post-tags {
+            color: var(--text-muted);
+            font-size: 0.8rem;
+            margin-left: 0.5rem;
+        }
+
         /* Animations */
         @keyframes windowShake {
     0%, 100% { transform: translateX(0); }
@@ -691,9 +785,35 @@
                 grid-template-columns: 1fr;
                 text-align: center;
             }
-            
+
             .ascii-art {
                 font-size: 0.25rem;
+            }
+
+            .window-content {
+                padding: 1rem;
+            }
+
+            .output {
+                margin-left: 0.75rem;
+            }
+
+            .output.tree {
+                font-size: 0.72rem;
+            }
+
+            /* Icons reflow into a wrapped row so the 8th icon doesn't overflow */
+            .desktop-icons {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 0.5rem;
+                padding: 5rem 1rem 1rem;
+                height: auto;
+                align-content: flex-start;
+            }
+
+            .desktop-icon {
+                position: static !important;
             }
         }
     </style>
@@ -755,6 +875,11 @@
                 <div class="icon-image">⚡</div>
                 <div class="icon-label">Terminal.sh</div>
             </div>
+
+            <div class="desktop-icon" data-window="posts-window" style="top: 400px; left: 200px;">
+                <div class="icon-image">📝</div>
+                <div class="icon-label">Blog.md</div>
+            </div>
         </div>
 
         <!-- Hero/Main Window -->
@@ -765,7 +890,7 @@
                     <div class="window-control minimize" data-action="minimize"></div>
                     <div class="window-control maximize" data-action="maximize"></div>
                 </div>
-                <div class="window-title">jordan@waterloo:~$ building_the_future.sh</div>
+                <div class="window-title">jordan@waterloo:~$ one_layer_down.sh</div>
             </div>
             <div class="window-content">
                 <div class="ascii-art">
@@ -780,32 +905,44 @@
                     <span class="prompt">jordan@waterloo:~$</span> <span class="command">whoami</span>
                 </div>
                 <div class="terminal-line">
-                    <div class="output">Electrical Engineering Student (3rd Year) @ University of Waterloo<br>
-                    Machine Learning Engineer Intern @ <span class="highlight">Health Canada (PMRA)</span><br>
-                    VP Services @ <span class="highlight">UWaterloo Engineering Society</span><br>
-                    Technical Project Manager @ <span class="highlight">Wat.AI</span></div>
+                    <div class="output">Electrical Engineering @ <span class="highlight">University of Waterloo</span> (3B)<br>
+                    FPGA / RTL — <span class="highlight">SystemVerilog</span>, Vivado, Zynq UltraScale+<br>
+                    Previously: ML research. Now working one layer down.<br>
+                    <span class="highlight">Cansbridge Fellow</span> — 1 of 15 selected nationally</div>
                 </div>
 
                 <div class="terminal-line">
                     <span class="prompt">jordan@waterloo:~$</span> <span class="command">cat mission.txt</span>
                 </div>
                 <div class="terminal-line">
-                    <div class="output">Building intelligent systems that bridge <span class="success">hardware</span> and <span class="success">software</span><br>
-                    to solve real-world challenges in <span class="success">energy</span>, <span class="success">education</span>, and <span class="success">civic technology</span></div>
+                    <div class="output">Making compute <span class="success">cheaper</span> and <span class="success">more available</span>.<br>
+                    Pipelined accelerators in SystemVerilog, timing closed<br>
+                    through architecture instead of tool flags.</div>
                 </div>
 
                 <div class="terminal-line">
-                    <span class="prompt">jordan@waterloo:~$</span> <span class="command">ls current_projects/ --impact</span>
+                    <span class="prompt">jordan@waterloo:~$</span> <span class="command">tree ~/work --depth=1</span>
                 </div>
                 <div class="terminal-line">
-                    <div class="output success">✓ microgrid_rl_optimizer/     <span class="highlight"># Bringing energy to Sub-Saharan Africa</span><br>
-                    ✓ health_canada_ai/          <span class="highlight"># AI for regulatory science</span><br>
-                    ✓ coursify_nlp/              <span class="highlight"># Natural language course scheduling</span><br>
-                    ✓ political_chatbot_rag/     <span class="highlight"># Civic transparency through AI</span></div>
+<pre class="output tree"><span class="success">~/hardware/</span>          <span class="dir-comment"># where I am now</span>
+  <span class="success">mvm_accelerator/</span>     128 lanes, 450 MHz, ~850 GOPS
+  <span class="success">tanh_pipeline/</span>       280 -> 840 MHz over four rewrites
+  <span class="success">wordle_on_kria/</span>      FSM in fabric, baremetal C on the PS
+
+<span class="success">~/research/</span>          <span class="dir-comment"># where I came from</span>
+  <span class="success">microgrid_rl/</span>        first-author, CUCAI 2026, -23% diesel
+  <span class="success">rag_agents/</span>          co-author, CUCAI 2025
+
+<span class="success">~/software/</span>          <span class="dir-comment"># things I built because I wanted them to exist</span>
+  <span class="success">coursify/</span>
+  <span class="success">lasercal/</span></pre>
                 </div>
 
                 <div class="terminal-line">
-                    <span class="prompt">jordan@waterloo:~$</span> <span class="command">echo "Ready to build the future together"</span>
+                    <span class="prompt">jordan@waterloo:~$</span> <span class="command">cat looking_for.txt | head -1</span>
+                </div>
+                <div class="terminal-line">
+                    <div class="output">FPGA / RTL co-op, 2027.  <span class="dir-comment"># full ask in Contact.json</span></div>
                 </div>
             </div>
         </div>
@@ -826,19 +963,36 @@
                         <div class="about-avatar">🚀</div>
                         <div class="status-indicator">
                             <div class="status-dot"></div>
-                            Currently @ PMRA • Cansbridge Fellow 2026
+                            3B EE @ Waterloo • Cansbridge Fellow
                         </div>
                     </div>
                     <div class="about-text">
-                        <h2>Building Tomorrow's Tech Today</h2>
-                        <p>I'm a <span class="highlight">third-year Electrical Engineering student</span> at the University of Waterloo with a passion for building systems that solve meaningful problems — from embedded hardware to AI-driven decision-making.</p>
+                        <h2>One layer down.</h2>
+                        <p>I'm a <span class="highlight">3B Electrical Engineering student</span> at the University of Waterloo. Right now I build <span class="highlight">pipelined fixed-point accelerators in SystemVerilog</span> on Zynq UltraScale+, closing timing through architecture instead of tool flags.</p>
 
-                        <p>Currently working as a <span class="highlight">Machine Learning Engineer Intern at Health Canada (PMRA)</span>, where I apply AI to regulatory science and public health challenges. I also lead an <span class="highlight">11-person AI research team at Wat.AI</span>, developing reinforcement learning agents for renewable energy optimization in Sub-Saharan Africa.</p>
+                        <p>I got here from the other direction. I spent two years doing AI research at <span class="highlight">Wat.AI</span>, leading an 11-person team building a reinforcement learning controller for off-grid microgrids in rural sub-Saharan Africa. It worked: <span class="highlight">23% less diesel per year at equal reliability</span>, and a first-authored paper accepted at CUCAI 2026.</p>
 
-                        <p>As a <span class="highlight">Cansbridge Fellow</span>, I've received a $10,000 fellowship supporting an upcoming Asia internship (September-December 2026), fostering cross-cultural technical collaboration. I also serve as <span class="highlight">VP Services for the UWaterloo Engineering Society</span>, where I work to improve the student experience for the entire engineering community.</p>
+                        <p>Then I looked at deploying it. The low-cost board we needed to run the controller had roughly doubled in price and was unavailable, squeezed by the AI compute shortage. The inference compute cost more than parts of the microgrid it was supposed to control. The algorithm was never the bottleneck. The hardware was. And when compute gets scarce, the people with the least get cut off first.</p>
 
-                        <p>From <span class="highlight">FPGA traffic control systems</span> to <span class="highlight">natural language course scheduling</span>, I love bridging the gap between theoretical knowledge and practical impact. Whether it's teaching C++, building political transparency tools with RAG, or designing motion control systems, I'm driven by the belief that technology should empower and create positive change.</p>
+                        <p>I called it a pivot. It isn't. I started at the application, hit a wall made of hardware, and went one layer down to work on the wall.</p>
+
+                        <p>Four months into RTL, working through the <span class="highlight">ECE 124 → ECE 222 → ECE 327 Digital Hardware Systems</span> sequence. Before that: RAG pipelines over 300+ page regulatory documents at Health Canada's PMRA, an experiment I designed at the National Research Council with roughly $100,000 of lab equipment specced for it, PCB design and EMI/EMC compliance at Harding Technologies, and TAing ECE 150 for 400+ first-years.</p>
+
+                        <p><span class="highlight">Cansbridge Fellow</span>, 1 of 15 selected nationally — Asia internship Winter 2027. <span class="highlight">VP Services</span>, Waterloo Engineering Society.</p>
                     </div>
+                </div>
+
+                <div class="terminal-line" style="margin-top: 2rem;">
+                    <span class="prompt">jordan@waterloo:~$</span> <span class="command">git log --oneline experience/</span>
+                </div>
+                <div class="terminal-line">
+<pre class="output tree"><span class="highlight">2026 Jan–Aug</span>       ML Engineer (Research), Health Canada (PMRA)
+<span class="highlight">2026 Jan–Apr</span>       Director, Wat.AI
+<span class="highlight">2025 May–2026 Apr</span>  Technical Project Manager, Wat.AI
+<span class="highlight">2025 May–Aug</span>       Research Assistant, National Research Council of Canada
+<span class="highlight">2024 Sep–Dec</span>       Teaching Assistant (ECE 150), University of Waterloo
+<span class="highlight">2024 Jan–Apr</span>       Engineering Co-op, Harding Technologies
+<span class="highlight">2023 Sep–Dec</span>       Hardware Designer, Midnight Sun Solar Rayce Car</pre>
                 </div>
             </div>
         </div>
@@ -854,58 +1008,96 @@
                 <div class="window-title">projects_portfolio.exe</div>
             </div>
             <div class="window-content">
-                <h2 style="color: var(--accent-energy); margin-bottom: 2rem; text-align: center;">Featured Projects</h2>
-                <div class="projects-grid">
-                    <div class="project-card" data-url="https://github.com/Jordan-Leis/Microgrid-RL">
-                        <div class="project-icon">🔋</div>
-                        <h3 class="project-title">Microgrid RL Optimizer</h3>
-                        <p class="project-subtitle">Technical Project Manager • Wat.AI Research</p>
-                        <p class="project-description">Leading development of reinforcement learning agents for autonomous renewable energy optimization in rural Sub-Saharan Africa. Integrated NASA POWER API for real-world weather simulation.</p>
-                        <div class="project-tech">
-                            <span class="tech-tag">Python</span>
-                            <span class="tech-tag">TensorFlow</span>
-                            <span class="tech-tag">Gymnasium</span>
-                            <span class="tech-tag">NASA API</span>
+                <div class="project-group">
+                    <div class="terminal-line">
+                        <span class="prompt">jordan@waterloo:~$</span> <span class="command">ls ~/hardware/</span> <span class="dir-comment"># where I am now</span>
+                    </div>
+                    <div class="projects-grid">
+                        <div class="project-card" data-url="https://github.com/Jordan-Leis/mvm-in-system-verilog">
+                            <div class="project-icon">🔲</div>
+                            <h3 class="project-title">MVM Accelerator</h3>
+                            <p class="project-subtitle">SystemVerilog • Zynq UltraScale+ MPSoC</p>
+                            <p class="project-description">128-lane fixed-point matrix-vector engine running 1024 MACs per cycle at 450 MHz, sustaining ~850 GOPS. Same architecture family Microsoft built BrainWave on. Timing closed entirely through RTL structure — register fanout trees, an address tree with fanout 1 — with no synthesis flags, XDC hacks, or <code>phys_opt_design</code>.</p>
+                            <div class="project-tech">
+                                <span class="tech-tag">SystemVerilog</span>
+                                <span class="tech-tag">Vivado</span>
+                                <span class="tech-tag">DSP48E2</span>
+                                <span class="tech-tag">Timing Closure</span>
+                            </div>
+                        </div>
+
+                        <div class="project-card" data-url="https://github.com/Jordan-Leis/tanh-in-system-verilog">
+                            <div class="project-icon">📈</div>
+                            <h3 class="project-title">tanh Accelerator</h3>
+                            <p class="project-subtitle">SystemVerilog • Fixed-Point Pipeline</p>
+                            <p class="project-description">Pipelined Q2.12 tanh core with a ready/valid streaming interface, driven from 280 MHz to 840 MHz across four rewrites. The last gain came from registering every inter-DSP link, moving the design from routing-bound to logic-bound. Verified against a golden model with randomized stimulus and mid-stream backpressure testing.</p>
+                            <div class="project-tech">
+                                <span class="tech-tag">SystemVerilog</span>
+                                <span class="tech-tag">DSP48E2</span>
+                                <span class="tech-tag">Fixed-Point</span>
+                                <span class="tech-tag">Verification</span>
+                            </div>
+                        </div>
+
+                        <div class="project-card" data-url="https://github.com/Jordan-Leis/wordle-in-system-verilog">
+                            <div class="project-icon">🟩</div>
+                            <h3 class="project-title">Wordle on Kria</h3>
+                            <p class="project-subtitle">SystemVerilog • Hardware/Software Co-Design</p>
+                            <p class="project-description">Wordle running in FPGA fabric on a Xilinx Kria board. Game logic is a 5-state FSM in programmable logic; a baremetal C application on the ARM processing system drives it over seven AXI-GPIO blocks and UART. Vivado block design generated from Tcl, exported to Vitis via XSA handoff.</p>
+                            <div class="project-tech">
+                                <span class="tech-tag">SystemVerilog</span>
+                                <span class="tech-tag">AXI-GPIO</span>
+                                <span class="tech-tag">Vitis</span>
+                                <span class="tech-tag">Baremetal C</span>
+                                <span class="tech-tag">FSM</span>
+                            </div>
                         </div>
                     </div>
-                    
-                    <div class="project-card" data-url="https://github.com/Madhav-Malhotra/political-chatbot">
-                        <div class="project-icon">🏛️</div>
-                        <h3 class="project-title">Political Chatbot</h3>
-                        <p class="project-subtitle">First Author • RAG Architecture</p>
-                        <p class="project-description">Developed an AI-powered political chatbot using RAG (Retrieval Augmented Generation) for accurate legislative Q&A. Led webscraping, architecture design, and evaluation methodology as first author on research paper.</p>
-                        <div class="project-tech">
-                            <span class="tech-tag">Python</span>
-                            <span class="tech-tag">RAG</span>
-                            <span class="tech-tag">Webscraping</span>
-                            <span class="tech-tag">LLMs</span>
+                </div>
+
+                <div class="project-group">
+                    <div class="terminal-line">
+                        <span class="prompt">jordan@waterloo:~$</span> <span class="command">ls ~/research/</span> <span class="dir-comment"># where I came from</span>
+                    </div>
+                    <div class="projects-grid">
+                        <div class="project-card" data-url="https://cucai.ca/papers/48">
+                            <div class="project-icon">🔋</div>
+                            <h3 class="project-title">Microgrid RL Controller</h3>
+                            <p class="project-subtitle">first author • CUCAI 2026</p>
+                            <p class="project-description">Reinforcement learning controller for off-grid hybrid microgrids in rural sub-Saharan Africa. Most work in the field treats electricity as a commodity to sell back to a grid; this treated it as a scarce resource, optimizing how many people one generator can reach. A 150-run benchmark on five years of NASA POWER climate data found DDPG optimal: <span class="highlight">23% less diesel per year at equal reliability</span>. Led an 11-person team. First-authored, accepted at CUCAI 2026.</p>
+                            <div class="project-tech">
+                                <span class="tech-tag">Reinforcement Learning</span>
+                                <span class="tech-tag">TensorFlow</span>
+                                <span class="tech-tag">Gymnasium</span>
+                                <span class="tech-tag">NASA POWER</span>
+                            </div>
+                        </div>
+
+                        <div class="project-card" data-url="https://github.com/Madhav-Malhotra/political-chatbot">
+                            <div class="project-icon">🏛️</div>
+                            <h3 class="project-title">RAG Agent Architectures</h3>
+                            <p class="project-subtitle">co-author • CUCAI 2025</p>
+                            <p class="project-description">Evaluated retrieval-augmented generation architectures for generalized decision-making across domains. 400+ simulated games measuring strategic consistency, extended to political analysis with human evaluation from 50+ participants. Co-authored; presented at CUCAI 2025 and the Ethical Tech for Global Futures Symposium, where it received Best Undergraduate Research Presentation.</p>
+                            <div class="project-tech">
+                                <span class="tech-tag">RAG</span>
+                                <span class="tech-tag">LLM Evaluation</span>
+                                <span class="tech-tag">Multi-Agent</span>
+                            </div>
                         </div>
                     </div>
-                    
-                    <div class="project-card" data-url="https://github.com/Jordan-Leis/Course-Selector">
-                        <div class="project-icon">📚</div>
-                        <h3 class="project-title">Coursify</h3>
-                        <p class="project-subtitle">Solo Project • Natural Language Scheduling</p>
-                        <p class="project-description">Built an intelligent course scheduling system for Waterloo Engineering students using natural language processing. Allows students to build their schedules conversationally by expressing interests and requirements, powered by LLMs.</p>
-                        <div class="project-tech">
-                            <span class="tech-tag">LLMs</span>
-                            <span class="tech-tag">NLP</span>
-                            <span class="tech-tag">Python</span>
-                            <span class="tech-tag">API Design</span>
-                        </div>
+                </div>
+
+                <div class="project-group">
+                    <div class="terminal-line">
+                        <span class="prompt">jordan@waterloo:~$</span> <span class="command">ls ~/software/</span> <span class="dir-comment"># things I built because I wanted them to exist</span>
                     </div>
-                    
-                    <div class="project-card" data-url="https://github.com/Jordan-Leis/LaserCal-Embedded-Motion-Control-and-Sensor-Integration">
-                        <div class="project-icon">🎯</div>
-                        <h3 class="project-title">LaserCal</h3>
-                        <p class="project-subtitle">Embedded Systems • Motion Control</p>
-                        <p class="project-description">Demonstrates motion control and sensor processing in a Qt/C++ application. Emulates a two-axis stage with linear and circular moves, synthetic laser displacement readings with moving average filtering, and automated calibration stored in SQLite.</p>
-                        <div class="project-tech">
-                            <span class="tech-tag">Qt</span>
-                            <span class="tech-tag">C++</span>
-                            <span class="tech-tag">QML</span>
-                            <span class="tech-tag">SQLite</span>
-                        </div>
+                    <div class="project-card compact" data-url="https://github.com/Jordan-Leis/Course-Selector">
+                        <h3 class="project-title">coursify/</h3>
+                        <p class="project-description">Natural language course scheduling for Waterloo Engineering students, built on LLMs.</p>
+                    </div>
+                    <div class="project-card compact" data-url="https://github.com/Jordan-Leis/LaserCal-Embedded-Motion-Control-and-Sensor-Integration" style="margin-top: 0.75rem;">
+                        <h3 class="project-title">lasercal/</h3>
+                        <p class="project-description">Two-axis motion control and sensor processing in Qt/C++, with moving-average filtering and calibration stored in SQLite.</p>
                     </div>
                 </div>
             </div>
@@ -922,9 +1114,23 @@
                 <div class="window-title">contact_info.json</div>
             </div>
             <div class="window-content">
-                <h2 style="color: var(--accent-cyber); margin-bottom: 1rem; text-align: center;">Let's Connect!</h2>
-                <p style="color: var(--text-secondary); text-align: center; margin-bottom: 2rem;">Interested in collaboration, research opportunities, or discussing innovative projects? Click any card below to connect!</p>
-                
+                <div class="terminal-line">
+                    <span class="prompt">jordan@waterloo:~$</span> <span class="command">cat looking_for.txt</span>
+                </div>
+                <div class="terminal-line">
+<pre class="output ask"><span class="success">FPGA / RTL co-op, 2027.</span>
+I'm in Asia January through April on the Cansbridge Fellowship.
+If you do ASIC design or manufacturing out there, I'd like to talk.
+Also happy to hear from anyone who's been through a full tapeout —
+I want to understand how IP licensing and mask costs change the
+decisions I make in RTL.
+
+→ <a href="mailto:jordan.jay.leis@gmail.com">jordan.jay.leis@gmail.com</a></pre>
+                </div>
+                <div class="terminal-line">
+                    <span class="prompt">jordan@waterloo:~$</span> <span class="command">_</span>
+                </div>
+
                 <div class="contact-grid">
                     <div class="contact-card" data-url="mailto:jordan.jay.leis@gmail.com">
                         <span class="contact-icon">📧</span>
@@ -950,6 +1156,35 @@
             </div>
         </div>
 
+        <!-- Blog Window (post list generated by Jekyll from _posts/) -->
+        <div class="window posts-window" id="posts-window">
+            <div class="window-header">
+                <div class="window-controls">
+                    <div class="window-control close" data-action="close"></div>
+                    <div class="window-control minimize" data-action="minimize"></div>
+                    <div class="window-control maximize" data-action="maximize"></div>
+                </div>
+                <div class="window-title">~/posts/</div>
+            </div>
+            <div class="window-content">
+                <div class="terminal-line">
+                    <span class="prompt">jordan@waterloo:~$</span> <span class="command">ls -lt ~/posts/</span>
+                </div>
+                <div class="terminal-line">
+                    <div class="output">
+{% if site.posts.size > 0 %}{% for post in site.posts %}
+                        <a class="post-entry" href="{{ post.url }}"><span class="highlight">{{ post.date | date: "%Y-%m-%d" }}</span>  {{ post.title }}{% if post.tags.size > 0 %}<span class="post-tags">{% for tag in post.tags %}#{{ tag }} {% endfor %}</span>{% endif %}</a>
+{% endfor %}{% else %}
+                        <span class="dir-comment">ls: ~/posts/: directory is empty. First post coming.</span>
+{% endif %}
+                    </div>
+                </div>
+                <div class="terminal-line">
+                    <span class="prompt">jordan@waterloo:~$</span> <span class="command">_</span>
+                </div>
+            </div>
+        </div>
+
     </div>
 
     <!-- Taskbar -->
@@ -960,9 +1195,10 @@
             <div class="taskbar-item" data-window="about-window">About</div>
             <div class="taskbar-item" data-window="projects-window">Projects</div>
             <div class="taskbar-item" data-window="contact-window">Contact</div>
+            <div class="taskbar-item" data-window="posts-window">Blog</div>
         </div>
         <div style="margin-left: auto; color: var(--text-muted); font-size: 0.8rem;">
-            Ready to build the future 🚀
+            FPGA / RTL co-op · 2027
         </div>
     </div>
 
