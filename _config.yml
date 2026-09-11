@@ -1,0 +1,22 @@
+title: Jordan Leis
+description: Electrical Engineering student at the University of Waterloo. Building pipelined accelerators in SystemVerilog after AI research ran into a hardware wall. Cansbridge Fellow.
+url: https://jordanleis.com
+
+# Posts live in _posts/YYYY-MM-DD-slug.md and publish at /blog/slug/
+permalink: /blog/:title/
+
+markdown: kramdown
+kramdown:
+  input: GFM
+  syntax_highlighter: rouge
+
+defaults:
+  - scope:
+      path: ""
+      type: posts
+    values:
+      layout: post
+
+exclude:
+  - README.md
+  - .github

@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% if page.title %}{{ page.title }} — {% endif %}Jordan Leis</title>
+    <meta name="description" content="{% if page.excerpt %}{{ page.excerpt | strip_html | strip_newlines | truncate: 160 }}{% else %}{{ site.description }}{% endif %}">
+    <link rel="stylesheet" href="{{ '/assets/css/syntax.css' | relative_url }}">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-primary: #0a0a0f;
+            --bg-secondary: #161627;
+            --bg-tertiary: #1a1a2e;
+            --terminal-bg: #0d1117;
+            --terminal-border: #30363d;
+            --text-primary: #f0f6fc;
+            --text-secondary: #c9d1d9;
+            --text-muted: #8b949e;
+            --accent-energy: #7ee081;
+            --accent-cyber: #00cfff;
+            --accent-purple: #adbcff;
+            --accent-danger: #ff7b72;
+            --accent-warning: #ffbd2e;
+        }
+
+        body {
+            font-family: 'JetBrains Mono', monospace;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            min-height: 100vh;
+            padding: 3rem 1rem 4rem;
+        }
+
+        .animated-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            background: linear-gradient(45deg, var(--bg-primary) 0%, #0f0f1a 25%, var(--bg-secondary) 50%, #1a1a2e 75%, var(--bg-primary) 100%);
+            background-size: 400% 400%;
+            animation: gradientShift 15s ease infinite;
+        }
+
+        @keyframes gradientShift {
+            0%, 100% { background-position: 0% 50%; }
+            25% { background-position: 100% 50%; }
+            50% { background-position: 100% 100%; }
+            75% { background-position: 0% 100%; }
+        }
+
+        .window {
+            width: min(900px, 100%);
+            margin: 0 auto;
+            background: var(--terminal-bg);
+            border: 1px solid var(--terminal-border);
+            border-radius: 8px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
+        }
+
+        .window-header {
+            background: var(--bg-secondary);
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid var(--terminal-border);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .window-controls {
+            display: flex;
+            gap: 0.3rem;
+        }
+
+        .window-control {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+        .window-control.close { background: #ff5f56; }
+        .window-control.minimize { background: #ffbd2e; }
+        .window-control.maximize { background: #27ca3f; }
+
+        .window-title {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            flex: 1;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .window-content {
+            padding: 2rem;
+        }
+
+        .terminal-line {
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+        }
+
+        .prompt {
+            color: var(--accent-purple);
+            font-weight: 600;
+        }
+
+        .command {
+            color: var(--accent-cyber);
+            font-weight: 500;
+        }
+
+        .output {
+            color: var(--text-secondary);
+            margin-left: 2rem;
+            line-height: 1.6;
+        }
+
+        /* span-scoped so it doesn't hit Rouge's <div class="highlight"> code blocks */
+        span.highlight {
+            color: var(--accent-cyber);
+            font-weight: 600;
+        }
+
+        .dir-comment {
+            color: var(--text-muted);
+        }
+
+        .terminal-line a,
+        .output a {
+            color: var(--accent-cyber);
+            text-decoration: none;
+            border-bottom: 1px solid rgba(0, 207, 255, 0.3);
+        }
+
+        .terminal-line a:hover,
+        .output a:hover {
+            color: var(--accent-energy);
+            border-bottom-color: var(--accent-energy);
+        }
+
+        .post-entry {
+            display: block;
+            color: var(--text-secondary);
+            text-decoration: none;
+            border-bottom: none;
+            padding: 0.35rem 0;
+            font-size: 0.9rem;
+            transition: color 0.2s ease;
+        }
+
+        .post-entry:hover,
+        .post-entry:hover span.highlight {
+            color: var(--accent-energy);
+            border-bottom: none;
+        }
+
+        .post-tags {
+            color: var(--text-muted);
+            font-size: 0.8rem;
+            margin-left: 0.5rem;
+        }
+
+        .nav-line {
+            margin-top: 2rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--terminal-border);
+        }
+
+        .nav-line .command {
+            margin-right: 1.5rem;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem 1rem 3rem;
+            }
+
+            .window-content {
+                padding: 1rem;
+            }
+
+            .output {
+                margin-left: 0.75rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="animated-bg"></div>
+
+    <div class="window">
+        <div class="window-header">
+            <div class="window-controls">
+                <div class="window-control close"></div>
+                <div class="window-control minimize"></div>
+                <div class="window-control maximize"></div>
+            </div>
+            <div class="window-title">{{ page.window_title | default: page.title }}</div>
+        </div>
+        <div class="window-content">
+            {{ content }}
+
+            <div class="terminal-line nav-line">
+                <span class="prompt">jordan@waterloo:~$</span>
+                <a class="command" href="{{ '/' | relative_url }}">cd ~</a>
+                <a class="command" href="{{ '/blog/' | relative_url }}">ls ~/posts/</a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

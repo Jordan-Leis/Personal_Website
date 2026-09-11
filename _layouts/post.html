@@ -1,0 +1,154 @@
+---
+layout: terminal
+---
+<style>
+    .post-body {
+        color: var(--text-secondary);
+        font-size: 0.95rem;
+        line-height: 1.75;
+        margin-left: 2rem;
+        max-width: 72ch;
+    }
+
+    .post-body h1,
+    .post-body h2,
+    .post-body h3 {
+        color: var(--text-primary);
+        font-weight: 600;
+        margin: 2rem 0 0.75rem;
+        line-height: 1.3;
+    }
+
+    .post-body h1 { font-size: 1.5rem; }
+    .post-body h2 { font-size: 1.2rem; color: var(--accent-energy); }
+    .post-body h3 { font-size: 1rem; color: var(--accent-cyber); }
+
+    .post-body h2::before { content: '## '; color: var(--text-muted); }
+    .post-body h3::before { content: '### '; color: var(--text-muted); }
+
+    .post-body p,
+    .post-body ul,
+    .post-body ol {
+        margin-bottom: 1rem;
+    }
+
+    .post-body ul,
+    .post-body ol {
+        padding-left: 1.5rem;
+    }
+
+    .post-body li {
+        margin-bottom: 0.25rem;
+    }
+
+    .post-body a {
+        color: var(--accent-cyber);
+        text-decoration: none;
+        border-bottom: 1px solid rgba(0, 207, 255, 0.3);
+    }
+
+    .post-body a:hover {
+        color: var(--accent-energy);
+        border-bottom-color: var(--accent-energy);
+    }
+
+    .post-body strong {
+        color: var(--text-primary);
+    }
+
+    .post-body blockquote {
+        border-left: 2px solid var(--accent-purple);
+        padding-left: 1rem;
+        color: var(--text-muted);
+        margin: 1rem 0;
+    }
+
+    .post-body code {
+        font-family: inherit;
+        font-size: 0.875em;
+        background: rgba(0, 207, 255, 0.08);
+        color: var(--accent-cyber);
+        padding: 0.1em 0.4em;
+        border-radius: 3px;
+    }
+
+    .post-body pre {
+        background: rgba(48, 54, 61, 0.3);
+        border: 1px solid var(--terminal-border);
+        border-radius: 6px;
+        padding: 1rem 1.25rem;
+        overflow-x: auto;
+        margin: 1rem 0 1.5rem;
+        font-size: 0.85rem;
+        line-height: 1.55;
+    }
+
+    .post-body pre code {
+        background: none;
+        color: var(--text-secondary);
+        padding: 0;
+        font-size: inherit;
+    }
+
+    .post-body hr {
+        border: 0;
+        border-top: 1px solid var(--terminal-border);
+        margin: 2rem 0;
+    }
+
+    .post-body img {
+        max-width: 100%;
+        border-radius: 6px;
+    }
+
+    .post-body table {
+        border-collapse: collapse;
+        margin-bottom: 1rem;
+        font-size: 0.85rem;
+        display: block;
+        overflow-x: auto;
+    }
+
+    .post-body th,
+    .post-body td {
+        border: 1px solid var(--terminal-border);
+        padding: 0.4rem 0.8rem;
+        text-align: left;
+    }
+
+    .post-body th {
+        color: var(--accent-energy);
+    }
+
+    .post-meta {
+        margin-left: 2rem;
+        color: var(--text-muted);
+        font-size: 0.85rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .post-meta .post-tags {
+        margin-left: 1rem;
+    }
+
+    @media (max-width: 768px) {
+        .post-body,
+        .post-meta {
+            margin-left: 0.75rem;
+        }
+    }
+</style>
+
+<div class="terminal-line">
+    <span class="prompt">jordan@waterloo:~$</span> <span class="command">cat ~/posts/{{ page.slug }}.md</span>
+</div>
+
+<div class="post-meta">
+    <span class="highlight">{{ page.date | date: "%Y-%m-%d" }}</span>
+    <span class="post-tags">{% for tag in page.tags %}#{{ tag }} {% endfor %}</span>
+</div>
+
+<article class="post-body">
+    <h1>{{ page.title }}</h1>
+    {{ content }}
+</article>

@@ -1,0 +1,17 @@
+---
+layout: terminal
+title: Blog
+window_title: "~/posts/"
+---
+<div class="terminal-line">
+    <span class="prompt">jordan@waterloo:~$</span> <span class="command">ls -lt ~/posts/</span>
+</div>
+<div class="terminal-line">
+    <div class="output">
+{% if site.posts.size > 0 %}{% for post in site.posts %}
+        <a class="post-entry" href="{{ post.url | relative_url }}"><span class="highlight">{{ post.date | date: "%Y-%m-%d" }}</span>  {{ post.title }}{% if post.tags.size > 0 %}<span class="post-tags">{% for tag in post.tags %}#{{ tag }} {% endfor %}</span>{% endif %}</a>
+{% endfor %}{% else %}
+        <span class="dir-comment">ls: ~/posts/: directory is empty. First post coming.</span>
+{% endif %}
+    </div>
+</div>
