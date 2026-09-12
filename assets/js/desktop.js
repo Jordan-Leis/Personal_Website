@@ -32,6 +32,7 @@ function initializeWindows() {
     // Set initial z-index values
     windows.forEach((window, index) => {
         window.style.zIndex = 1000 + index;
+        if (window.classList.contains('active')) window.classList.add('is-open');
     });
 
     // Setup window controls
@@ -62,7 +63,7 @@ function initializeWindows() {
 
         // Make window draggable
         header.addEventListener('mousedown', (e) => {
-            if (e.target.closest('.window-control')) return;
+            if (e.target.closest('.window-control, button, a, input, .hb-btn')) return;
             if (window.classList.contains('maximized')) return;
 
             startDrag(e, window);
@@ -71,7 +72,7 @@ function initializeWindows() {
 
         // Double-click the header bar to maximize, like GNOME
         header.addEventListener('dblclick', (e) => {
-            if (e.target.closest('.window-control')) return;
+            if (e.target.closest('.window-control, button, a, input, .hb-btn')) return;
             toggleMaximize(window.id);
         });
 
@@ -156,6 +157,13 @@ function stopDrag() {
 }
 
 // Window management functions
+function focusVisibleWindow() {
+    const visible = Array.from(document.querySelectorAll('.window.active'))
+        .sort((a, b) => Number(b.style.zIndex) - Number(a.style.zIndex));
+    activeWindow = null;
+    if (visible.length) bringToFront(visible[0]);
+}
+
 function bringToFront(window) {
     let maxZ = 1000;
     document.querySelectorAll('.window').forEach(w => {
@@ -170,29 +178,24 @@ function bringToFront(window) {
     updateDock();
 }
 
-function openWindow(windowId) {
+function openWindow(windowId, { navigateHome = true } = {}) {
     const window = document.getElementById(windowId);
     window.classList.remove('minimized');
-    window.classList.add('active');
+    window.classList.add('active', 'is-open');
     bringToFront(window);
-    if (windowId === 'browser-window' && Browser.history.length === 0) {
+    if (windowId === 'browser-window' && navigateHome && Browser.history.length === 0) {
         Browser.navigate(BROWSER_HOME);
     }
 }
 
 function closeWindow(windowId) {
     const window = document.getElementById(windowId);
-    window.classList.remove('active', 'focused');
+    window.classList.remove('active', 'focused', 'is-open');
     window.classList.add('minimized');
     if (windowId === 'browser-window') Browser.reset();
 
     if (activeWindow === windowId) {
-        const openWindows = document.querySelectorAll('.window.active');
-        if (openWindows.length > 0) {
-            bringToFront(openWindows[0]);
-        } else {
-            activeWindow = null;
-        }
+        focusVisibleWindow();
     }
     updateDock();
 }
@@ -203,7 +206,7 @@ function minimizeWindow(windowId) {
     window.classList.add('minimized');
 
     if (activeWindow === windowId) {
-        activeWindow = null;
+        focusVisibleWindow();
     }
     updateDock();
 }
@@ -247,7 +250,7 @@ function updateDock() {
 
         item.classList.remove('running', 'focused');
 
-        if (window.classList.contains('active')) {
+        if (window.classList.contains('is-open')) {
             item.classList.add('running');
             if (activeWindow === windowId) {
                 item.classList.add('focused');
@@ -500,6 +503,8 @@ const Browser = {
     },
 
     fail() {
+        if (this.index < 0) return;
+        clearTimeout(this.loadTimer);
         const el = this.els();
         el.loading.classList.remove('on');
         el.fallback.classList.add('on');
@@ -508,15 +513,22 @@ const Browser = {
     // Same-origin pages (the blog) report where they went; the address
     // bar follows. Cross-origin frames keep whatever was last set.
     onLoad() {
+        if (this.index < 0) return;
         const el = this.els();
-        clearTimeout(this.loadTimer);
-        el.loading.classList.remove('on');
         let href, title;
         try {
             href = el.frame.contentWindow.location.href;
             title = el.frame.contentDocument && el.frame.contentDocument.title;
-        } catch (e) { return; }
+        } catch (e) {
+            clearTimeout(this.loadTimer);
+            el.loading.classList.remove('on');
+            el.fallback.classList.remove('on');
+            return;
+        }
         if (!href || href === 'about:blank') return;
+        clearTimeout(this.loadTimer);
+        el.loading.classList.remove('on');
+        el.fallback.classList.remove('on');
         if (href !== this.history[this.index]) {
             this.history = this.history.slice(0, this.index + 1);
             this.history.push(href);
@@ -570,6 +582,7 @@ const Browser = {
         const el = this.els();
         if (!el.frame) return;
         el.frame.addEventListener('load', () => this.onLoad());
+        el.frame.addEventListener('error', () => this.fail());
         el.back.addEventListener('click', () => this.back());
         el.forward.addEventListener('click', () => this.forward());
         el.reload.addEventListener('click', () => this.reload());
@@ -578,6 +591,7 @@ const Browser = {
 
 // Every link on the desktop goes through here.
 function openUrl(url) {
+    if (typeof url !== 'string' || !url) return;
     if (url.startsWith('mailto:')) {
         window.location.href = url;
         return;
@@ -586,7 +600,7 @@ function openUrl(url) {
         window.open(url, '_blank', 'noopener');
         return;
     }
-    openWindow('browser-window');
+    openWindow('browser-window', { navigateHome: false });
     Browser.navigate(url);
 }
 
@@ -594,7 +608,12 @@ function openUrl(url) {
 function deepLinkTarget() {
     const path = new URLSearchParams(location.search).get('open');
     if (!path || !path.startsWith('/') || path.startsWith('//')) return null;
-    return location.origin + path;
+    try {
+        const target = new URL(path, location.origin);
+        return target.origin === location.origin ? target.href : null;
+    } catch (e) {
+        return null;
+    }
 }
 
 // Files (Nautilus). A small virtual filesystem over PROJECTS and the
@@ -727,6 +746,7 @@ const Files = {
             b.addEventListener('click', () => this.go(c.path));
             el.pathBar.appendChild(b);
         });
+        el.pathBar.scrollLeft = el.pathBar.scrollWidth;
         if (el.title) el.title.textContent = crumbs[crumbs.length - 1].name;
 
         const items = this.list(path);
@@ -1135,11 +1155,11 @@ if (window.self !== window.top) {
 document.addEventListener('keydown', (e) => {
     if (e.altKey && e.key === 'Tab') {
         e.preventDefault();
-        const activeWindows = Array.from(document.querySelectorAll('.window.active'));
-        if (activeWindows.length > 1) {
+        const activeWindows = Array.from(document.querySelectorAll('.window.is-open'));
+        if (activeWindows.length > 0) {
             const currentIndex = activeWindows.findIndex(w => w.id === activeWindow);
             const nextIndex = (currentIndex + 1) % activeWindows.length;
-            bringToFront(activeWindows[nextIndex]);
+            openWindow(activeWindows[nextIndex].id);
         }
     }
 
