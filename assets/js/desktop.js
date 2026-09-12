@@ -18,10 +18,16 @@ let iconDragData = {
     element: null
 };
 
+// The work area: everything below the top panel and beside the dock.
+// Window and icon coordinates are relative to it.
+function workArea() {
+    return document.getElementById('desktop').getBoundingClientRect();
+}
+
 // Initialize window system
 function initializeWindows() {
     const windows = document.querySelectorAll('.window');
-    const taskbarItems = document.querySelectorAll('.taskbar-item');
+    const dockItems = document.querySelectorAll('.dock-item[data-window]');
 
     // Set initial z-index values
     windows.forEach((window, index) => {
@@ -56,10 +62,17 @@ function initializeWindows() {
 
         // Make window draggable
         header.addEventListener('mousedown', (e) => {
-            if (e.target.classList.contains('window-control')) return;
-            
+            if (e.target.closest('.window-control')) return;
+            if (window.classList.contains('maximized')) return;
+
             startDrag(e, window);
             bringToFront(window);
+        });
+
+        // Double-click the header bar to maximize, like GNOME
+        header.addEventListener('dblclick', (e) => {
+            if (e.target.closest('.window-control')) return;
+            toggleMaximize(window.id);
         });
 
         // Click to focus
@@ -68,12 +81,16 @@ function initializeWindows() {
         });
     });
 
-    // Taskbar item clicks
-    taskbarItems.forEach(item => {
+    // Dock clicks: open/raise, or minimize when already focused
+    dockItems.forEach(item => {
         item.addEventListener('click', () => {
             const windowId = item.getAttribute('data-window');
-            toggleWindow(windowId);
-            updateTaskbar();
+            const window = document.getElementById(windowId);
+            if (window.classList.contains('active') && activeWindow === windowId) {
+                minimizeWindow(windowId);
+            } else {
+                openWindow(windowId);
+            }
         });
     });
 
@@ -83,7 +100,7 @@ function initializeWindows() {
 
     // Initial state
     bringToFront(document.getElementById('hero-window'));
-    updateTaskbar();
+    updateDock();
 }
 
 // Window drag functions
@@ -92,10 +109,11 @@ function startDrag(e, window) {
     dragData.element = window;
     dragData.startX = e.clientX;
     dragData.startY = e.clientY;
-    
+
     const rect = window.getBoundingClientRect();
-    dragData.startLeft = rect.left;
-    dragData.startTop = rect.top;
+    const area = workArea();
+    dragData.startLeft = rect.left - area.left;
+    dragData.startTop = rect.top - area.top;
 
     window.style.cursor = 'grabbing';
     document.body.style.userSelect = 'none';
@@ -110,16 +128,18 @@ function handleDrag(e) {
     let newLeft = dragData.startLeft + deltaX;
     let newTop = dragData.startTop + deltaY;
 
-    // Boundary constraints
+    // Keep the header bar reachable inside the work area
     const windowRect = dragData.element.getBoundingClientRect();
-    const maxLeft = window.innerWidth - windowRect.width;
-    const maxTop = window.innerHeight - windowRect.height - 60;
+    const area = workArea();
+    const maxLeft = area.width - windowRect.width;
+    const maxTop = area.height - 46;
 
-    newLeft = Math.max(0, Math.min(newLeft, maxLeft));
+    newLeft = Math.max(Math.min(0, maxLeft), Math.min(newLeft, Math.max(0, maxLeft)));
     newTop = Math.max(0, Math.min(newTop, maxTop));
 
     dragData.element.style.left = newLeft + 'px';
     dragData.element.style.top = newTop + 'px';
+    dragData.element.style.right = 'auto';
     dragData.element.style.transform = 'none';
 }
 
@@ -138,18 +158,27 @@ function bringToFront(window) {
     document.querySelectorAll('.window').forEach(w => {
         const z = parseInt(w.style.zIndex || 1000);
         if (z > maxZ) maxZ = z;
+        w.classList.remove('focused');
     });
 
     window.style.zIndex = maxZ + 1;
+    window.classList.add('focused');
     activeWindow = window.id;
-    updateTaskbar();
+    updateDock();
+}
+
+function openWindow(windowId) {
+    const window = document.getElementById(windowId);
+    window.classList.remove('minimized');
+    window.classList.add('active');
+    bringToFront(window);
 }
 
 function closeWindow(windowId) {
     const window = document.getElementById(windowId);
-    window.classList.remove('active');
+    window.classList.remove('active', 'focused');
     window.classList.add('minimized');
-    
+
     if (activeWindow === windowId) {
         const openWindows = document.querySelectorAll('.window.active');
         if (openWindows.length > 0) {
@@ -158,67 +187,64 @@ function closeWindow(windowId) {
             activeWindow = null;
         }
     }
-    updateTaskbar();
+    updateDock();
 }
 
 function minimizeWindow(windowId) {
     const window = document.getElementById(windowId);
-    window.classList.remove('active');
+    window.classList.remove('active', 'focused');
     window.classList.add('minimized');
-    
+
     if (activeWindow === windowId) {
         activeWindow = null;
     }
-    updateTaskbar();
+    updateDock();
 }
 
 function toggleMaximize(windowId) {
     const window = document.getElementById(windowId);
-    
+
     if (window.classList.contains('maximized')) {
         window.classList.remove('maximized');
         window.style.width = '';
         window.style.height = '';
         window.style.top = '';
         window.style.left = '';
+        window.style.right = '';
         window.style.transform = '';
     } else {
         window.classList.add('maximized');
-        window.style.width = '95vw';
-        window.style.height = 'calc(95vh - 60px)';
-        window.style.top = '2.5vh';
-        window.style.left = '2.5vw';
+        window.style.width = '100%';
+        window.style.height = '100%';
+        window.style.top = '0';
+        window.style.left = '0';
+        window.style.right = 'auto';
         window.style.transform = 'none';
     }
 }
 
 function toggleWindow(windowId) {
     const window = document.getElementById(windowId);
-    
+
     if (window.classList.contains('active')) {
         minimizeWindow(windowId);
     } else {
-        window.classList.remove('minimized');
-        window.classList.add('active');
-        bringToFront(window);
+        openWindow(windowId);
     }
 }
 
-function updateTaskbar() {
-    const taskbarItems = document.querySelectorAll('.taskbar-item');
-    
-    taskbarItems.forEach(item => {
+function updateDock() {
+    document.querySelectorAll('.dock-item[data-window]').forEach(item => {
         const windowId = item.getAttribute('data-window');
         const window = document.getElementById(windowId);
-        
-        item.classList.remove('active', 'minimized');
-        
+
+        item.classList.remove('running', 'focused');
+
         if (window.classList.contains('active')) {
+            item.classList.add('running');
             if (activeWindow === windowId) {
-                item.classList.add('active');
+                item.classList.add('focused');
             }
-        } else if (window.classList.contains('minimized')) {
-            item.classList.add('minimized');
         }
     });
 }
@@ -276,16 +302,13 @@ function deselectAllIcons() {
     selectedIcon = null;
 }
 
+// Desktop icons and app-grid launchers share this
 function openIconTarget(icon) {
     const windowId = icon.getAttribute('data-window');
     const action = icon.getAttribute('data-action');
 
     if (windowId) {
-        const window = document.getElementById(windowId);
-        window.classList.remove('minimized');
-        window.classList.add('active');
-        bringToFront(window);
-        updateTaskbar();
+        openWindow(windowId);
     } else if (action) {
         switch(action) {
             case 'resume':
@@ -298,17 +321,12 @@ function openIconTarget(icon) {
                 window.open('https://www.linkedin.com/in/jordan-leis/', '_blank');
                 break;
             case 'terminal':
-                toggleWindow('hero-window');
-                updateTaskbar();
+                openWindow('hero-window');
+                break;
+            case 'trash':
                 break;
         }
     }
-
-    // Opening animation
-    icon.style.transform = 'scale(1.2)';
-    setTimeout(() => {
-        icon.style.transform = '';
-    }, 200);
 }
 
 function startIconDrag(e, icon) {
@@ -316,10 +334,11 @@ function startIconDrag(e, icon) {
     iconDragData.element = icon;
     iconDragData.startX = e.clientX;
     iconDragData.startY = e.clientY;
-    
+
     const rect = icon.getBoundingClientRect();
-    iconDragData.startLeft = rect.left;
-    iconDragData.startTop = rect.top;
+    const area = workArea();
+    iconDragData.startLeft = rect.left - area.left;
+    iconDragData.startTop = rect.top - area.top;
 
     icon.style.cursor = 'grabbing';
     icon.style.zIndex = '1000';
@@ -328,6 +347,7 @@ function startIconDrag(e, icon) {
 
 function handleIconDrag(e) {
     if (!iconDragData.isDragging || !iconDragData.element) return;
+    if (window.getComputedStyle(iconDragData.element).position !== 'absolute') return;
 
     const deltaX = e.clientX - iconDragData.startX;
     const deltaY = e.clientY - iconDragData.startY;
@@ -336,17 +356,15 @@ function handleIconDrag(e) {
     let newTop = iconDragData.startTop + deltaY;
 
     // Boundary constraints
-    const desktop = document.getElementById('desktop');
-    const desktopRect = desktop.getBoundingClientRect();
+    const desktopRect = workArea();
     const iconRect = iconDragData.element.getBoundingClientRect();
 
     newLeft = Math.max(0, Math.min(newLeft, desktopRect.width - iconRect.width));
-    newTop = Math.max(0, Math.min(newTop, desktopRect.height - iconRect.height - 60));
+    newTop = Math.max(0, Math.min(newTop, desktopRect.height - iconRect.height));
 
-    // Grid snapping
-    const gridSize = 100;
-    const snappedLeft = Math.round(newLeft / gridSize) * gridSize;
-    const snappedTop = Math.round(newTop / gridSize) * gridSize;
+    // Grid snapping (matches the 96x100 icon grid)
+    const snappedLeft = Math.round((newLeft - 16) / 96) * 96 + 16;
+    const snappedTop = Math.round((newTop - 16) / 100) * 100 + 16;
 
     if (Math.abs(newLeft - snappedLeft) < 20) newLeft = snappedLeft;
     if (Math.abs(newTop - snappedTop) < 20) newTop = snappedTop;
@@ -393,60 +411,65 @@ function initializeContactCards() {
     });
 }
 
-// Desktop Clock
+// Panel clock: "Sep 12  12:50"
 function updateClock() {
     const now = new Date();
-    const timeElement = document.querySelector('.desktop-clock .time');
-    const dateElement = document.querySelector('.desktop-clock .date');
-    
-    if (timeElement && dateElement) {
-        const timeString = now.toLocaleTimeString('en-US', { 
-            hour12: false,
-            hour: '2-digit',
-            minute: '2-digit',
-            second: '2-digit'
-        });
-        
-        const dateString = now.toLocaleDateString('en-US', {
-            weekday: 'short',
-            month: 'short',
-            day: 'numeric',
-            year: 'numeric'
-        });
-        
-        timeElement.textContent = timeString;
-        dateElement.textContent = dateString;
-    }
+    const clock = document.getElementById('panel-clock');
+    if (!clock) return;
+
+    const dateString = now.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    const timeString = now.toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' });
+    clock.textContent = dateString + '  ' + timeString;
 }
 
-// Window effects
-function addWindowEffects() {
-    const windows = document.querySelectorAll('.window');
-    
-    windows.forEach(window => {
-        const closeBtn = window.querySelector('.window-control.close');
-        closeBtn.addEventListener('mouseenter', () => {
-            window.querySelector('.window-header').style.animation =
-    'windowShake 0.5s ease-in-out';
-        });
-        
-        closeBtn.addEventListener('mouseleave', () => {
-            window.querySelector('.window-header').style.animation = '';
+// App grid (Activities / Show Applications)
+function initializeAppGrid() {
+    const grid = document.getElementById('app-grid');
+    const activities = document.getElementById('activities');
+    const showApps = document.getElementById('show-apps');
+    if (!grid) return;
 
+    const setOpen = (open) => {
+        grid.classList.toggle('open', open);
+        if (activities) activities.classList.toggle('open', open);
+    };
+    const toggle = () => setOpen(!grid.classList.contains('open'));
+
+    if (activities) activities.addEventListener('click', toggle);
+    if (showApps) showApps.addEventListener('click', toggle);
+
+    grid.addEventListener('click', (e) => {
+        if (e.target === grid) setOpen(false);
+    });
+
+    grid.querySelectorAll('.app-launcher').forEach(launcher => {
+        launcher.addEventListener('click', () => {
+            setOpen(false);
+            openIconTarget(launcher);
         });
     });
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && grid.classList.contains('open')) {
+            e.stopImmediatePropagation();
+            setOpen(false);
+        }
+    }, true);
 }
 
 // Boot sequence + hello line
 // Edit these arrays to change what plays on first visit.
+// A line starting with "[  OK  ]" gets the green systemd treatment.
 const BOOT_LINES = [
-    ['JORDAN-OS v3B  —  University of Waterloo build', 350],
-    ['POST ..................................... OK', 300],
-    ['Detecting hardware ........... Zynq UltraScale+ (fabric online)', 400],
-    ['Loading modules ..... research.ko  ml.ko  software.ko  hardware.ko', 450],
-    ['Mounting ~/hardware ~/research ~/software ~/posts ....... OK', 300],
-    ['Checking timing .................... closed, no phys_opt_design', 350],
-    ['Starting desktop ...', 400]
+    ['[  OK  ] Started JORDAN-OS v3B (University of Waterloo build).', 350],
+    ['[  OK  ] Found device Zynq UltraScale+ MPSoC. Fabric online.', 300],
+    ['[  OK  ] Loaded kernel modules: research.ko ml.ko software.ko hardware.ko.', 400],
+    ['[  OK  ] Mounted /home/jordan/hardware.', 200],
+    ['[  OK  ] Mounted /home/jordan/research.', 200],
+    ['[  OK  ] Mounted /home/jordan/software.', 200],
+    ['[  OK  ] Mounted /home/jordan/posts.', 250],
+    ['[  OK  ] Reached target Timing Closure. No phys_opt_design required.', 350],
+    ['         Starting Display Manager...', 400]
 ];
 const HELLO_PREFIX = "Hi, I'm Jordan. ";
 const HELLO_ROLES = [
@@ -487,6 +510,21 @@ function waitOrSkip(ms, onSkip) {
     });
 }
 
+function appendBootLine(log, text) {
+    const OK = '[  OK  ]';
+    if (text.startsWith(OK)) {
+        const tag = document.createElement('span');
+        tag.className = 'ok';
+        tag.append('[  ');
+        const b = document.createElement('b');
+        b.textContent = 'OK';
+        tag.append(b, '  ]');
+        log.append(tag, text.slice(OK.length) + '\n');
+    } else {
+        log.append(text + '\n');
+    }
+}
+
 function runBoot() {
     const screen = document.getElementById('boot-screen');
     const log = document.getElementById('boot-log');
@@ -501,7 +539,7 @@ function runBoot() {
     const showLines = async () => {
         for (const [text, delay] of BOOT_LINES) {
             if (skipped) break;
-            log.textContent += text + '\n';
+            appendBootLine(log, text);
             skipped = await waitOrSkip(delay);
         }
     };
@@ -563,7 +601,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initializeDesktopIcons();
     initializeProjectCards();
     initializeContactCards();
-    addWindowEffects();
+    initializeAppGrid();
 
     // Start clock
     setInterval(updateClock, 1000);
@@ -588,7 +626,7 @@ document.addEventListener('keydown', (e) => {
             bringToFront(activeWindows[nextIndex]);
         }
     }
-    
+
     if (e.key === 'Escape' && activeWindow) {
         closeWindow(activeWindow);
     }
