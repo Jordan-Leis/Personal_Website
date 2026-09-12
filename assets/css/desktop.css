@@ -557,91 +557,65 @@ img {
     50% { opacity: 0; }
 }
 
-/* Non-terminal windows (About / Projects / Contact until their apps land) */
-.app-window .window-content .terminal-line {
-    font-family: var(--font-mono);
-    font-size: 14px;
+/* Text Editor documents */
+.editor-app .window-content {
+    width: 100%;
+    max-width: calc(72ch + 48px);
+    margin: 0 auto;
+    padding: 24px;
+    font: 15px/1.7 var(--font-ui);
+    color: var(--fg-dim);
+    overflow-wrap: anywhere;
 }
 
-.app-window .prompt .user { color: var(--term-green); }
-.app-window .prompt .path { color: var(--term-blue); }
-.app-window .command { color: var(--fg); }
-.app-window .output { color: var(--fg-dim); }
-.app-window .highlight { color: var(--orange-hover); }
-.app-window .success { color: #8ae234; }
-
-.about-content {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 0;
-}
+.editor-app .terminal-line { font: inherit; }
+.editor-app .output { color: var(--fg-dim); }
+.editor-app .highlight { color: var(--orange-hover); }
+.editor-app .success { color: #8ae234; }
+.editor-app .prompt .user { color: var(--term-green); }
+.editor-app .prompt .path { color: var(--term-blue); }
+.editor-app .command { color: var(--fg); }
+.editor-app pre,
+.editor-app .prompt,
+.editor-app .command { font-family: var(--font-mono); }
+.editor-app pre { white-space: pre-wrap; overflow-wrap: anywhere; }
 
 .about-text h2 {
     color: var(--fg);
     font-size: 22px;
-    font-weight: 700;
-    margin-bottom: 12px;
+    line-height: 1.4;
+    margin-bottom: 16px;
 }
 
-.about-text p {
-    color: var(--fg-dim);
-    line-height: 1.7;
-    margin-bottom: 12px;
-    font-size: 15px;
-    max-width: 72ch;
-}
+.about-text p { margin-bottom: 16px; }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-.contact-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-    gap: 12px;
-    margin-bottom: 8px;
-}
-
-.contact-card {
-    background: #262626;
+.contact-links {
+    display: flex;
+    flex-direction: column;
+    margin-top: 24px;
     border: 1px solid var(--win-border);
     border-radius: 8px;
-    padding: 16px;
-    text-align: center;
-    cursor: pointer;
-    transition: border-color 0.15s ease;
+    overflow: hidden;
 }
 
-.contact-card:hover {
-    border-color: var(--orange);
-}
-
-.contact-icon {
-    font-size: 1.6rem;
-    margin-bottom: 8px;
-    display: block;
-}
-
-.contact-card h3 {
+.contact-row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 12px 14px;
     color: var(--fg);
-    margin-bottom: 4px;
-    font-size: 14px;
+    text-decoration: none;
+    background: #262626;
 }
 
-.contact-card p {
-    color: var(--fg-muted);
-    font-size: 12.5px;
-}
+.contact-row + .contact-row { border-top: 1px solid var(--win-border); }
+.contact-row:hover { background: #303030; }
+.contact-row:focus-visible { outline: 2px solid var(--orange); outline-offset: -2px; }
+.contact-row img { width: 32px; height: 32px; flex: 0 0 auto; }
+.contact-row > span { min-width: 0; }
+.contact-row strong { font-size: 14px; }
+.contact-description { display: block; font-size: 12px; color: var(--fg-muted); }
+.contact-arrow { margin-left: auto; color: var(--fg-muted); }
 
 /* Files (Nautilus) */
 .files-window {

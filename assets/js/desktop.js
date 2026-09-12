@@ -398,18 +398,13 @@ function stopIconDrag() {
     iconDragData.element = null;
 }
 
-// Contact card clicks
-function initializeContactCards() {
-    document.querySelectorAll('.contact-card').forEach(card => {
-        card.addEventListener('click', () => {
-            const url = card.getAttribute('data-url');
-            if (url) {
-                if (url.startsWith('mailto:')) {
-                    window.location.href = url;
-                } else {
-                    openUrl(url);
-                }
-            }
+// Contact links share the desktop browser routing.
+function initializeContactLinks() {
+    document.querySelectorAll('#contact-window a[href]').forEach(link => {
+        link.addEventListener('click', (e) => {
+            if (e.ctrlKey || e.metaKey || e.shiftKey || e.altKey) return;
+            e.preventDefault();
+            openUrl(link.href);
         });
     });
 }
@@ -1109,7 +1104,7 @@ function runHello() {
 document.addEventListener('DOMContentLoaded', () => {
     initializeWindows();
     initializeDesktopIcons();
-    initializeContactCards();
+    initializeContactLinks();
     initializeAppGrid();
     Browser.init();
     Files.init();
