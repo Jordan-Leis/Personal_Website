@@ -337,6 +337,8 @@ function openIconTarget(icon) {
                 openWindow('hero-window');
                 break;
             case 'trash':
+                openWindow('projects-window');
+                Files.go('/Trash');
                 break;
         }
     }
@@ -394,25 +396,6 @@ function stopIconDrag() {
     document.body.style.userSelect = '';
     iconDragData.isDragging = false;
     iconDragData.element = null;
-}
-
-// Project card clicks
-function initializeProjectCards() {
-    document.querySelectorAll('.project-card').forEach(card => {
-        card.addEventListener('click', () => {
-            const url = card.getAttribute('data-url');
-            if (url && url !== '#') {
-                openUrl(url);
-            }
-        });
-    });
-
-    document.querySelectorAll('.post-entry').forEach(entry => {
-        entry.addEventListener('click', (e) => {
-            e.preventDefault();
-            openUrl(entry.href);
-        });
-    });
 }
 
 // Contact card clicks
@@ -619,6 +602,325 @@ function deepLinkTarget() {
     return location.origin + path;
 }
 
+// Files (Nautilus). A small virtual filesystem over PROJECTS and the
+// Jekyll-rendered post list; single-click selects, double-click opens.
+const ICON = (name) => '/assets/icons/yaru/' + name + '.png';
+const GITHUB_MARK = 'M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z';
+
+const Files = {
+    path: '/',
+    history: ['/'],
+    index: 0,
+    selected: null,
+
+    els() {
+        return {
+            win: document.getElementById('projects-window'),
+            grid: document.getElementById('files-grid'),
+            empty: document.getElementById('files-empty'),
+            emptySub: document.getElementById('files-empty-sub'),
+            status: document.getElementById('files-status'),
+            pathBar: document.getElementById('files-path'),
+            details: document.getElementById('files-details'),
+            back: document.getElementById('files-back'),
+            forward: document.getElementById('files-forward'),
+            title: document.querySelector('#projects-window .window-title')
+        };
+    },
+
+    projectItem(p) {
+        return {
+            type: 'project', name: p.name, subtitle: p.subtitle, project: p,
+            icon: p.folder === 'papers' ? ICON('application-pdf') : ICON('folder'),
+            emblem: !!p.repo,
+            open: () => {
+                const url = p.paper || p.repo || p.site;
+                if (url) openUrl(url);
+            }
+        };
+    },
+
+    posts() {
+        const tpl = document.getElementById('posts-data');
+        if (!tpl) return [];
+        return Array.from(tpl.content.querySelectorAll('.post-entry')).map(a => ({
+            type: 'post', name: a.textContent.trim(), icon: ICON('text-markdown'),
+            subtitle: a.dataset.date, tags: (a.dataset.tags || '').trim().split(/\s+/).filter(Boolean),
+            url: a.getAttribute('href'),
+            open: () => openUrl(location.origin + a.getAttribute('href'))
+        }));
+    },
+
+    // Folder contents by path
+    list(path) {
+        const folder = (name, target, icon) => ({
+            type: 'folder', name, icon: ICON(icon || 'folder'),
+            subtitle: this.list(target).length + ' items', open: () => this.go(target)
+        });
+        switch (path) {
+            case '/':
+                return [
+                    folder('Projects', '/Projects'),
+                    folder('posts', '/posts', 'folder-documents'),
+                    { type: 'file', name: 'about.md', icon: ICON('text-markdown'), subtitle: 'Markdown', open: () => openWindow('about-window') },
+                    { type: 'file', name: 'contact.json', icon: ICON('application-json'), subtitle: 'JSON', open: () => openWindow('contact-window') },
+                    { type: 'file', name: 'Resume.pdf', icon: ICON('application-pdf'), subtitle: 'PDF', open: () => openUrl(LINKS.resume) }
+                ];
+            case '/Projects':
+                return PROJECT_FOLDERS.map(f => folder(f.id, '/Projects/' + f.id));
+            case '/posts':
+                return this.posts();
+            case '/Trash':
+                return [];
+            default: {
+                const m = path.match(/^\/Projects\/(\w+)$/);
+                if (!m) return [];
+                return PROJECTS.filter(p => p.folder === m[1]).map(p => this.projectItem(p));
+            }
+        }
+    },
+
+    crumbs(path) {
+        const parts = path.split('/').filter(Boolean);
+        const out = [{ name: 'Home', path: '/' }];
+        let acc = '';
+        for (const part of parts) {
+            acc += '/' + part;
+            out.push({ name: part, path: acc });
+        }
+        return out;
+    },
+
+    go(path) {
+        if (path === this.path) return;
+        this.history = this.history.slice(0, this.index + 1);
+        this.history.push(path);
+        this.index = this.history.length - 1;
+        this.render(path);
+    },
+
+    back() {
+        if (this.index <= 0) return;
+        this.index -= 1;
+        this.render(this.history[this.index]);
+    },
+
+    forward() {
+        if (this.index >= this.history.length - 1) return;
+        this.index += 1;
+        this.render(this.history[this.index]);
+    },
+
+    render(path) {
+        const el = this.els();
+        if (!el.grid) return;
+        this.path = path;
+        this.select(null);
+
+        const crumbs = this.crumbs(path);
+        el.pathBar.innerHTML = '';
+        crumbs.forEach((c, i) => {
+            if (i > 0) {
+                const sep = document.createElement('span');
+                sep.className = 'crumb-sep';
+                sep.textContent = '›';
+                el.pathBar.appendChild(sep);
+            }
+            const b = document.createElement('button');
+            b.className = 'crumb' + (i === crumbs.length - 1 ? ' current' : '');
+            b.textContent = c.name;
+            b.addEventListener('click', () => this.go(c.path));
+            el.pathBar.appendChild(b);
+        });
+        if (el.title) el.title.textContent = crumbs[crumbs.length - 1].name;
+
+        const items = this.list(path);
+        el.grid.innerHTML = '';
+        items.forEach(item => el.grid.appendChild(this.renderItem(item)));
+
+        const isEmpty = items.length === 0;
+        el.empty.hidden = !isEmpty;
+        el.grid.hidden = isEmpty;
+        if (isEmpty) {
+            const tpl = document.getElementById('posts-data');
+            const note = path === '/posts' && tpl && tpl.content.querySelector('.posts-empty');
+            el.emptySub.textContent = note ? note.textContent : '';
+        }
+        el.status.textContent = items.length === 1 ? '1 item' : items.length + ' items';
+
+        el.back.disabled = this.index <= 0;
+        el.forward.disabled = this.index >= this.history.length - 1;
+
+        document.querySelectorAll('.files-sidebar .sb-item[data-path]').forEach(sb => {
+            sb.classList.toggle('current', sb.dataset.path === path);
+        });
+    },
+
+    renderItem(item) {
+        const div = document.createElement('div');
+        div.className = 'fs-item fs-' + item.type;
+        if (item.project) div.dataset.project = item.project.id;
+
+        const iconWrap = document.createElement('div');
+        iconWrap.className = 'fs-icon';
+        const img = document.createElement('img');
+        img.src = item.icon;
+        img.alt = '';
+        iconWrap.appendChild(img);
+        if (item.emblem) {
+            iconWrap.insertAdjacentHTML('beforeend',
+                '<svg class="fs-emblem" viewBox="0 0 16 16"><path d="' + GITHUB_MARK + '"/></svg>');
+        }
+
+        const label = document.createElement('div');
+        label.className = 'fs-label';
+        label.textContent = item.name;
+
+        div.append(iconWrap, label);
+        div.tabIndex = 0;
+        div.setAttribute('role', 'button');
+        div.setAttribute('aria-label', item.name);
+        if (item.type === 'folder') {
+            const count = document.createElement('div');
+            count.className = 'fs-count';
+            count.textContent = item.subtitle;
+            div.appendChild(count);
+        }
+        div.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                this.select(item, div);
+                item.open();
+            } else if (e.key === ' ') {
+                e.preventDefault();
+                this.select(item, div);
+            }
+        });
+        div.addEventListener('click', (e) => {
+            e.stopPropagation();
+            this.select(item, div);
+        });
+        div.addEventListener('dblclick', (e) => {
+            e.stopPropagation();
+            item.open();
+        });
+        return div;
+    },
+
+    select(item, div) {
+        const el = this.els();
+        el.grid.querySelectorAll('.fs-item.selected').forEach(d => d.classList.remove('selected'));
+        this.selected = item;
+        if (!item) {
+            el.details.hidden = true;
+            el.details.innerHTML = '';
+            return;
+        }
+        div.classList.add('selected');
+        el.details.innerHTML = '';
+        el.details.hidden = false;
+
+        const head = document.createElement('div');
+        head.className = 'dt-head';
+        const img = document.createElement('img');
+        img.src = item.icon;
+        img.alt = '';
+        const name = document.createElement('div');
+        name.className = 'dt-name';
+        name.textContent = item.name;
+        const sub = document.createElement('div');
+        sub.className = 'dt-sub';
+        sub.textContent = item.subtitle || '';
+        head.append(img, name, sub);
+        el.details.appendChild(head);
+
+        const closeBtn = document.createElement('button');
+        closeBtn.className = 'dt-close';
+        closeBtn.title = 'Close';
+        closeBtn.innerHTML = '<svg viewBox="0 0 16 16"><path d="M4.5 4.5l7 7M11.5 4.5l-7 7"/></svg>';
+        closeBtn.addEventListener('click', () => this.select(null));
+        el.details.appendChild(closeBtn);
+
+        const p = item.project;
+        if (p) {
+            const desc = document.createElement('p');
+            desc.className = 'dt-desc';
+            desc.textContent = p.description;
+            el.details.appendChild(desc);
+        }
+        const tags = p ? p.tags : item.tags;
+        if (tags && tags.length) {
+            const wrap = document.createElement('div');
+            wrap.className = 'dt-tags';
+            tags.forEach(t => {
+                const chip = document.createElement('span');
+                chip.className = 'chip';
+                chip.textContent = t;
+                wrap.appendChild(chip);
+            });
+            el.details.appendChild(wrap);
+        }
+
+        const actions = document.createElement('div');
+        actions.className = 'dt-actions';
+        const button = (label, fn, primary) => {
+            const b = document.createElement('button');
+            b.className = 'dt-btn' + (primary ? ' primary' : '');
+            b.textContent = label;
+            b.addEventListener('click', fn);
+            actions.appendChild(b);
+        };
+        if (p) {
+            if (p.paper) button('Open paper', () => openUrl(p.paper), true);
+            if (p.repo) button('Open on GitHub', () => openUrl(p.repo), !p.paper);
+            if (p.site) button('Open site', () => openUrl(p.site), false);
+            if (!p.repo && !p.paper && !p.site) {
+                const note = document.createElement('div');
+                note.className = 'dt-note';
+                note.textContent = 'Repository not public yet.';
+                actions.appendChild(note);
+            }
+        } else if (item.type === 'folder') {
+            button('Open', () => item.open(), true);
+        } else {
+            button('Open', () => item.open(), true);
+        }
+        el.details.appendChild(actions);
+    },
+
+    init() {
+        const el = this.els();
+        if (!el.grid) return;
+        el.back.addEventListener('click', () => this.back());
+        el.forward.addEventListener('click', () => this.forward());
+        document.querySelectorAll('.files-sidebar .sb-item[data-path]').forEach(sb => {
+            sb.addEventListener('click', () => this.go(sb.dataset.path));
+        });
+        el.grid.addEventListener('click', () => this.select(null));
+        this.history = ['/Projects'];
+        this.index = 0;
+        this.render('/Projects');
+    }
+};
+
+// The terminal's `tree ~/work` output, from the same data
+function renderWorkTree() {
+    const pre = document.getElementById('work-tree');
+    if (!pre) return;
+    const esc = (t) => t.replace(/&/g, '&amp;').replace(/</g, '&lt;');
+    const pad = (t, n) => t + ' '.repeat(Math.max(1, n - t.length));
+    const lines = [];
+    PROJECT_FOLDERS.forEach((f, i) => {
+        if (i > 0) lines.push('');
+        lines.push('<span class="success">' + pad('~/' + f.id + '/', 21) + '</span><span class="dir-comment"># ' + esc(f.comment) + '</span>');
+        PROJECTS.filter(p => p.folder === f.id).forEach(p => {
+            const name = '<span class="success">' + p.slug + '/</span>';
+            lines.push('  ' + (p.note ? name + ' '.repeat(Math.max(1, 21 - p.slug.length - 1)) + esc(p.note) : name));
+        });
+    });
+    pre.innerHTML = lines.join('\n');
+}
+
 // Panel clock: "Sep 12  12:50"
 function updateClock() {
     const now = new Date();
@@ -673,7 +975,7 @@ const BOOT_LINES = [
     ['[  OK  ] Found device Zynq UltraScale+ MPSoC. Fabric online.', 300],
     ['[  OK  ] Loaded kernel modules: research.ko ml.ko software.ko hardware.ko.', 400],
     ['[  OK  ] Mounted /home/jordan/hardware.', 200],
-    ['[  OK  ] Mounted /home/jordan/research.', 200],
+    ['[  OK  ] Mounted /home/jordan/papers.', 200],
     ['[  OK  ] Mounted /home/jordan/software.', 200],
     ['[  OK  ] Mounted /home/jordan/posts.', 250],
     ['[  OK  ] Reached target Timing Closure. No phys_opt_design required.', 350],
@@ -807,10 +1109,11 @@ function runHello() {
 document.addEventListener('DOMContentLoaded', () => {
     initializeWindows();
     initializeDesktopIcons();
-    initializeProjectCards();
     initializeContactCards();
     initializeAppGrid();
     Browser.init();
+    Files.init();
+    renderWorkTree();
 
     // Start clock
     setInterval(updateClock, 1000);

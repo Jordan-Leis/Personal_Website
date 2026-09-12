@@ -163,18 +163,23 @@
                     <span class="prompt"><span class="user">jordan@waterloo</span>:<span class="path">~</span>$</span> <span class="command">tree ~/work --depth=1</span>
                 </div>
                 <div class="terminal-line">
-<pre class="output tree"><span class="success">~/hardware/</span>          <span class="dir-comment"># where I am now</span>
+<pre class="output tree" id="work-tree"><span class="success">~/hardware/          </span><span class="dir-comment"># where I am now</span>
   <span class="success">mvm_accelerator/</span>     128 lanes, 450 MHz, ~850 GOPS
   <span class="success">tanh_pipeline/</span>       280 -> 840 MHz over four rewrites
   <span class="success">wordle_on_kria/</span>      FSM in fabric, baremetal C on the PS
 
-<span class="success">~/research/</span>          <span class="dir-comment"># where I came from</span>
+<span class="success">~/papers/            </span><span class="dir-comment"># where I came from</span>
   <span class="success">microgrid_rl/</span>        first-author, CUCAI 2026, -23% diesel
   <span class="success">rag_agents/</span>          co-author, CUCAI 2025
 
-<span class="success">~/software/</span>          <span class="dir-comment"># things I built because I wanted them to exist</span>
+<span class="success">~/software/          </span><span class="dir-comment"># things I built because I wanted them to exist</span>
+  <span class="success">summarization_tool/</span>
+  <span class="success">uw_awards_search/</span>
   <span class="success">coursify/</span>
-  <span class="success">lasercal/</span></pre>
+  <span class="success">sred_copilot/</span>
+  <span class="success">lasercal/</span>
+  <span class="success">relaycalc/</span>
+  <span class="success">linxicon_solver/</span></pre>
                 </div>
 
                 <div class="terminal-line">
@@ -232,110 +237,57 @@
             </div>
         </div>
 
-        <!-- Projects Window -->
-        <div class="window projects-window app-window" id="projects-window">
-            <div class="window-header">
-                <div class="window-title">Projects</div>
+        <!-- Files: Projects live here, as folders -->
+        <div class="window files-window files-app" id="projects-window">
+            <div class="window-header files-header">
+                <div class="files-nav">
+                    <button class="hb-btn" id="files-back" title="Back" disabled><svg viewBox="0 0 16 16"><path d="M10 3 5 8l5 5"/></svg></button>
+                    <button class="hb-btn" id="files-forward" title="Forward" disabled><svg viewBox="0 0 16 16"><path d="m6 3 5 5-5 5"/></svg></button>
+                </div>
+                <div class="files-path" id="files-path"></div>
+                <div class="files-tools">
+                    <div class="hb-btn" title="Search"><svg viewBox="0 0 16 16"><circle cx="7" cy="7" r="4.5"/><path d="m10.5 10.5 3 3"/></svg></div>
+                    <div class="hb-btn" title="View options"><svg viewBox="0 0 16 16"><rect x="2.5" y="2.5" width="4" height="4" rx=".8"/><rect x="9.5" y="2.5" width="4" height="4" rx=".8"/><rect x="2.5" y="9.5" width="4" height="4" rx=".8"/><rect x="9.5" y="9.5" width="4" height="4" rx=".8"/></svg></div>
+                    <div class="hb-btn" title="Main Menu"><svg viewBox="0 0 16 16"><path d="M2.5 4h11M2.5 8h11M2.5 12h11"/></svg></div>
+                </div>
                 <div class="window-controls">
                     <div class="window-control minimize" data-action="minimize" title="Minimize"><svg viewBox="0 0 16 16"><path d="M3.5 11h9"/></svg></div>
                     <div class="window-control maximize" data-action="maximize" title="Maximize"><svg viewBox="0 0 16 16"><rect x="3.5" y="3.5" width="9" height="9" rx="1"/></svg></div>
                     <div class="window-control close" data-action="close" title="Close"><svg viewBox="0 0 16 16"><path d="M4.5 4.5l7 7M11.5 4.5l-7 7"/></svg></div>
                 </div>
             </div>
-            <div class="window-content">
-                <div class="project-group">
-                    <div class="terminal-line">
-                        <span class="prompt"><span class="user">jordan@waterloo</span>:<span class="path">~</span>$</span> <span class="command">ls ~/hardware/</span> <span class="dir-comment"># where I am now</span>
-                    </div>
-                    <div class="projects-grid">
-                        <div class="project-card" data-url="https://github.com/Jordan-Leis/mvm-in-system-verilog">
-                            <div class="project-icon">🔲</div>
-                            <h3 class="project-title">MVM Accelerator</h3>
-                            <p class="project-subtitle">SystemVerilog • Zynq UltraScale+ MPSoC</p>
-                            <p class="project-description">128-lane fixed-point matrix-vector engine running 1024 MACs per cycle at 450 MHz, sustaining ~850 GOPS. Same architecture family Microsoft built BrainWave on. Timing closed entirely through RTL structure — register fanout trees, an address tree with fanout 1 — with no synthesis flags, XDC hacks, or <code>phys_opt_design</code>.</p>
-                            <div class="project-tech">
-                                <span class="tech-tag">SystemVerilog</span>
-                                <span class="tech-tag">Vivado</span>
-                                <span class="tech-tag">DSP48E2</span>
-                                <span class="tech-tag">Timing Closure</span>
-                            </div>
-                        </div>
-
-                        <div class="project-card" data-url="https://github.com/Jordan-Leis/tanh-in-system-verilog">
-                            <div class="project-icon">📈</div>
-                            <h3 class="project-title">tanh Accelerator</h3>
-                            <p class="project-subtitle">SystemVerilog • Fixed-Point Pipeline</p>
-                            <p class="project-description">Pipelined Q2.12 tanh core with a ready/valid streaming interface, driven from 280 MHz to 840 MHz across four rewrites. The last gain came from registering every inter-DSP link, moving the design from routing-bound to logic-bound. Verified against a golden model with randomized stimulus and mid-stream backpressure testing.</p>
-                            <div class="project-tech">
-                                <span class="tech-tag">SystemVerilog</span>
-                                <span class="tech-tag">DSP48E2</span>
-                                <span class="tech-tag">Fixed-Point</span>
-                                <span class="tech-tag">Verification</span>
-                            </div>
-                        </div>
-
-                        <div class="project-card" data-url="https://github.com/Jordan-Leis/wordle-in-system-verilog">
-                            <div class="project-icon">🟩</div>
-                            <h3 class="project-title">Wordle on Kria</h3>
-                            <p class="project-subtitle">SystemVerilog • Hardware/Software Co-Design</p>
-                            <p class="project-description">Wordle running in FPGA fabric on a Xilinx Kria board. Game logic is a 5-state FSM in programmable logic; a baremetal C application on the ARM processing system drives it over seven AXI-GPIO blocks and UART. Vivado block design generated from Tcl, exported to Vitis via XSA handoff.</p>
-                            <div class="project-tech">
-                                <span class="tech-tag">SystemVerilog</span>
-                                <span class="tech-tag">AXI-GPIO</span>
-                                <span class="tech-tag">Vitis</span>
-                                <span class="tech-tag">Baremetal C</span>
-                                <span class="tech-tag">FSM</span>
-                            </div>
-                        </div>
-                    </div>
+            <div class="files-body">
+                <div class="files-sidebar">
+                    <div class="sb-item muted"><img src="/assets/icons/yaru/document-open-recent.png" alt="">Recent</div>
+                    <div class="sb-item muted"><span class="sb-star">★</span>Starred</div>
+                    <div class="sb-item" data-path="/"><img src="/assets/icons/yaru/user-home.png" alt="">Home</div>
+                    <div class="sb-item muted"><img src="/assets/icons/yaru/user-desktop.png" alt="">Desktop</div>
+                    <div class="sb-item muted"><img src="/assets/icons/yaru/folder-documents.png" alt="">Documents</div>
+                    <div class="sb-item muted"><img src="/assets/icons/yaru/folder-download.png" alt="">Downloads</div>
+                    <div class="sb-item" data-path="/Projects"><img src="/assets/icons/yaru/folder.png" alt="">Projects</div>
+                    <div class="sb-item" data-path="/posts"><img src="/assets/icons/yaru/folder-documents.png" alt="">posts</div>
+                    <div class="sb-item" data-path="/Trash"><img src="/assets/icons/yaru/user-trash.png" alt="">Trash</div>
                 </div>
-
-                <div class="project-group">
-                    <div class="terminal-line">
-                        <span class="prompt"><span class="user">jordan@waterloo</span>:<span class="path">~</span>$</span> <span class="command">ls ~/research/</span> <span class="dir-comment"># where I came from</span>
+                <div class="files-main">
+                    <div class="files-grid" id="files-grid"></div>
+                    <div class="files-empty" id="files-empty" hidden>
+                        <img src="/assets/icons/yaru/folder-open.png" alt="">
+                        <div class="files-empty-title">Folder is Empty</div>
+                        <div class="files-empty-sub" id="files-empty-sub"></div>
                     </div>
-                    <div class="projects-grid">
-                        <div class="project-card" data-url="https://cucai.ca/papers/48">
-                            <div class="project-icon">🔋</div>
-                            <h3 class="project-title">Microgrid RL Controller</h3>
-                            <p class="project-subtitle">first author • CUCAI 2026</p>
-                            <p class="project-description">Reinforcement learning controller for off-grid hybrid microgrids in rural sub-Saharan Africa. Most work in the field treats electricity as a commodity to sell back to a grid; this treated it as a scarce resource, optimizing how many people one generator can reach. A 150-run benchmark on five years of NASA POWER climate data found DDPG optimal: <span class="highlight">23% less diesel per year at equal reliability</span>. Led an 11-person team. First-authored, accepted at CUCAI 2026.</p>
-                            <div class="project-tech">
-                                <span class="tech-tag">Reinforcement Learning</span>
-                                <span class="tech-tag">TensorFlow</span>
-                                <span class="tech-tag">Gymnasium</span>
-                                <span class="tech-tag">NASA POWER</span>
-                            </div>
-                        </div>
-
-                        <div class="project-card" data-url="https://github.com/Madhav-Malhotra/political-chatbot">
-                            <div class="project-icon">🏛️</div>
-                            <h3 class="project-title">RAG Agent Architectures</h3>
-                            <p class="project-subtitle">co-author • CUCAI 2025</p>
-                            <p class="project-description">Evaluated retrieval-augmented generation architectures for generalized decision-making across domains. 400+ simulated games measuring strategic consistency, extended to political analysis with human evaluation from 50+ participants. Co-authored; presented at CUCAI 2025 and the Ethical Tech for Global Futures Symposium, where it received Best Undergraduate Research Presentation.</p>
-                            <div class="project-tech">
-                                <span class="tech-tag">RAG</span>
-                                <span class="tech-tag">LLM Evaluation</span>
-                                <span class="tech-tag">Multi-Agent</span>
-                            </div>
-                        </div>
-                    </div>
+                    <div class="files-status" id="files-status"></div>
                 </div>
-
-                <div class="project-group">
-                    <div class="terminal-line">
-                        <span class="prompt"><span class="user">jordan@waterloo</span>:<span class="path">~</span>$</span> <span class="command">ls ~/software/</span> <span class="dir-comment"># things I built because I wanted them to exist</span>
-                    </div>
-                    <div class="project-card compact" data-url="https://github.com/Jordan-Leis/Course-Selector">
-                        <h3 class="project-title">coursify/</h3>
-                        <p class="project-description">Natural language course scheduling for Waterloo Engineering students, built on LLMs.</p>
-                    </div>
-                    <div class="project-card compact" data-url="https://github.com/Jordan-Leis/LaserCal-Embedded-Motion-Control-and-Sensor-Integration">
-                        <h3 class="project-title">lasercal/</h3>
-                        <p class="project-description">Two-axis motion control and sensor processing in Qt/C++, with moving-average filtering and calibration stored in SQLite.</p>
-                    </div>
-                </div>
+                <div class="files-details" id="files-details" hidden></div>
             </div>
+
+            <!-- Post list generated by Jekyll from _posts/; the Files app reads it -->
+            <template id="posts-data">
+{% if site.posts.size > 0 %}{% for post in site.posts %}
+                <a class="post-entry" href="{{ post.url }}" data-date="{{ post.date | date: "%Y-%m-%d" }}" data-tags="{% for tag in post.tags %}{{ tag }} {% endfor %}">{{ post.title }}</a>
+{% endfor %}{% else %}
+                <span class="posts-empty">First post coming.</span>
+{% endif %}
+            </template>
         </div>
 
         <!-- Contact Window -->
@@ -392,35 +344,6 @@ reach more people, I'm interested.
             </div>
         </div>
 
-        <!-- Blog Window (post list generated by Jekyll from _posts/) -->
-        <div class="window posts-window terminal-app" id="posts-window">
-            <div class="window-header">
-                <div class="window-title">jordan@waterloo: ~/posts</div>
-                <div class="window-controls">
-                    <div class="window-control minimize" data-action="minimize" title="Minimize"><svg viewBox="0 0 16 16"><path d="M3.5 11h9"/></svg></div>
-                    <div class="window-control maximize" data-action="maximize" title="Maximize"><svg viewBox="0 0 16 16"><rect x="3.5" y="3.5" width="9" height="9" rx="1"/></svg></div>
-                    <div class="window-control close" data-action="close" title="Close"><svg viewBox="0 0 16 16"><path d="M4.5 4.5l7 7M11.5 4.5l-7 7"/></svg></div>
-                </div>
-            </div>
-            <div class="window-content">
-                <div class="terminal-line">
-                    <span class="prompt"><span class="user">jordan@waterloo</span>:<span class="path">~/posts</span>$</span> <span class="command">ls -lt</span>
-                </div>
-                <div class="terminal-line">
-                    <div class="output">
-{% if site.posts.size > 0 %}{% for post in site.posts %}
-                        <a class="post-entry" href="{{ post.url }}"><span class="highlight">{{ post.date | date: "%Y-%m-%d" }}</span>  {{ post.title }}{% if post.tags.size > 0 %}<span class="post-tags">{% for tag in post.tags %}#{{ tag }} {% endfor %}</span>{% endif %}</a>
-{% endfor %}{% else %}
-                        <span class="dir-comment">ls: ~/posts/: directory is empty. First post coming.</span>
-{% endif %}
-                    </div>
-                </div>
-                <div class="terminal-line">
-                    <span class="prompt"><span class="user">jordan@waterloo</span>:<span class="path">~/posts</span>$</span> <span class="cursor"></span>
-                </div>
-            </div>
-        </div>
-
         <!-- Browser: every external link opens here, in an iframe, with a way out -->
         <div class="window browser-window browser-app" id="browser-window">
             <div class="window-header">
@@ -461,6 +384,7 @@ reach more people, I'm interested.
 
     </div>
 
+    <script src="{{ "/assets/js/projects.js" | relative_url }}"></script>
     <script src="{{ "/assets/js/desktop.js" | relative_url }}"></script>
 </body>
 </html>
