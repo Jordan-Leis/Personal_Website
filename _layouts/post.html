@@ -3,28 +3,28 @@ layout: terminal
 ---
 <style>
     .post-body {
-        color: var(--text-secondary);
-        font-size: 0.95rem;
+        color: var(--term-fg);
+        font-size: 15px;
         line-height: 1.75;
-        margin-left: 2rem;
+        margin-left: 0;
         max-width: 72ch;
     }
 
     .post-body h1,
     .post-body h2,
     .post-body h3 {
-        color: var(--text-primary);
+        color: var(--term-fg);
         font-weight: 600;
         margin: 2rem 0 0.75rem;
         line-height: 1.3;
     }
 
     .post-body h1 { font-size: 1.5rem; }
-    .post-body h2 { font-size: 1.2rem; color: var(--accent-energy); }
-    .post-body h3 { font-size: 1rem; color: var(--accent-cyber); }
+    .post-body h2 { font-size: 1.2rem; color: var(--term-green); }
+    .post-body h3 { font-size: 1rem; color: var(--term-cyan); }
 
-    .post-body h2::before { content: '## '; color: var(--text-muted); }
-    .post-body h3::before { content: '### '; color: var(--text-muted); }
+    .post-body h2::before { content: '## '; color: var(--term-muted); }
+    .post-body h3::before { content: '### '; color: var(--term-muted); }
 
     .post-body p,
     .post-body ul,
@@ -42,39 +42,39 @@ layout: terminal
     }
 
     .post-body a {
-        color: var(--accent-cyber);
+        color: var(--term-cyan);
         text-decoration: none;
-        border-bottom: 1px solid rgba(0, 207, 255, 0.3);
+        border-bottom: 1px solid rgba(52, 226, 226, 0.4);
     }
 
     .post-body a:hover {
-        color: var(--accent-energy);
-        border-bottom-color: var(--accent-energy);
+        color: var(--term-green);
+        border-bottom-color: var(--term-green);
     }
 
     .post-body strong {
-        color: var(--text-primary);
+        color: var(--term-fg);
     }
 
     .post-body blockquote {
-        border-left: 2px solid var(--accent-purple);
+        border-left: 2px solid var(--term-blue);
         padding-left: 1rem;
-        color: var(--text-muted);
+        color: var(--term-muted);
         margin: 1rem 0;
     }
 
     .post-body code {
         font-family: inherit;
         font-size: 0.875em;
-        background: rgba(0, 207, 255, 0.08);
-        color: var(--accent-cyber);
+        background: rgba(255, 255, 255, 0.08);
+        color: var(--term-cyan);
         padding: 0.1em 0.4em;
         border-radius: 3px;
     }
 
     .post-body pre {
-        background: rgba(48, 54, 61, 0.3);
-        border: 1px solid var(--terminal-border);
+        background: rgba(0, 0, 0, 0.25);
+        border: 1px solid rgba(255, 255, 255, 0.15);
         border-radius: 6px;
         padding: 1rem 1.25rem;
         overflow-x: auto;
@@ -85,14 +85,14 @@ layout: terminal
 
     .post-body pre code {
         background: none;
-        color: var(--text-secondary);
+        color: var(--term-fg);
         padding: 0;
         font-size: inherit;
     }
 
     .post-body hr {
         border: 0;
-        border-top: 1px solid var(--terminal-border);
+        border-top: 1px solid rgba(255, 255, 255, 0.15);
         margin: 2rem 0;
     }
 
@@ -111,18 +111,18 @@ layout: terminal
 
     .post-body th,
     .post-body td {
-        border: 1px solid var(--terminal-border);
+        border: 1px solid rgba(255, 255, 255, 0.15);
         padding: 0.4rem 0.8rem;
         text-align: left;
     }
 
     .post-body th {
-        color: var(--accent-energy);
+        color: var(--term-green);
     }
 
     .post-meta {
-        margin-left: 2rem;
-        color: var(--text-muted);
+        margin-left: 0;
+        color: var(--term-muted);
         font-size: 0.85rem;
         margin-bottom: 1.5rem;
     }
@@ -134,13 +134,13 @@ layout: terminal
     @media (max-width: 768px) {
         .post-body,
         .post-meta {
-            margin-left: 0.75rem;
+            margin-left: 0;
         }
     }
 </style>
 
 <div class="terminal-line">
-    <span class="prompt">jordan@waterloo:~$</span> <span class="command">cat ~/posts/{{ page.slug }}.md</span>
+    <span class="prompt"><span class="user">jordan@waterloo</span>:<span class="path">~</span>$</span> <span class="command">cat ~/posts/{{ page.slug }}.md</span>
 </div>
 
 <div class="post-meta">

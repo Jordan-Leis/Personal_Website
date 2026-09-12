@@ -82,6 +82,9 @@ function initializeWindows() {
     });
 
     // Dock clicks: open/raise, or minimize when already focused
+    document.querySelectorAll('.dock-item[data-action]:not([data-window])').forEach(item => {
+        item.addEventListener('click', () => openIconTarget(item));
+    });
     dockItems.forEach(item => {
         item.addEventListener('click', () => {
             const windowId = item.getAttribute('data-window');
@@ -172,12 +175,16 @@ function openWindow(windowId) {
     window.classList.remove('minimized');
     window.classList.add('active');
     bringToFront(window);
+    if (windowId === 'browser-window' && Browser.history.length === 0) {
+        Browser.navigate(BROWSER_HOME);
+    }
 }
 
 function closeWindow(windowId) {
     const window = document.getElementById(windowId);
     window.classList.remove('active', 'focused');
     window.classList.add('minimized');
+    if (windowId === 'browser-window') Browser.reset();
 
     if (activeWindow === windowId) {
         const openWindows = document.querySelectorAll('.window.active');
@@ -312,13 +319,19 @@ function openIconTarget(icon) {
     } else if (action) {
         switch(action) {
             case 'resume':
-                window.open('https://drive.google.com/file/d/1jHbSPjZX3hLAVGLmC30Kj_MwDdtXkR9Z/view?usp=sharing', '_blank');
+                openUrl(LINKS.resume);
                 break;
             case 'github':
-                window.open('https://github.com/Jordan-Leis', '_blank');
+                openUrl(LINKS.github);
                 break;
             case 'linkedin':
-                window.open('https://www.linkedin.com/in/jordan-leis/', '_blank');
+                openUrl(LINKS.linkedin);
+                break;
+            case 'blog':
+                openUrl(BROWSER_HOME);
+                break;
+            case 'browser':
+                openWindow('browser-window');
                 break;
             case 'terminal':
                 openWindow('hero-window');
@@ -389,8 +402,15 @@ function initializeProjectCards() {
         card.addEventListener('click', () => {
             const url = card.getAttribute('data-url');
             if (url && url !== '#') {
-                window.open(url, '_blank');
+                openUrl(url);
             }
+        });
+    });
+
+    document.querySelectorAll('.post-entry').forEach(entry => {
+        entry.addEventListener('click', (e) => {
+            e.preventDefault();
+            openUrl(entry.href);
         });
     });
 }
@@ -404,11 +424,199 @@ function initializeContactCards() {
                 if (url.startsWith('mailto:')) {
                     window.location.href = url;
                 } else {
-                    window.open(url, '_blank');
+                    openUrl(url);
                 }
             }
         });
     });
+}
+
+// Links that leave the desktop
+const LINKS = {
+    resume: 'https://drive.google.com/file/d/1jHbSPjZX3hLAVGLmC30Kj_MwDdtXkR9Z/view?usp=sharing',
+    github: 'https://github.com/Jordan-Leis',
+    linkedin: 'https://www.linkedin.com/in/jordan-leis/'
+};
+const BROWSER_HOME = location.origin + '/blog/';
+
+// Hosts that refuse to be framed (X-Frame-Options / frame-ancestors).
+// These open in a real tab instead of the browser window.
+const NO_EMBED = ['linkedin.com'];
+
+// The in-desktop browser. The address bar always shows the real URL;
+// the iframe loads whatever `resolve` maps it to.
+const Browser = {
+    history: [],
+    index: -1,
+    loadTimer: null,
+
+    els() {
+        return {
+            win: document.getElementById('browser-window'),
+            frame: document.getElementById('browser-frame'),
+            address: document.getElementById('browser-address'),
+            title: document.getElementById('browser-tab-title'),
+            external: document.getElementById('browser-external'),
+            back: document.getElementById('browser-back'),
+            forward: document.getElementById('browser-forward'),
+            reload: document.getElementById('browser-reload'),
+            loading: document.getElementById('browser-loading'),
+            fallback: document.getElementById('browser-fallback'),
+            fallbackLink: document.getElementById('browser-fallback-link')
+        };
+    },
+
+    // github.com can't be framed; github1s.com renders the same repo.
+    // Drive's /view page can't either; its /preview page can.
+    resolve(url) {
+        let u;
+        try { u = new URL(url); } catch (e) { return url; }
+        const host = u.hostname.replace(/^www\./, '');
+        if (host === 'github.com') {
+            const parts = u.pathname.split('/').filter(Boolean);
+            if (parts.length === 1) return 'https://github1s.com/' + parts[0] + '/' + parts[0];
+            return 'https://github1s.com' + u.pathname;
+        }
+        if (host === 'drive.google.com') {
+            const m = u.pathname.match(/^\/file\/d\/([^/]+)/);
+            if (m) return 'https://drive.google.com/file/d/' + m[1] + '/preview';
+        }
+        return url;
+    },
+
+    canEmbed(url) {
+        try {
+            const host = new URL(url).hostname.replace(/^www\./, '');
+            return !NO_EMBED.some(h => host === h || host.endsWith('.' + h));
+        } catch (e) { return false; }
+    },
+
+    display(url) {
+        return url.replace(/^https?:\/\//, '').replace(/^www\./, '');
+    },
+
+    hostname(url) {
+        try { return new URL(url).hostname.replace(/^www\./, ''); } catch (e) { return url; }
+    },
+
+    navigate(url) {
+        this.history = this.history.slice(0, this.index + 1);
+        this.history.push(url);
+        this.index = this.history.length - 1;
+        this.load(url);
+    },
+
+    load(url) {
+        const el = this.els();
+        if (!el.frame) return;
+        el.address.textContent = this.display(url);
+        el.title.textContent = this.hostname(url);
+        el.external.href = url;
+        el.fallbackLink.href = url;
+        el.fallback.classList.remove('on');
+        el.loading.classList.add('on');
+        clearTimeout(this.loadTimer);
+        this.loadTimer = setTimeout(() => this.fail(), 15000);
+        el.frame.src = this.resolve(url);
+        this.updateNav();
+    },
+
+    fail() {
+        const el = this.els();
+        el.loading.classList.remove('on');
+        el.fallback.classList.add('on');
+    },
+
+    // Same-origin pages (the blog) report where they went; the address
+    // bar follows. Cross-origin frames keep whatever was last set.
+    onLoad() {
+        const el = this.els();
+        clearTimeout(this.loadTimer);
+        el.loading.classList.remove('on');
+        let href, title;
+        try {
+            href = el.frame.contentWindow.location.href;
+            title = el.frame.contentDocument && el.frame.contentDocument.title;
+        } catch (e) { return; }
+        if (!href || href === 'about:blank') return;
+        if (href !== this.history[this.index]) {
+            this.history = this.history.slice(0, this.index + 1);
+            this.history.push(href);
+            this.index = this.history.length - 1;
+        }
+        el.address.textContent = this.display(href);
+        el.title.textContent = title || this.hostname(href);
+        el.external.href = href;
+        el.fallbackLink.href = href;
+        this.updateNav();
+    },
+
+    back() {
+        if (this.index <= 0) return;
+        this.index -= 1;
+        this.load(this.history[this.index]);
+    },
+
+    forward() {
+        if (this.index >= this.history.length - 1) return;
+        this.index += 1;
+        this.load(this.history[this.index]);
+    },
+
+    reload() {
+        if (this.index >= 0) this.load(this.history[this.index]);
+    },
+
+    // Closing the window blanks the frame so nothing keeps running
+    reset() {
+        const el = this.els();
+        if (!el.frame) return;
+        clearTimeout(this.loadTimer);
+        this.history = [];
+        this.index = -1;
+        el.frame.removeAttribute('src');
+        el.address.textContent = '';
+        el.title.textContent = 'New Tab';
+        el.loading.classList.remove('on');
+        el.fallback.classList.remove('on');
+        this.updateNav();
+    },
+
+    updateNav() {
+        const el = this.els();
+        el.back.disabled = this.index <= 0;
+        el.forward.disabled = this.index >= this.history.length - 1;
+    },
+
+    init() {
+        const el = this.els();
+        if (!el.frame) return;
+        el.frame.addEventListener('load', () => this.onLoad());
+        el.back.addEventListener('click', () => this.back());
+        el.forward.addEventListener('click', () => this.forward());
+        el.reload.addEventListener('click', () => this.reload());
+    }
+};
+
+// Every link on the desktop goes through here.
+function openUrl(url) {
+    if (url.startsWith('mailto:')) {
+        window.location.href = url;
+        return;
+    }
+    if (!Browser.canEmbed(url)) {
+        window.open(url, '_blank', 'noopener');
+        return;
+    }
+    openWindow('browser-window');
+    Browser.navigate(url);
+}
+
+// index.html?open=/blog/some-post/ opens the browser on a same-origin page
+function deepLinkTarget() {
+    const path = new URLSearchParams(location.search).get('open');
+    if (!path || !path.startsWith('/') || path.startsWith('//')) return null;
+    return location.origin + path;
 }
 
 // Panel clock: "Sep 12  12:50"
@@ -602,6 +810,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initializeProjectCards();
     initializeContactCards();
     initializeAppGrid();
+    Browser.init();
 
     // Start clock
     setInterval(updateClock, 1000);
@@ -612,8 +821,17 @@ document.addEventListener('DOMContentLoaded', () => {
         closeWindow(window.id);
     });
 
-    runBoot().then(runHello);
+    runBoot().then(() => {
+        runHello();
+        const target = deepLinkTarget();
+        if (target) openUrl(target);
+    });
 });
+
+// If the desktop ends up inside its own browser window, break out.
+if (window.self !== window.top) {
+    try { window.top.location.href = window.location.href; } catch (e) {}
+}
 
 // Keyboard shortcuts
 document.addEventListener('keydown', (e) => {

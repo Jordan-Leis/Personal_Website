@@ -47,9 +47,10 @@
     <div class="dock" id="dock">
         <div class="dock-item" data-window="projects-window"><img src="/assets/icons/yaru/filemanager-app.png" alt="Files"><span class="tooltip">Files</span></div>
         <div class="dock-item" data-window="hero-window"><img src="/assets/icons/yaru/terminal-app.png" alt="Terminal"><span class="tooltip">Terminal</span></div>
+        <div class="dock-item" data-window="browser-window" data-action="browser"><img src="/assets/icons/yaru/webbrowser-app.png" alt="Web Browser"><span class="tooltip">Web Browser</span></div>
         <div class="dock-item" data-window="about-window"><img src="/assets/icons/yaru/org.gnome.TextEditor.png" alt="Text Editor"><span class="tooltip">Text Editor</span></div>
         <div class="dock-item" data-window="contact-window"><img src="/assets/icons/yaru/application-json.png" alt="Contact"><span class="tooltip">Contact</span></div>
-        <div class="dock-item" data-window="posts-window"><img src="/assets/icons/yaru/folder-documents.png" alt="Blog"><span class="tooltip">Blog</span></div>
+        <div class="dock-item" data-action="blog"><img src="/assets/icons/yaru/folder-documents.png" alt="Blog"><span class="tooltip">Blog</span></div>
         <div class="dock-spacer"></div>
         <div class="dock-item show-apps" id="show-apps" title="Show Applications">
             <svg viewBox="0 0 26 26"><circle cx="4" cy="4" r="2.6"/><circle cx="13" cy="4" r="2.6"/><circle cx="22" cy="4" r="2.6"/><circle cx="4" cy="13" r="2.6"/><circle cx="13" cy="13" r="2.6"/><circle cx="22" cy="13" r="2.6"/><circle cx="4" cy="22" r="2.6"/><circle cx="13" cy="22" r="2.6"/><circle cx="22" cy="22" r="2.6"/></svg>
@@ -61,8 +62,9 @@
         <div class="app-grid-inner">
             <div class="app-launcher" data-window="projects-window"><img src="/assets/icons/yaru/filemanager-app.png" alt="">Files</div>
             <div class="app-launcher" data-window="hero-window"><img src="/assets/icons/yaru/terminal-app.png" alt="">Terminal</div>
+            <div class="app-launcher" data-action="browser"><img src="/assets/icons/yaru/webbrowser-app.png" alt="">Web Browser</div>
             <div class="app-launcher" data-window="about-window"><img src="/assets/icons/yaru/org.gnome.TextEditor.png" alt="">Text Editor</div>
-            <div class="app-launcher" data-window="posts-window"><img src="/assets/icons/yaru/folder-documents.png" alt="">Blog</div>
+            <div class="app-launcher" data-action="blog"><img src="/assets/icons/yaru/folder-documents.png" alt="">Blog</div>
             <div class="app-launcher" data-window="contact-window"><img src="/assets/icons/yaru/application-json.png" alt="">Contact</div>
             <div class="app-launcher" data-action="resume"><img src="/assets/icons/yaru/application-pdf.png" alt="">Resume</div>
             <div class="app-launcher" data-action="github"><img src="/assets/icons/yaru/webbrowser-app.png" alt="">GitHub</div>
@@ -91,7 +93,7 @@
                 <img class="icon-image" src="/assets/icons/yaru/application-pdf.png" alt="">
                 <div class="icon-label">Resume.pdf</div>
             </div>
-            <div class="desktop-icon" data-window="posts-window" style="top: 416px; left: 16px;">
+            <div class="desktop-icon" data-action="blog" style="top: 416px; left: 16px;">
                 <img class="icon-image" src="/assets/icons/yaru/folder-documents.png" alt="">
                 <div class="icon-label">Blog</div>
             </div>
@@ -415,6 +417,44 @@ reach more people, I'm interested.
                 </div>
                 <div class="terminal-line">
                     <span class="prompt"><span class="user">jordan@waterloo</span>:<span class="path">~/posts</span>$</span> <span class="cursor"></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Browser: every external link opens here, in an iframe, with a way out -->
+        <div class="window browser-window browser-app" id="browser-window">
+            <div class="window-header">
+                <div class="browser-tabs">
+                    <div class="browser-tab">
+                        <span class="tab-favicon" id="browser-tab-favicon"></span>
+                        <span class="tab-title" id="browser-tab-title">New Tab</span>
+                    </div>
+                    <div class="browser-newtab" title="New tab">+</div>
+                </div>
+                <div class="window-controls">
+                    <div class="window-control minimize" data-action="minimize" title="Minimize"><svg viewBox="0 0 16 16"><path d="M3.5 11h9"/></svg></div>
+                    <div class="window-control maximize" data-action="maximize" title="Maximize"><svg viewBox="0 0 16 16"><rect x="3.5" y="3.5" width="9" height="9" rx="1"/></svg></div>
+                    <div class="window-control close" data-action="close" title="Close"><svg viewBox="0 0 16 16"><path d="M4.5 4.5l7 7M11.5 4.5l-7 7"/></svg></div>
+                </div>
+            </div>
+            <div class="browser-toolbar">
+                <button class="nav-btn" id="browser-back" title="Back" disabled><svg viewBox="0 0 16 16"><path d="M10 3 5 8l5 5"/></svg></button>
+                <button class="nav-btn" id="browser-forward" title="Forward" disabled><svg viewBox="0 0 16 16"><path d="m6 3 5 5-5 5"/></svg></button>
+                <button class="nav-btn" id="browser-reload" title="Reload"><svg viewBox="0 0 16 16"><path d="M13 8a5 5 0 1 1-1.5-3.6"/><path d="M13 2v3.5H9.5"/></svg></button>
+                <div class="address-bar">
+                    <svg class="lock" viewBox="0 0 16 16"><rect x="3" y="7" width="10" height="7" rx="1.5"/><path d="M5 7V5a3 3 0 0 1 6 0v2" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
+                    <span class="address" id="browser-address"></span>
+                </div>
+                <a class="open-external" id="browser-external" href="#" target="_blank" rel="noopener">Open in browser ↗</a>
+                <div class="nav-btn menu" title="Open application menu"><svg viewBox="0 0 16 16"><path d="M2.5 4h11M2.5 8h11M2.5 12h11"/></svg></div>
+            </div>
+            <div class="browser-loading" id="browser-loading"></div>
+            <div class="window-content browser-body">
+                <iframe id="browser-frame" title="Page" sandbox="allow-scripts allow-same-origin allow-popups allow-forms allow-downloads allow-popups-to-escape-sandbox" referrerpolicy="no-referrer"></iframe>
+                <div class="browser-fallback" id="browser-fallback">
+                    <h2>Hmm. This page isn't loading here.</h2>
+                    <p>The site may not allow itself to be shown inside another page, or it's taking too long.</p>
+                    <a class="fallback-btn" id="browser-fallback-link" href="#" target="_blank" rel="noopener">Open in your browser ↗</a>
                 </div>
             </div>
         </div>

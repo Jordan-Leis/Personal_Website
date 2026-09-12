@@ -4,27 +4,27 @@
 .highlight .c,
 .highlight .c1,
 .highlight .cm,
-.highlight .cs { color: #8b949e; font-style: italic; }   /* comments */
+.highlight .cs { color: #a89ca2; font-style: italic; }   /* comments */
 
-.highlight .cp { color: #adbcff; }                        /* preprocessor: `define, `include */
+.highlight .cp { color: #fcaf3e; }                        /* preprocessor: `define, `include */
 
 .highlight .k,
 .highlight .kd,
 .highlight .kn,
 .highlight .kp,
-.highlight .kr { color: #00cfff; font-weight: 500; }      /* keywords: module, always_ff, begin */
+.highlight .kr { color: #34e2e2; font-weight: 500; }      /* keywords: module, always_ff, begin */
 
-.highlight .kt { color: #adbcff; }                        /* types: logic, wire, reg */
+.highlight .kt { color: #fcaf3e; }                        /* types: logic, wire, reg */
 
 .highlight .nb,
 .highlight .nf,
-.highlight .nc { color: #7ee081; }                        /* builtins / functions / classes */
+.highlight .nc { color: #8ae234; }                        /* builtins / functions / classes */
 
 .highlight .nv,
 .highlight .vi,
-.highlight .vg { color: #f0f6fc; }                        /* variables */
+.highlight .vg { color: #ffffff; }                        /* variables */
 
-.highlight .n { color: #c9d1d9; }                         /* plain names */
+.highlight .n { color: #f7f7f7; }                         /* plain names */
 
 .highlight .m,
 .highlight .mi,
@@ -32,23 +32,23 @@
 .highlight .mh,
 .highlight .mb,
 .highlight .mo,
-.highlight .il { color: #ffbd2e; }                        /* numbers: 8'hFF, 16'd0 */
+.highlight .il { color: #fce94f; }                        /* numbers: 8'hFF, 16'd0 */
 
 .highlight .s,
 .highlight .s1,
 .highlight .s2,
 .highlight .sb,
 .highlight .sc,
-.highlight .se { color: #7ee081; }                        /* strings */
+.highlight .se { color: #8ae234; }                        /* strings */
 
 .highlight .o,
-.highlight .ow { color: #ff7b72; }                        /* operators: <=, ==, ? */
+.highlight .ow { color: #ef8a8a; }                        /* operators: <=, ==, ? */
 
-.highlight .p { color: #c9d1d9; }                         /* punctuation */
+.highlight .p { color: #f7f7f7; }                         /* punctuation */
 
-.highlight .err { color: #ff7b72; }
+.highlight .err { color: #ef8a8a; }
 
 .highlight .gh,
-.highlight .gu { color: #7ee081; font-weight: 600; }      /* markdown headings */
-.highlight .gd { color: #ff7b72; }                        /* diff removed */
-.highlight .gi { color: #7ee081; }                        /* diff added */
+.highlight .gu { color: #8ae234; font-weight: 600; }      /* markdown headings */
+.highlight .gd { color: #ef8a8a; }                        /* diff removed */
+.highlight .gi { color: #8ae234; }                        /* diff added */
