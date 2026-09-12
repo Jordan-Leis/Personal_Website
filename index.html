@@ -5,8 +5,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Jordan Leis — FPGA / RTL Engineer</title>
-    <meta name="description" content="Electrical Engineering student at the University of Waterloo. Building pipelined accelerators in SystemVerilog after AI research ran into a hardware wall. Cansbridge Fellow.">
+    <title>Jordan Leis — RL to RTL</title>
+    <meta name="description" content="Electrical Engineering student at the University of Waterloo. Research, ML, software, and now RTL — I build at whatever layer the problem is stuck at. Cansbridge Fellow.">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&display=swap');
         
@@ -396,7 +396,7 @@
         /* Specific Window Styles */
         .hero-window {
             width: 800px;
-            height: 600px;
+            height: 640px;
             top: 10%;
             left: 50%;
             transform: translateX(-50%);
@@ -668,6 +668,88 @@
             font-size: 0.85rem;
         }
 
+        /* Boot sequence */
+        .boot-screen {
+            position: fixed;
+            inset: 0;
+            background: #000;
+            z-index: 5000;
+            padding: 2rem;
+            color: var(--accent-energy);
+            font-size: 0.85rem;
+            line-height: 1.7;
+            display: none;
+        }
+
+        .boot-screen::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            background: repeating-linear-gradient(
+                to bottom,
+                rgba(255, 255, 255, 0.06) 0px,
+                rgba(255, 255, 255, 0.06) 1px,
+                transparent 1px,
+                transparent 3px
+            );
+        }
+
+        .boot-screen.on {
+            display: block;
+        }
+
+        .boot-screen.off {
+            opacity: 0;
+            transition: opacity 0.45s ease;
+            pointer-events: none;
+        }
+
+        .boot-log {
+            font-family: inherit;
+            white-space: pre-wrap;
+            text-shadow: 0 0 8px rgba(126, 224, 129, 0.5);
+        }
+
+        .boot-log::after {
+            content: '█';
+            animation: blink 1s steps(1) infinite;
+        }
+
+        .boot-skip {
+            position: absolute;
+            left: 2rem;
+            bottom: 2rem;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
+        }
+
+        /* Hello line (typed on first visit) */
+        .hello-line {
+            color: var(--text-primary);
+            font-size: 1rem;
+            min-height: 1.6em;
+        }
+
+        .cursor {
+            display: inline-block;
+            width: 0.55em;
+            height: 1.1em;
+            margin-left: 2px;
+            vertical-align: text-bottom;
+            background: var(--accent-energy);
+            animation: blink 1s steps(1) infinite;
+        }
+
+        .cursor.done {
+            display: none;
+        }
+
         /* Terminal blocks: tree listings, git log, the ask */
         .output.tree {
             white-space: pre;
@@ -826,6 +908,16 @@
                 font-size: 1rem;
             }
 
+            .boot-screen {
+                padding: 1rem;
+                font-size: 0.72rem;
+            }
+
+            .boot-skip {
+                left: 1rem;
+                bottom: 1rem;
+            }
+
             .desktop-icons {
                 display: flex;
                 flex-wrap: wrap;
@@ -842,6 +934,12 @@
     </style>
 </head>
 <body>
+    <!-- Boot sequence (shown once per session; any key skips) -->
+    <div class="boot-screen" id="boot-screen" aria-hidden="true">
+        <pre class="boot-log" id="boot-log"></pre>
+        <div class="boot-skip">press any key to skip</div>
+    </div>
+
     <!-- Animated Background -->
     <div class="animated-bg"></div>
     <div class="circuit-pattern"></div>
@@ -925,12 +1023,19 @@
  ╚════╝  ╚═════╝ ╚═╝  ╚═╝╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═══╝    ╚══════╝╚══════╝╚═╝╚══════╝</div>
 
                 <div class="terminal-line">
+                    <span class="prompt">jordan@waterloo:~$</span> <span class="command">./hello.sh</span>
+                </div>
+                <div class="terminal-line">
+                    <div class="output hello-line"><span id="hello-text">Hi, I'm Jordan. I like to build.</span><span class="cursor done" id="hello-cursor"></span></div>
+                </div>
+
+                <div class="terminal-line">
                     <span class="prompt">jordan@waterloo:~$</span> <span class="command">whoami</span>
                 </div>
                 <div class="terminal-line">
                     <div class="output">Electrical Engineering @ <span class="highlight">University of Waterloo</span> (3B)<br>
-                    FPGA / RTL — <span class="highlight">SystemVerilog</span>, Vivado, Zynq UltraScale+<br>
-                    Previously: ML research. Now working one layer down.<br>
+                    Research → ML → software → hardware. Currently: <span class="highlight">RTL on Zynq UltraScale+</span>.<br>
+                    I build at whatever layer the problem is stuck at.<br>
                     <span class="highlight">Cansbridge Fellow</span> — 1 of 15 selected nationally</div>
                 </div>
 
@@ -938,9 +1043,8 @@
                     <span class="prompt">jordan@waterloo:~$</span> <span class="command">cat mission.txt</span>
                 </div>
                 <div class="terminal-line">
-                    <div class="output">Making compute <span class="success">cheaper</span> and <span class="success">more available</span>.<br>
-                    Pipelined accelerators in SystemVerilog, timing closed<br>
-                    through architecture instead of tool flags.</div>
+                    <div class="output">Making compute <span class="success">cheaper</span> and <span class="success">more available</span> —<br>
+                    at the model, the software, or the silicon, whichever is the bottleneck.</div>
                 </div>
 
                 <div class="terminal-line">
@@ -990,8 +1094,8 @@
                         </div>
                     </div>
                     <div class="about-text">
-                        <h2>One layer down.</h2>
-                        <p>I'm a <span class="highlight">3B Electrical Engineering student</span> at the University of Waterloo. Right now I build <span class="highlight">pipelined fixed-point accelerators in SystemVerilog</span> on Zynq UltraScale+, closing timing through architecture instead of tool flags.</p>
+                        <h2>I like to build.</h2>
+                        <p>I'm a <span class="highlight">3B Electrical Engineering student</span> at the University of Waterloo. I've built at every layer I've needed to: an RL controller and the paper behind it, RAG pipelines over 300-page regulatory documents, a Qt/C++ motion-control app, PCBs through EMI/EMC compliance, and now <span class="highlight">pipelined fixed-point accelerators in SystemVerilog</span>. Not to collect skills. The problem kept moving.</p>
 
                         <p>I got here from the other direction. I spent two years doing AI research at <span class="highlight">Wat.AI</span>, leading an 11-person team building a reinforcement learning controller for off-grid microgrids in rural sub-Saharan Africa. It worked: <span class="highlight">23% less diesel per year at equal reliability</span>, and a first-authored paper accepted at CUCAI 2026.</p>
 
@@ -999,7 +1103,7 @@
 
                         <p>I called it a pivot. It isn't. I started at the application, hit a wall made of hardware, and went one layer down to work on the wall.</p>
 
-                        <p>Four months into RTL, working through the <span class="highlight">ECE 124 → ECE 222 → ECE 327 Digital Hardware Systems</span> sequence. Before that: RAG pipelines over 300+ page regulatory documents at Health Canada's PMRA, an experiment I designed at the National Research Council with roughly $100,000 of lab equipment specced for it, PCB design and EMI/EMC compliance at Harding Technologies, and TAing ECE 150 for 400+ first-years.</p>
+                        <p>Right now the bottleneck is hardware, so that's where I am: working through the <span class="highlight">ECE 124 → ECE 222 → ECE 327 Digital Hardware Systems</span> sequence, closing timing through architecture instead of tool flags. If the bottleneck moves again, I'll move with it. Before this: ML Engineer (Research) at Health Canada's PMRA; an experiment I designed at the National Research Council with roughly $100,000 of lab equipment specced for it; TAing ECE 150 for 400+ first-years.</p>
 
                         <p><span class="highlight">Cansbridge Fellow</span>, 1 of 15 selected nationally — Asia internship Winter 2027. <span class="highlight">VP Services</span>, Waterloo Engineering Society.</p>
                     </div>
@@ -1148,6 +1252,10 @@ Also happy to hear from anyone who's been through a full tapeout —
 I want to understand how IP licensing and mask costs change the
 decisions I make in RTL.
 
+Hardware is first on the list, not the whole list. ML systems, or the
+software between the model and the silicon — if the work makes compute
+reach more people, I'm interested.
+
 → <a href="mailto:jordan.jay.leis@gmail.com">jordan.jay.leis@gmail.com</a></pre>
                 </div>
                 <div class="terminal-line">
@@ -1221,7 +1329,7 @@ decisions I make in RTL.
             <div class="taskbar-item" data-window="posts-window">Blog</div>
         </div>
         <div class="taskbar-status" style="margin-left: auto; color: var(--text-muted); font-size: 0.8rem;">
-            FPGA / RTL co-op · 2027
+            RL to RTL · co-op 2027
         </div>
     </div>
 
@@ -1665,6 +1773,126 @@ decisions I make in RTL.
             });
         }
 
+        // Boot sequence + hello line
+        // Edit these arrays to change what plays on first visit.
+        const BOOT_LINES = [
+            ['JORDAN-OS v3B  —  University of Waterloo build', 350],
+            ['POST ..................................... OK', 300],
+            ['Detecting hardware ........... Zynq UltraScale+ (fabric online)', 400],
+            ['Loading modules ..... research.ko  ml.ko  software.ko  hardware.ko', 450],
+            ['Mounting ~/hardware ~/research ~/software ~/posts ....... OK', 300],
+            ['Checking timing .................... closed, no phys_opt_design', 350],
+            ['Starting desktop ...', 400]
+        ];
+        const HELLO_PREFIX = "Hi, I'm Jordan. ";
+        const HELLO_ROLES = [
+            "I'm a research engineer.",
+            "I'm a hardware engineer.",
+            "I'm a software engineer.",
+            "I'm an ML engineer."
+        ];
+        const HELLO_FINAL = "I like to build.";
+        const TYPE_MS = 35, DELETE_MS = 15, HOLD_MS = 650;
+
+        const reducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+        function sessionFlag(key, value) {
+            try {
+                if (value === undefined) return sessionStorage.getItem(key);
+                sessionStorage.setItem(key, value);
+            } catch (e) { return null; }
+        }
+
+        // Resolves when the user presses a key or taps, or when the timer ends.
+        function waitOrSkip(ms, onSkip) {
+            return new Promise(resolve => {
+                let done = false;
+                const finish = (skipped) => {
+                    if (done) return;
+                    done = true;
+                    clearTimeout(timer);
+                    document.removeEventListener('keydown', skip);
+                    document.removeEventListener('pointerdown', skip);
+                    if (skipped && onSkip) onSkip();
+                    resolve(skipped);
+                };
+                const skip = () => finish(true);
+                const timer = setTimeout(() => finish(false), ms);
+                document.addEventListener('keydown', skip);
+                document.addEventListener('pointerdown', skip);
+            });
+        }
+
+        function runBoot() {
+            const screen = document.getElementById('boot-screen');
+            const log = document.getElementById('boot-log');
+            if (!screen || !log || reducedMotion || sessionFlag('booted')) {
+                if (screen) screen.remove();
+                return Promise.resolve();
+            }
+
+            screen.classList.add('on');
+            let skipped = false;
+
+            const showLines = async () => {
+                for (const [text, delay] of BOOT_LINES) {
+                    if (skipped) break;
+                    log.textContent += text + '\n';
+                    skipped = await waitOrSkip(delay);
+                }
+            };
+
+            return showLines().then(() => {
+                sessionFlag('booted', '1');
+                screen.classList.add('off');
+                return new Promise(resolve => setTimeout(resolve, 450));
+            }).then(() => screen.remove());
+        }
+
+        function runHello() {
+            const text = document.getElementById('hello-text');
+            const cursor = document.getElementById('hello-cursor');
+            if (!text || !cursor || reducedMotion || sessionFlag('hello')) return;
+
+            let cancelled = false;
+            const finish = () => {
+                cancelled = true;
+                text.textContent = HELLO_PREFIX + HELLO_FINAL;
+                cursor.classList.add('done');
+                sessionFlag('hello', '1');
+                document.removeEventListener('keydown', finish);
+                document.removeEventListener('pointerdown', finish);
+            };
+            document.addEventListener('keydown', finish);
+            document.addEventListener('pointerdown', finish);
+
+            const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+            const typeTo = async (target) => {
+                while (!cancelled && text.textContent.length > 0 && !target.startsWith(text.textContent)) {
+                    text.textContent = text.textContent.slice(0, -1);
+                    await sleep(DELETE_MS);
+                }
+                while (!cancelled && text.textContent.length < target.length) {
+                    text.textContent = target.slice(0, text.textContent.length + 1);
+                    await sleep(TYPE_MS);
+                }
+            };
+
+            (async () => {
+                text.textContent = '';
+                cursor.classList.remove('done');
+                for (const role of HELLO_ROLES) {
+                    await typeTo(HELLO_PREFIX + role);
+                    if (cancelled) return;
+                    await sleep(HOLD_MS);
+                }
+                await typeTo(HELLO_PREFIX + HELLO_FINAL);
+                if (cancelled) return;
+                await sleep(2000);
+                finish();
+            })();
+        }
+
         // Initialize everything
         document.addEventListener('DOMContentLoaded', () => {
             initializeWindows();
@@ -1681,6 +1909,8 @@ decisions I make in RTL.
             document.querySelectorAll('.window:not(.hero-window)').forEach(window => {
                 closeWindow(window.id);
             });
+
+            runBoot().then(runHello);
         });
 
         // Keyboard shortcuts
