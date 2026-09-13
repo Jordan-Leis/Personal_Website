@@ -28,7 +28,7 @@ gh run download <run-id> -n site-empty -D /tmp/jordanleis-preview/site-empty
 python3 -m http.server 8765 --bind 127.0.0.1 --directory /tmp/jordanleis-preview/site-seeded
 ```
 
-Serve `site-empty` on port 8766 in a second terminal to check the empty post list. Stop each server with Ctrl+C. Use artifacts from the commit under review so that the desktop and blog layouts come from the same build. The check workflow verifies branches; production continues to build from `main`.
+Serve `site-empty` on port 8766 in a second terminal to check the empty post list. Stop each server with Ctrl+C. Use artifacts from the commit under review so that the desktop and blog layouts come from the same build. The check workflow verifies branches; production publishes from `main` through the `pages.yml` workflow described below.
 
 ## How it is put together
 
@@ -52,7 +52,7 @@ The desktop uses vanilla HTML, CSS, and JavaScript. There is no application buil
 | `assets/css/syntax.css` | Blog code highlighting. |
 | `assets/icons/yaru/` | Bundled desktop icons; attribution below. |
 
-Edit `PROJECTS` to update a project. Entries retain their array order within each folder; `PROJECT_FOLDERS` controls folder order. `slug` and optional `note` provide the terminal tree text. Keep links null when unavailable: Linxicon currently displays “Repository not public yet.” without an outgoing link.
+Edit `PROJECTS` to update a project. Entries retain their array order within each folder; `PROJECT_FOLDERS` controls folder order. `slug` and optional `note` provide the terminal tree text. Keep links null when unavailable: an entry with no `paper`, `repo`, or `site` displays “Repository not public yet.” without an outgoing link. A same-origin `site` such as `/linxicon-solver/` opens inside the desktop browser.
 
 Files opens at Projects, with hardware, papers, and software folders. Select an item for details; double-click or press Enter for its primary action. On touch screens, select an item and use its Open action. Home provides Desktop, Documents, Downloads, Photos, Projects, posts, and Trash. Documents uses the existing portfolio text and Resume link. Desktop mirrors active shortcuts; deleting a shortcut leaves its application available in the app grid.
 
@@ -88,6 +88,59 @@ JEKYLL_ENV=production jekyll build --destination /tmp/jordanleis-preview/product
 ```
 
 Repeat from a second temporary copy with `_posts/` removed to check the empty-post cases. Serve each generated directory with a local HTTP server as in the artifact workflow above. Keep Playwright tooling, screenshots, downloaded toolchains, and test fixtures outside the repository. Build copies must exclude staging originals so missing public media paths cannot be masked by the source directory.
+
+## Linxicon Semantic Atlas
+
+`/linxicon-solver/` is a standalone static atlas, with `/linixcon-solver/`
+redirecting to it. The page has its own CSS and self-hosted fonts in
+`assets/atlas/`; it does not depend on the desktop redesign branch.
+
+Run a local preview and checks:
+
+```sh
+python3 -m http.server 18764 --bind 127.0.0.1
+npm ci
+npm test
+npx playwright install chromium
+npm run test:browser
+python3 scripts/check_atlas.py
+```
+
+Playwright starts its own preview on port 18764; stop a manual preview before
+running it. Browser fixtures use the checked-in game #944 snapshot. The checks
+cover hidden answers, reveal, replay state, scrubbing, alternatives, board score
+sources, keyboard navigation, mobile overflow, reduced motion, stale/error
+states, and throttled playback. All bundled initial assets and data are checked
+against a 1 MB gzip budget (approximately 406 KB at launch).
+
+### Production publishing
+
+GitHub Pages uses **GitHub Actions** as its publishing source. The `pages.yml`
+workflow builds the same Jekyll website on `main` pushes and checks the daily
+puzzle every hour at minute 17. It checks out a pinned public solver revision,
+restores datasets/caches, and prepares a validated replay before publication.
+The original seeded/empty-post preview checks remain in `jekyll-check.yml`.
+
+The workflow retrieves the previous published manifest and validates its hash
+before replacing the checked-in bootstrap snapshot. An unchanged puzzle and
+exporter revision do not regenerate or redeploy on scheduled runs. Temporary
+server verification failures are retried at most three times per puzzle and
+revision; definitive rejections are shown without automatic retries. Generator
+failures retain the complete previous replay and its date. The browser never
+calls the game's server.
+
+Manual workflow dispatch accepts `force` for a fresh solve, or
+`rollback_run_id` to restore a complete `site-release-<run-id>` artifact from a
+previous successful run. Complete website artifacts are retained for 30 days.
+The Actions run summary reports generated, unchanged, stale, or retry-limit
+outcomes. Inspect failures there; update the pinned solver revision only after
+its exporter/tests pass. Schedules can be delayed, so the UI displays the
+recorded puzzle date and flags snapshots older than 26 hours.
+
+The initial snapshot was generated from game #944 (2026-09-13):
+`bridge → track → running`, server scores 0.6 and 1.0, with a verified server
+board replay. Exported metadata records actual timings and solver revision.
+Dataset, font, and D3 notices are bundled under `assets/atlas/`.
 
 ## Browser destinations
 

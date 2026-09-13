@@ -82,10 +82,19 @@ const PROJECTS = [
     {
         id: 'linxicon', folder: 'software', slug: 'linxicon_solver',
         name: 'Linxicon Optimal Solver', subtitle: 'Python • graph search',
-        // https://github.com/Jordan-Leis/linxicon-optimal-solver is 404 as of 2026-09-12; set when public
-        repo: null,
+        repo: 'https://github.com/Jordan-Leis/linxicon-optimal-solver',
         tags: ['Python', 'NumPy', 'ConceptNet', 'wordfreq', 'pytest'],
         description: 'Solver for Linxicon, the daily word-chain game. The rules were reverse-engineered from the game\'s client bundles rather than guessed: ConceptNet Numberbatch cosine similarity (800/813 sampled pairs match exactly, with a second lexical measure still being pinned down), a 0.3995 link threshold, top-5 link pruning, and a 50-word board cap. Builds the threshold graph, runs bidirectional BFS for all shortest chains ranked by average link score, and verifies each chain against a faithful port of the board simulator before you type it in. Fully offline after the first run.'
+    },
+
+    {
+        id: 'linxicon-atlas', folder: 'software', slug: 'linxicon_atlas',
+        name: 'Linxicon Semantic Atlas', subtitle: 'vanilla JS • SVG • D3',
+        site: '/linxicon-solver/',
+        repo: 'https://github.com/Jordan-Leis/linxicon-optimal-solver',
+        tags: ['JavaScript', 'SVG', 'D3', 'GitHub Actions'],
+        note: 'daily replay of the solver, at /linxicon-solver/',
+        description: 'An interactive atlas of today\'s word puzzle. Replay breadth-first search, explore vector neighborhoods, and inspect server-verified routes through meaning.'
     },
 
     // papers/

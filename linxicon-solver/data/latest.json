@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "file": "daily-944-704bfbf125e037bf.json",
+  "sha256": "704bfbf125e037bfd4ce112a88169f7e95bd9355e7f2c2fd879e3c9adbb35ae1",
+  "game": {
+    "id": 944,
+    "tl": "bridge",
+    "br": "running",
+    "similarity": 0.0613,
+    "date": "2026-09-13"
+  },
+  "solver_revision": "38ed5337114869657ac8f874b95b6eb011edca8f",
+  "generated_at": "2026-09-13T00:23:39.687658+00:00",
+  "verification_status": "complete",
+  "attempts": 1
+}

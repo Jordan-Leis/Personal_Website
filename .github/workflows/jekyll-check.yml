@@ -1,6 +1,6 @@
 # Builds the site with GitHub's own Pages builder so a branch can be
 # verified before merging. Does not deploy — production still uses the
-# legacy Pages build from main.
+# production Pages workflow from main.
 name: jekyll-check
 
 on:
@@ -30,6 +30,7 @@ jobs:
       - name: Sanity checks
         run: |
           set -e
+          python3 scripts/check_atlas.py _site
           test -f _site/index.html
           test -f _site/CNAME
           test -f _site/cracked-profiles/privacy/index.html
@@ -48,3 +49,22 @@ jobs:
         with:
           name: site-${{ matrix.posts }}
           path: _site
+
+  browser:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - run: npm test
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:browser
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: atlas-browser-results
+          path: test-results
+          if-no-files-found: ignore

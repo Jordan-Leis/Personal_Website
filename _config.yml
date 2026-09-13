@@ -20,3 +20,12 @@ defaults:
 exclude:
   - README.md
   - .github
+  - node_modules
+  - package.json
+  - package-lock.json
+  - playwright.config.js
+  - tests
+  - scripts
+  - test-results
+  - playwright-report
+  - solver

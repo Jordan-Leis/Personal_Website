@@ -517,7 +517,9 @@ function openUrl(url) {
         window.location.href = url;
         return;
     }
-    try { if (!['http:', 'https:'].includes(new URL(url, location.origin).protocol)) return; } catch { return; }
+    // Relative site paths (e.g. a project's `site: '/linxicon-solver/'`) resolve against this origin.
+    try { url = new URL(url, location.origin).href; } catch { return; }
+    if (!['http:', 'https:'].includes(new URL(url).protocol)) return;
     if (!Browser.canEmbed(url)) {
         window.open(url, '_blank', 'noopener');
         return;

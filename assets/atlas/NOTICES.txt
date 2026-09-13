@@ -1,0 +1,26 @@
+SEMANTIC ATLAS — DATA AND BUNDLED ASSET NOTICES
+
+Derived atlas data: CC BY-SA 4.0
+https://creativecommons.org/licenses/by-sa/4.0/
+This data contains semantic vectors from ConceptNet Numberbatch, by Luminoso
+Technologies, Inc. You may redistribute or modify the data under the terms
+of the CC-By-SA 4.0 license. The atlas transforms selected vectors into PCA
+coordinates, cosine neighbor lists, and derived graph information.
+Source: https://github.com/commonsense/conceptnet-numberbatch
+Citation: Robyn Speer, Joshua Chin, Catherine Havasi (2017), ConceptNet 5.5:
+An Open Multilingual Graph of General Knowledge, AAAI 2017.
+
+WordNet 3.0 copyright 2006 Princeton University.
+The full notice and disclaimer are in WordNet-LICENSE.txt.
+
+Newsreader by Production Type. SIL Open Font License 1.1.
+See fonts/Newsreader-LICENSE.txt.
+IBM Plex Sans and IBM Plex Mono by IBM. SIL Open Font License 1.1.
+See fonts/IBMPlexSans-LICENSE.txt and fonts/IBMPlexMono-LICENSE.txt.
+Fonts are self-hosted Latin WOFF2 subsets distributed through Google Fonts.
+
+D3 7.9.0, copyright Mike Bostock. ISC license.
+See vendor/d3-LICENSE.txt. Bundled without modifications.
+
+Linxicon is a game by Trainwreck Labs. This independent solver and atlas
+are not affiliated with Linxicon or Trainwreck Labs.
