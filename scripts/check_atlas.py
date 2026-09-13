@@ -9,7 +9,8 @@ root=Path(sys.argv[1] if len(sys.argv)>1 else '.')
 page=root/'linxicon-solver/index.html'
 assert page.is_file(), 'Atlas route missing'
 assert (root/'linixcon-solver/index.html').is_file(), 'Redirect route missing'
-assert '/linxicon-solver/' in (root/'index.html').read_text(), 'Homepage link missing'
+# The desktop homepage lists projects from assets/js/projects.js.
+assert '/linxicon-solver/' in (root/'assets/js/projects.js').read_text(), 'Homepage link missing'
 manifest=json.loads((root/'linxicon-solver/data/latest.json').read_text())
 assert manifest['schema_version']==1
 name=manifest['file'];assert Path(name).name==name
