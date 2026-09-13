@@ -6,8 +6,13 @@
     <title>{% if page.title %}{{ page.title }} — {% endif %}Jordan Leis</title>
     <meta name="description" content="{% if page.excerpt %}{{ page.excerpt | strip_html | strip_newlines | truncate: 160 }}{% else %}{{ site.description }}{% endif %}">
     <link rel="stylesheet" href="{{ '/assets/css/syntax.css' | relative_url }}">
+    <script>
+        // Inside the desktop's browser window the page fills the frame;
+        // on its own it sits in a terminal window on the wallpaper.
+        if (window.self !== window.top) document.documentElement.classList.add('framed');
+    </script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;500;700&family=Ubuntu+Mono:wght@400;700&display=swap');
 
         * {
             margin: 0;
@@ -16,205 +21,225 @@
         }
 
         :root {
-            --bg-primary: #0a0a0f;
-            --bg-secondary: #161627;
-            --bg-tertiary: #1a1a2e;
-            --terminal-bg: #0d1117;
-            --terminal-border: #30363d;
-            --text-primary: #f0f6fc;
-            --text-secondary: #c9d1d9;
-            --text-muted: #8b949e;
-            --accent-energy: #7ee081;
-            --accent-cyber: #00cfff;
-            --accent-purple: #adbcff;
-            --accent-danger: #ff7b72;
-            --accent-warning: #ffbd2e;
+            --orange: #e95420;
+            --win-header: #2b2b2b;
+            --win-border: rgba(255, 255, 255, 0.08);
+            --fg: #f7f7f7;
+            --fg-muted: #9a9996;
+            --term-bg: #300a24;
+            --term-fg: #ffffff;
+            --term-green: #8ae234;
+            --term-blue: #729fcf;
+            --term-cyan: #34e2e2;
+            --term-yellow: #fce94f;
+            --term-muted: #b7aeb3;
+            --font-ui: 'Ubuntu', 'Noto Sans', 'DejaVu Sans', system-ui, sans-serif;
+            --font-mono: 'Ubuntu Mono', 'DejaVu Sans Mono', 'Liberation Mono', monospace;
         }
 
         body {
-            font-family: 'JetBrains Mono', monospace;
-            background: var(--bg-primary);
-            color: var(--text-primary);
-            line-height: 1.6;
+            font-family: var(--font-mono);
+            font-size: 15px;
+            background:
+                radial-gradient(ellipse 60% 55% at 85% 95%, rgba(233, 84, 32, 0.45), transparent 70%),
+                linear-gradient(135deg, #2c001e 0%, #5e2750 55%, #772953 100%);
+            background-attachment: fixed;
+            color: var(--term-fg);
+            line-height: 1.45;
             min-height: 100vh;
             padding: 3rem 1rem 4rem;
-        }
-
-        .animated-bg {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: -1;
-            background: linear-gradient(45deg, var(--bg-primary) 0%, #0f0f1a 25%, var(--bg-secondary) 50%, #1a1a2e 75%, var(--bg-primary) 100%);
-            background-size: 400% 400%;
-            animation: gradientShift 15s ease infinite;
-        }
-
-        @keyframes gradientShift {
-            0%, 100% { background-position: 0% 50%; }
-            25% { background-position: 100% 50%; }
-            50% { background-position: 100% 100%; }
-            75% { background-position: 0% 100%; }
         }
 
         .window {
             width: min(900px, 100%);
             margin: 0 auto;
-            background: var(--terminal-bg);
-            border: 1px solid var(--terminal-border);
-            border-radius: 8px;
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
+            background: var(--term-bg);
+            border: 1px solid var(--win-border);
+            border-radius: 8px 8px 0 0;
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6);
+            overflow: hidden;
         }
 
         .window-header {
-            background: var(--bg-secondary);
-            padding: 0.75rem 1rem;
-            border-bottom: 1px solid var(--terminal-border);
+            height: 46px;
+            background: var(--win-header);
             display: flex;
             align-items: center;
-            gap: 1rem;
+            padding: 0 8px 0 14px;
+            position: relative;
+            font-family: var(--font-ui);
+        }
+
+        .window-title {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #fff;
+            font-size: 13px;
+            font-weight: 700;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: calc(100% - 140px);
         }
 
         .window-controls {
+            margin-left: auto;
             display: flex;
-            gap: 0.3rem;
+            gap: 6px;
         }
 
         .window-control {
-            width: 12px;
-            height: 12px;
+            width: 24px;
+            height: 24px;
             border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
-        .window-control.close { background: #ff5f56; }
-        .window-control.minimize { background: #ffbd2e; }
-        .window-control.maximize { background: #27ca3f; }
+        .window-control svg {
+            width: 14px;
+            height: 14px;
+            fill: none;
+            stroke: var(--fg);
+            stroke-width: 1.5;
+        }
 
-        .window-title {
-            color: var(--text-muted);
-            font-size: 0.9rem;
-            flex: 1;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
+        .window-control.close {
+            background: var(--orange);
+        }
+
+        .window-control.close svg {
+            stroke: #fff;
+            stroke-width: 1.8;
         }
 
         .window-content {
-            padding: 2rem;
+            padding: 12px 16px 20px;
         }
 
         .terminal-line {
-            margin-bottom: 1rem;
-            font-size: 0.9rem;
+            margin-bottom: 0.7em;
         }
 
         .prompt {
-            color: var(--accent-purple);
-            font-weight: 600;
+            color: var(--term-fg);
+            font-weight: 700;
         }
 
+        .prompt .user { color: var(--term-green); }
+        .prompt .path { color: var(--term-blue); }
+
         .command {
-            color: var(--accent-cyber);
-            font-weight: 500;
+            color: var(--term-fg);
         }
 
         .output {
-            color: var(--text-secondary);
-            margin-left: 2rem;
-            line-height: 1.6;
+            color: var(--term-fg);
         }
 
         /* span-scoped so it doesn't hit Rouge's <div class="highlight"> code blocks */
         span.highlight {
-            color: var(--accent-cyber);
-            font-weight: 600;
+            color: var(--term-cyan);
+            font-weight: 700;
         }
 
         .dir-comment {
-            color: var(--text-muted);
+            color: var(--term-muted);
         }
 
         .terminal-line a,
         .output a {
-            color: var(--accent-cyber);
-            text-decoration: none;
-            border-bottom: 1px solid rgba(0, 207, 255, 0.3);
+            color: var(--term-cyan);
+            text-decoration: underline;
         }
 
         .terminal-line a:hover,
         .output a:hover {
-            color: var(--accent-energy);
-            border-bottom-color: var(--accent-energy);
+            color: var(--term-green);
         }
 
         .post-entry {
             display: block;
-            color: var(--text-secondary);
+            color: var(--term-fg);
             text-decoration: none;
-            border-bottom: none;
-            padding: 0.35rem 0;
-            font-size: 0.9rem;
-            transition: color 0.2s ease;
+            padding: 0.1em 0;
         }
 
         .post-entry:hover,
         .post-entry:hover span.highlight {
-            color: var(--accent-energy);
-            border-bottom: none;
+            color: var(--term-green);
         }
 
         .post-tags {
-            color: var(--text-muted);
-            font-size: 0.8rem;
-            margin-left: 0.5rem;
+            color: var(--term-muted);
+            margin-left: 0.5em;
         }
 
         .nav-line {
             margin-top: 2rem;
             padding-top: 1rem;
-            border-top: 1px solid var(--terminal-border);
+            border-top: 1px solid rgba(255, 255, 255, 0.12);
         }
 
-        .nav-line .command {
+        .nav-line a.command {
             margin-right: 1.5rem;
+            text-decoration: none;
+        }
+
+        .nav-line a.command:hover {
+            text-decoration: underline;
+        }
+
+        /* Framed inside the desktop browser: no chrome, fill the frame */
+        .framed body {
+            background: var(--term-bg);
+            padding: 0;
+        }
+
+        .framed .window {
+            width: 100%;
+            border: 0;
+            border-radius: 0;
+            box-shadow: none;
+        }
+
+        .framed .window-header,
+        .framed .standalone-only {
+            display: none;
         }
 
         @media (max-width: 768px) {
             body {
-                padding: 1rem 1rem 3rem;
+                padding: 1rem 0.5rem 3rem;
+                font-size: 14px;
             }
 
             .window-content {
-                padding: 1rem;
-            }
-
-            .output {
-                margin-left: 0.75rem;
+                padding: 10px 12px 16px;
             }
         }
     </style>
 </head>
 <body>
-    <div class="animated-bg"></div>
-
     <div class="window">
         <div class="window-header">
-            <div class="window-controls">
-                <div class="window-control close"></div>
-                <div class="window-control minimize"></div>
-                <div class="window-control maximize"></div>
-            </div>
             <div class="window-title">{{ page.window_title | default: page.title }}</div>
+            <div class="window-controls">
+                <div class="window-control minimize"><svg viewBox="0 0 16 16"><path d="M3.5 11h9"/></svg></div>
+                <div class="window-control maximize"><svg viewBox="0 0 16 16"><rect x="3.5" y="3.5" width="9" height="9" rx="1"/></svg></div>
+                <div class="window-control close"><svg viewBox="0 0 16 16"><path d="M4.5 4.5l7 7M11.5 4.5l-7 7"/></svg></div>
+            </div>
         </div>
         <div class="window-content">
             {{ content }}
 
             <div class="terminal-line nav-line">
-                <span class="prompt">jordan@waterloo:~$</span>
-                <a class="command" href="{{ '/' | relative_url }}">cd ~</a>
+                <span class="prompt"><span class="user">jordan@waterloo</span>:<span class="path">~</span>$</span>
                 <a class="command" href="{{ '/blog/' | relative_url }}">ls ~/posts/</a>
+                <a class="command standalone-only" href="{{ '/' | relative_url }}">cd ~</a>
+                <a class="command standalone-only" href="{{ '/' | relative_url }}?open={{ page.url }}" target="_top">open on desktop</a>
             </div>
         </div>
     </div>

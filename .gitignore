@@ -1,4 +1,7 @@
+/media-before-commit/
+/_site/
+/.jekyll-cache/
+/.sass-cache/
 node_modules/
 playwright-report/
 test-results/
-_site/

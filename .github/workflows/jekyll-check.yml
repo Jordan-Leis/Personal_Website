@@ -41,7 +41,7 @@ jobs:
             grep -q 'class="post-entry"' _site/index.html
             grep -q 'class="highlight"' _site/blog/hello-world/index.html
           else
-            grep -q 'directory is empty' _site/index.html
+            grep -q 'posts-empty' _site/index.html
             ! grep -q 'class="post-entry"' _site/index.html
           fi
 
@@ -50,7 +50,10 @@ jobs:
           name: site-${{ matrix.posts }}
           path: _site
 
+  # Browser checks run against the seeded build: the desktop's index.html
+  # contains Liquid and needs Jekyll, and the atlas is static in the same tree.
   browser:
+    needs: build
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -58,6 +61,10 @@ jobs:
         with:
           node-version: '22'
           cache: npm
+      - uses: actions/download-artifact@v4
+        with:
+          name: site-seeded
+          path: _site
       - run: npm ci --ignore-scripts
       - run: npm test
       - run: npx playwright install --with-deps chromium
@@ -65,6 +72,6 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: atlas-browser-results
+          name: browser-results
           path: test-results
           if-no-files-found: ignore

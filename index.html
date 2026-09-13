@@ -5,1015 +5,140 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Jordan Leis — RL to RTL</title>
+    <title>Jordan Leis</title>
     <meta name="description" content="Electrical Engineering student at the University of Waterloo. Research, ML, software, and now RTL — I build at whatever layer the problem is stuck at. Cansbridge Fellow.">
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&display=swap');
-        
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        :root {
-            --bg-primary: #0a0a0f;
-            --bg-secondary: #161627;
-            --bg-tertiary: #1a1a2e;
-            --terminal-bg: #0d1117;
-            --terminal-border: #30363d;
-            --text-primary: #f0f6fc;
-            --text-secondary: #c9d1d9;
-            --text-muted: #8b949e;
-            --accent-energy: #7ee081;
-            --accent-cyber: #00cfff;
-            --accent-purple: #adbcff;
-            --accent-danger: #ff7b72;
-            --accent-warning: #ffbd2e;
-        }
-        
-        body {
-            font-family: 'JetBrains Mono', monospace;
-            background: var(--bg-primary);
-            color: var(--text-primary);
-            overflow: hidden;
-            line-height: 1.6;
-            height: 100vh;
-        }
-
-        /* Animated Background */
-        .animated-bg {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: -2;
-            background: linear-gradient(
-                45deg,
-                var(--bg-primary) 0%,
-                #0f0f1a 25%,
-                var(--bg-secondary) 50%,
-                #1a1a2e 75%,
-                var(--bg-primary) 100%
-            );
-            background-size: 400% 400%;
-            animation: gradientShift 15s ease infinite;
-        }
-        
-        @keyframes gradientShift {
-            0%, 100% { background-position: 0% 50%; }
-            25% { background-position: 100% 50%; }
-            50% { background-position: 100% 100%; }
-            75% { background-position: 0% 100%; }
-        }
-
-        /* Circuit Pattern */
-        .circuit-pattern {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: -1;
-            opacity: 0.05;
-            background-image: 
-                radial-gradient(circle at 25% 25%, var(--accent-energy) 2px, transparent 2px),
-                radial-gradient(circle at 75% 75%, var(--accent-cyber) 2px, transparent 2px),
-                linear-gradient(var(--accent-purple) 1px, transparent 1px),
-                linear-gradient(90deg, var(--accent-energy) 1px, transparent 1px);
-            background-size: 100px 100px, 100px 100px, 50px 50px, 50px 50px;
-            animation: circuitFlow 20s linear infinite;
-        }
-        
-        @keyframes circuitFlow {
-            0% { transform: translate(0, 0); }
-            100% { transform: translate(50px, 50px); }
-        }
-
-        /* Floating Shapes */
-        .floating-shapes {
-            position: fixed;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            z-index: -1;
-        }
-        
-        .shape {
-            position: absolute;
-            opacity: 0.1;
-            animation: float 8s ease-in-out infinite;
-        }
-        
-        .shape:nth-child(1) {
-            top: 10%;
-            left: 10%;
-            width: 60px;
-            height: 60px;
-            background: linear-gradient(45deg, var(--accent-energy), transparent);
-            clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
-            animation-delay: 0s;
-        }
-        
-        .shape:nth-child(2) {
-            top: 70%;
-            right: 10%;
-            width: 80px;
-            height: 80px;
-            border: 2px solid var(--accent-cyber);
-            border-radius: 50%;
-            animation-delay: 2s;
-        }
-        
-        .shape:nth-child(3) {
-            top: 40%;
-            left: 80%;
-            width: 50px;
-            height: 50px;
-            background: var(--accent-purple);
-            clip-path: polygon(20% 0%, 80% 0%, 100% 100%, 0% 100%);
-            animation-delay: 4s;
-        }
-        
-        @keyframes float {
-            0%, 100% { 
-                transform: translateY(0px) rotate(0deg); 
-                opacity: 0.1; 
-            }
-            50% { 
-                transform: translateY(-30px) rotate(180deg); 
-                opacity: 0.3; 
-            }
-        }
-
-        /* Desktop/Workspace */
-        .desktop {
-            width: 100vw;
-            height: 100vh;
-            position: relative;
-            overflow: hidden;
-        }
-
-        /* Desktop Icons */
-        .desktop-icons {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: calc(100vh - 60px);
-            pointer-events: none;
-            z-index: 500;
-        }
-
-        .desktop-icon {
-            position: absolute;
-            width: 80px;
-            height: 100px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            cursor: pointer;
-            pointer-events: auto;
-            transition: all 0.2s ease;
-            user-select: none;
-        }
-
-        .desktop-icon:hover {
-            transform: scale(1.05);
-        }
-
-        .desktop-icon.selected {
-            background: rgba(0, 207, 255, 0.2);
-            border-radius: 8px;
-            border: 1px solid var(--accent-cyber);
-        }
-
-        .icon-image {
-            width: 48px;
-            height: 48px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 2.5rem;
-            margin-bottom: 0.5rem;
-            background: rgba(22, 22, 39, 0.8);
-            border-radius: 8px;
-            border: 1px solid var(--terminal-border);
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-            transition: all 0.2s ease;
-        }
-
-        .desktop-icon:hover .icon-image {
-            box-shadow: 0 6px 20px rgba(126, 224, 129, 0.3);
-            border-color: var(--accent-energy);
-        }
-
-        .icon-label {
-            color: var(--text-primary);
-            font-size: 0.75rem;
-            text-align: center;
-            background: rgba(13, 17, 23, 0.8);
-            padding: 0.2rem 0.4rem;
-            border-radius: 4px;
-            border: 1px solid rgba(48, 54, 61, 0.5);
-            max-width: 100px;
-            overflow-wrap: break-word;
-            word-break: keep-all;
-            hyphens: none;
-            line-height: 1.2;
-        }
-
-        .desktop-icon.selected .icon-label {
-            background: rgba(0, 207, 255, 0.2);
-            border-color: var(--accent-cyber);
-        }
-
-        /* Desktop Clock */
-        .desktop-clock {
-            position: absolute;
-            top: 2rem;
-            right: 2rem;
-            background: rgba(13, 17, 23, 0.8);
-            border: 1px solid var(--terminal-border);
-            border-radius: 8px;
-            padding: 1rem;
-            color: var(--accent-energy);
-            font-size: 1.2rem;
-            font-weight: 600;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-            z-index: 600;
-        }
-
-        .desktop-clock .date {
-            font-size: 0.8rem;
-            color: var(--text-muted);
-            text-align: center;
-            margin-top: 0.25rem;
-        }
-
-        /* Taskbar */
-        .taskbar {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            height: 60px;
-            background: rgba(13, 17, 23, 0.9);
-            backdrop-filter: blur(20px);
-            border-top: 1px solid var(--terminal-border);
-            z-index: 2000;
-            display: flex;
-            align-items: center;
-            padding: 0 2rem;
-            gap: 1rem;
-        }
-
-        .taskbar-logo {
-            font-size: 1.2rem;
-            font-weight: 600;
-            color: var(--accent-energy);
-        }
-
-        .taskbar-logo::before {
-            content: '$ ';
-            color: var(--accent-cyber);
-        }
-
-        .taskbar-items {
-            display: flex;
-            gap: 0.5rem;
-            flex: 1;
-        }
-
-        .taskbar-item {
-            background: rgba(48, 54, 61, 0.5);
-            border: 1px solid var(--terminal-border);
-            border-radius: 6px;
-            padding: 0.5rem 1rem;
-            color: var(--text-secondary);
-            cursor: pointer;
-            transition: all 0.3s ease;
-            font-size: 0.9rem;
-        }
-
-        .taskbar-item:hover {
-            background: rgba(126, 224, 129, 0.1);
-            color: var(--accent-energy);
-            border-color: var(--accent-energy);
-        }
-
-        .taskbar-item.active {
-            background: rgba(0, 207, 255, 0.2);
-            color: var(--accent-cyber);
-            border-color: var(--accent-cyber);
-        }
-
-        .taskbar-item.minimized {
-            opacity: 0.6;
-            background: rgba(255, 189, 46, 0.2);
-            border-color: var(--accent-warning);
-        }
-
-        /* Window System */
-        .window {
-            position: absolute;
-            background: var(--terminal-bg);
-            border: 1px solid var(--terminal-border);
-            border-radius: 8px;
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
-            z-index: 1000;
-            min-width: 400px;
-            min-height: 300px;
-            display: none;
-        }
-
-        .window.active {
-            display: block;
-            z-index: 1001;
-        }
-
-        .window.minimized {
-            display: none;
-        }
-
-        .window.maximized {
-            border-radius: 0;
-        }
-
-        .window-header {
-            background: var(--bg-secondary);
-            padding: 0.75rem 1rem;
-            border-bottom: 1px solid var(--terminal-border);
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            cursor: move;
-            user-select: none;
-        }
-
-        .window-controls {
-            display: flex;
-            gap: 0.3rem;
-        }
-
-        .window-control {
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-
-        .window-control:hover {
-            transform: scale(1.2);
-        }
-
-        .window-control.close {
-            background: #ff5f56;
-        }
-
-        .window-control.minimize {
-            background: #ffbd2e;
-        }
-
-        .window-control.maximize {
-            background: #27ca3f;
-        }
-
-        .window-title {
-            color: var(--text-muted);
-            font-size: 0.9rem;
-            flex: 1;
-        }
-
-        .window-content {
-            padding: 2rem;
-            height: calc(100% - 60px);
-            overflow-y: auto;
-        }
-
-        /* Specific Window Styles */
-        .hero-window {
-            width: 800px;
-            height: 640px;
-            top: 10%;
-            left: 50%;
-            transform: translateX(-50%);
-        }
-
-        .about-window {
-            width: 700px;
-            height: 640px;
-            top: 15%;
-            left: 20%;
-        }
-
-        .projects-window {
-            width: 900px;
-            height: 720px;
-            top: 10%;
-            right: 10%;
-        }
-
-        .contact-window {
-            width: 720px;
-            height: 620px;
-            bottom: 20%;
-            left: 15%;
-        }
-
-        .posts-window {
-            width: 700px;
-            height: 480px;
-            top: 20%;
-            left: 25%;
-        }
-
-        /* Terminal Content Styles */
-        .ascii-art {
-            color: var(--accent-energy);
-            font-size: 0.4rem;
-            white-space: pre;
-            margin-bottom: 2rem;
-            text-align: center;
-            text-shadow: 0 0 15px rgba(126, 224, 129, 0.4);
-            animation: asciiGlow 6s ease-in-out infinite;
-            font-weight: 600;
-        }
-        
-        @keyframes asciiGlow {
-            0%, 100% { 
-                opacity: 0.9; 
-                text-shadow: 0 0 15px rgba(126, 224, 129, 0.4);
-            }
-            50% { 
-                opacity: 1; 
-                text-shadow: 0 0 25px rgba(126, 224, 129, 0.8);
-            }
-        }
-
-        .terminal-line {
-            margin-bottom: 1rem;
-            font-size: 0.9rem;
-        }
-
-        .prompt {
-            color: var(--accent-purple);
-            font-weight: 600;
-        }
-        
-        .command {
-            color: var(--accent-cyber);
-            font-weight: 500;
-        }
-        
-        .output {
-            color: var(--text-secondary);
-            margin-left: 2rem;
-            line-height: 1.6;
-        }
-        
-        .success {
-            color: var(--accent-energy);
-            font-weight: 500;
-        }
-        
-        .highlight {
-            color: var(--accent-cyber);
-            font-weight: 600;
-        }
-
-        /* About Section Styles */
-        .about-content {
-            display: grid;
-            grid-template-columns: 1fr 2fr;
-            gap: 2rem;
-            align-items: start;
-        }
-
-        .about-avatar {
-            width: 120px;
-            height: 120px;
-            border-radius: 50%;
-            background: linear-gradient(45deg, var(--accent-energy), var(--accent-cyber));
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 3rem;
-            margin: 0 auto 1rem;
-            animation: avatarFloat 6s ease-in-out infinite;
-            box-shadow: 0 0 30px rgba(126, 224, 129, 0.3);
-        }
-
-        @keyframes avatarFloat {
-            0%, 100% { 
-                transform: translateY(0px) scale(1);
-                box-shadow: 0 0 30px rgba(126, 224, 129, 0.3);
-            }
-            50% { 
-                transform: translateY(-5px) scale(1.05);
-                box-shadow: 0 5px 40px rgba(126, 224, 129, 0.5);
-            }
-        }
-
-        .status-indicator {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            background: rgba(126, 224, 129, 0.1);
-            padding: 0.4rem 0.8rem;
-            border-radius: 20px;
-            font-size: 0.8rem;
-            color: var(--accent-energy);
-            border: 1px solid rgba(126, 224, 129, 0.3);
-            margin: 0 auto;
-        }
-
-        .status-dot {
-            width: 6px;
-            height: 6px;
-            background: var(--accent-energy);
-            border-radius: 50%;
-            animation: pulse 2s ease-in-out infinite;
-        }
-
-        @keyframes pulse {
-            0%, 100% { opacity: 1; transform: scale(1); }
-            50% { opacity: 0.7; transform: scale(0.95); }
-        }
-
-        .about-text h2 {
-            color: var(--text-primary);
-            font-size: 1.8rem;
-            margin-bottom: 1rem;
-            background: linear-gradient(45deg, var(--accent-energy), var(--accent-cyber));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-
-        .about-text p {
-            color: var(--text-secondary);
-            line-height: 1.7;
-            margin-bottom: 1rem;
-            font-size: 0.95rem;
-        }
-
-        /* Projects Grid */
-        .projects-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 1.5rem;
-        }
-
-        .project-card {
-            background: rgba(48, 54, 61, 0.3);
-            border: 1px solid var(--terminal-border);
-            border-radius: 8px;
-            padding: 1.5rem;
-            transition: all 0.3s ease;
-            cursor: pointer;
-        }
-
-        .project-card:hover {
-            border-color: var(--accent-energy);
-            box-shadow: 0 10px 25px rgba(126, 224, 129, 0.2);
-            transform: translateY(-5px);
-        }
-
-        .project-icon {
-            font-size: 2rem;
-            margin-bottom: 1rem;
-        }
-
-        .project-title {
-            color: var(--text-primary);
-            font-size: 1.1rem;
-            font-weight: 600;
-            margin-bottom: 0.5rem;
-        }
-
-        .project-subtitle {
-            color: var(--accent-energy);
-            font-size: 0.85rem;
-            margin-bottom: 1rem;
-        }
-
-        .project-description {
-            color: var(--text-secondary);
-            font-size: 0.9rem;
-            line-height: 1.6;
-            margin-bottom: 1rem;
-        }
-
-        .project-tech {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0.3rem;
-        }
-
-        .tech-tag {
-            background: rgba(0, 207, 255, 0.1);
-            color: var(--accent-cyber);
-            padding: 0.2rem 0.6rem;
-            border-radius: 3px;
-            font-size: 0.75rem;
-            border: 1px solid rgba(0, 207, 255, 0.2);
-        }
-
-        /* Contact Grid */
-        .contact-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 1.5rem;
-            margin-bottom: 2rem;
-        }
-
-        .contact-card {
-            background: rgba(48, 54, 61, 0.3);
-            border: 1px solid var(--terminal-border);
-            border-radius: 8px;
-            padding: 1.5rem;
-            text-align: center;
-            transition: all 0.3s ease;
-            cursor: pointer;
-        }
-
-        .contact-card:hover {
-            border-color: var(--accent-cyber);
-            transform: translateY(-5px);
-            box-shadow: 0 10px 25px rgba(0, 207, 255, 0.2);
-        }
-
-        .contact-card:active {
-            transform: translateY(-2px);
-            transition: transform 0.1s ease;
-        }
-
-        .contact-icon {
-            font-size: 2rem;
-            margin-bottom: 1rem;
-            display: block;
-        }
-
-        .contact-card h3 {
-            color: var(--accent-cyber);
-            margin-bottom: 0.5rem;
-            font-size: 1rem;
-        }
-
-        .contact-card p {
-            color: var(--text-muted);
-            font-size: 0.85rem;
-        }
-
-        /* Boot sequence */
-        .boot-screen {
-            position: fixed;
-            inset: 0;
-            background: #000;
-            z-index: 5000;
-            padding: 2rem;
-            color: var(--accent-energy);
-            font-size: 0.85rem;
-            line-height: 1.7;
-            display: none;
-        }
-
-        .boot-screen::before {
-            content: '';
-            position: absolute;
-            inset: 0;
-            pointer-events: none;
-            background: repeating-linear-gradient(
-                to bottom,
-                rgba(255, 255, 255, 0.06) 0px,
-                rgba(255, 255, 255, 0.06) 1px,
-                transparent 1px,
-                transparent 3px
-            );
-        }
-
-        .boot-screen.on {
-            display: block;
-        }
-
-        .boot-screen.off {
-            opacity: 0;
-            transition: opacity 0.45s ease;
-            pointer-events: none;
-        }
-
-        .boot-log {
-            font-family: inherit;
-            white-space: pre-wrap;
-            text-shadow: 0 0 8px rgba(126, 224, 129, 0.5);
-        }
-
-        .boot-log::after {
-            content: '█';
-            animation: blink 1s steps(1) infinite;
-        }
-
-        .boot-skip {
-            position: absolute;
-            left: 2rem;
-            bottom: 2rem;
-            color: var(--text-muted);
-            font-size: 0.75rem;
-        }
-
-        @keyframes blink {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0; }
-        }
-
-        /* Hello line (typed on first visit) */
-        .hello-line {
-            color: var(--text-primary);
-            font-size: 1rem;
-            min-height: 1.6em;
-        }
-
-        .cursor {
-            display: inline-block;
-            width: 0.55em;
-            height: 1.1em;
-            margin-left: 2px;
-            vertical-align: text-bottom;
-            background: var(--accent-energy);
-            animation: blink 1s steps(1) infinite;
-        }
-
-        .cursor.done {
-            display: none;
-        }
-
-        /* Terminal blocks: tree listings, git log, the ask */
-        .output.tree {
-            white-space: pre;
-            overflow-x: auto;
-            font-size: 0.85rem;
-            font-family: inherit;
-        }
-
-        .output.ask {
-            white-space: pre-wrap;
-            font-family: inherit;
-        }
-
-        .output a {
-            color: var(--accent-cyber);
-            text-decoration: none;
-            border-bottom: 1px solid rgba(0, 207, 255, 0.3);
-        }
-
-        .output a:hover {
-            color: var(--accent-energy);
-            border-bottom-color: var(--accent-energy);
-        }
-
-        .dir-comment {
-            color: var(--text-muted);
-        }
-
-        /* Project tiers */
-        .project-group {
-            margin-bottom: 2rem;
-        }
-
-        .project-group .terminal-line {
-            margin-bottom: 1rem;
-        }
-
-        .project-card.compact {
-            display: flex;
-            flex-wrap: wrap;
-            align-items: baseline;
-            gap: 0.25rem 1rem;
-            padding: 0.75rem 1rem;
-        }
-
-        .project-card.compact:hover {
-            transform: none;
-        }
-
-        .project-card.compact .project-title {
-            margin-bottom: 0;
-            font-size: 0.95rem;
-        }
-
-        .project-card.compact .project-description {
-            margin-bottom: 0;
-            font-size: 0.85rem;
-            flex: 1 1 300px;
-        }
-
-        /* Blog listing */
-        .post-entry {
-            display: block;
-            color: var(--text-secondary);
-            text-decoration: none;
-            padding: 0.35rem 0;
-            font-size: 0.9rem;
-            transition: color 0.2s ease;
-        }
-
-        .post-entry:hover {
-            color: var(--accent-energy);
-        }
-
-        .post-entry:hover .highlight {
-            color: var(--accent-energy);
-        }
-
-        .post-tags {
-            color: var(--text-muted);
-            font-size: 0.8rem;
-            margin-left: 0.5rem;
-        }
-
-        /* Animations */
-        @keyframes windowShake {
-    0%, 100% { transform: translateX(0); }
-    25% { transform: translateX(-2px); }
-    75% { transform: translateX(2px); }
-}
-
-
-        /* Responsive Design */
-        @media (max-width: 768px) {
-            .window {
-                min-width: 300px;
-                width: 90vw !important;
-                height: 80vh !important;
-                top: 10% !important;
-                left: 5% !important;
-                right: 5% !important;
-                transform: none !important;
-            }
-            
-            .taskbar {
-                padding: 0 1rem;
-                gap: 0.5rem;
-            }
-
-            .taskbar-logo {
-                font-size: 1rem;
-                white-space: nowrap;
-            }
-
-            .taskbar-items {
-                overflow-x: auto;
-                scrollbar-width: none;
-            }
-
-            .taskbar-status {
-                display: none;
-            }
-            
-            .taskbar-item {
-                padding: 0.3rem 0.8rem;
-                font-size: 0.8rem;
-                white-space: nowrap;
-            }
-            
-            .about-content {
-                grid-template-columns: 1fr;
-                text-align: center;
-            }
-
-            .ascii-art {
-                font-size: 0.25rem;
-            }
-
-            .window-content {
-                padding: 1rem;
-            }
-
-            .output {
-                margin-left: 0.75rem;
-            }
-
-            .output.tree {
-                font-size: 0.72rem;
-            }
-
-            /* Icons reflow into a wrapped row so the 8th icon doesn't overflow */
-            .desktop-clock {
-                top: 1rem;
-                right: 1rem;
-                padding: 0.5rem 0.75rem;
-                font-size: 1rem;
-            }
-
-            .boot-screen {
-                padding: 1rem;
-                font-size: 0.72rem;
-            }
-
-            .boot-skip {
-                left: 1rem;
-                bottom: 1rem;
-            }
-
-            .desktop-icons {
-                display: flex;
-                flex-wrap: wrap;
-                gap: 0.5rem;
-                padding: 6.5rem 1rem 1rem;
-                height: auto;
-                align-content: flex-start;
-            }
-
-            .desktop-icon {
-                position: static !important;
-            }
-        }
-    </style>
+    <link rel="stylesheet" href="{{ "/assets/css/desktop.css" | relative_url }}">
 </head>
 <body>
-    <!-- Boot sequence (shown once per session; any key skips) -->
+    <!-- Boot sequence: each full desktop load and simulated reboot -->
     <div class="boot-screen" id="boot-screen" aria-hidden="true">
         <pre class="boot-log" id="boot-log"></pre>
-        <div class="boot-skip">press any key to skip</div>
+        <button class="boot-skip" id="boot-skip">Skip boot</button>
     </div>
 
-    <!-- Animated Background -->
-    <div class="animated-bg"></div>
-    <div class="circuit-pattern"></div>
-    
-    <!-- Floating Shapes -->
-    <div class="floating-shapes">
-        <div class="shape"></div>
-        <div class="shape"></div>
-        <div class="shape"></div>
+    <!-- Wallpaper -->
+    <div class="wallpaper" aria-hidden="true">
+        <svg viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice">
+            <circle cx="1180" cy="760" r="420" fill="#e95420" opacity="0.10"/>
+            <circle cx="1310" cy="860" r="260" fill="#f08763" opacity="0.10"/>
+            <polygon points="0,900 0,520 520,900" fill="#2c001e" opacity="0.35"/>
+            <polygon points="1440,0 900,0 1440,540" fill="#772953" opacity="0.30"/>
+            <circle cx="260" cy="180" r="220" fill="#5e2750" opacity="0.35"/>
+        </svg>
     </div>
 
-    <!-- Desktop -->
-    <div class="desktop" id="desktop">
-        
-        <!-- Desktop Clock -->
-        <div class="desktop-clock" id="desktop-clock">
-            <div class="time">--:--:--</div>
-            <div class="date">--- --, ----</div>
+    <!-- Top panel -->
+    <div class="top-panel" id="top-panel">
+        <div class="panel-left">
+            <div class="panel-item activities" id="activities"><span>Activities</span></div>
         </div>
+        <div class="panel-clock" id="panel-clock">--- --  --:--</div>
+        <div class="panel-right">
+            <button class="panel-item panel-tray" id="system-toggle" title="Network · Sound · Battery" aria-label="System menu" aria-expanded="false">
+                <svg viewBox="0 0 16 16"><path d="M8 13.5 1 6.5C3 4.7 5.4 3.8 8 3.8s5 .9 7 2.7L8 13.5z"/></svg>
+                <svg viewBox="0 0 16 16"><path d="M2 6h3l4-3v10L5 10H2z"/><path d="M11 5.5a3.5 3.5 0 0 1 0 5" fill="none" stroke="#fff" stroke-width="1.4"/></svg>
+                <svg viewBox="0 0 16 16"><rect x="1" y="4" width="12" height="8" rx="1.5" fill="none" stroke="#fff" stroke-width="1.4"/><rect x="2.5" y="5.5" width="9" height="5"/><rect x="13.5" y="6.5" width="1.5" height="3"/></svg>
+                <svg viewBox="0 0 16 16"><path d="M8 1.5v6" fill="none" stroke="#fff" stroke-width="1.6" stroke-linecap="round"/><path d="M4.6 4.2a5 5 0 1 0 6.8 0" fill="none" stroke="#fff" stroke-width="1.6" stroke-linecap="round"/></svg>
+            </button>
+        </div>
+    </div>
+    <section id="system-menu" class="system-menu" hidden aria-label="System settings">
+        <div class="volume-row"><button id="system-mute" aria-label="Mute">♪</button><label for="system-volume">Volume</label><input id="system-volume" type="range" min="0" max="100" value="50"><output id="volume-value">50%</output></div>
+        <div class="system-row"><span>Wi-Fi</span><strong>eduroam</strong><span>Connected</span></div>
+        <div class="system-row"><span>Battery</span><strong>87%</strong><span>Charging</span></div>
+    </section>
+    <button id="egg-tracker" class="egg-tracker" hidden aria-live="polite"></button>
+    <div id="crash-screen" class="crash-screen" hidden role="alert"><pre>JORDAN-OS
+
+[FAILED] Desktop recursion limit exceeded.
+Kernel panic — recursive display server.
+
+Restarting display manager…</pre></div>
+
+    <!-- Dock -->
+    <div class="dock" id="dock">
+        <div class="dock-item" data-window="projects-window"><img src="/assets/icons/yaru/filemanager-app.png" alt="Files"><span class="tooltip">Files</span></div>
+        <div class="dock-item" data-window="hero-window"><img src="/assets/icons/yaru/terminal-app.png" alt="Terminal"><span class="tooltip">Terminal</span></div>
+        <div class="dock-item" data-window="browser-window" data-action="browser"><img src="/assets/icons/yaru/webbrowser-app.png" alt="Web Browser"><span class="tooltip">Web Browser</span></div>
+        <div class="dock-item" data-window="about-window"><img src="/assets/icons/yaru/org.gnome.TextEditor.png" alt="Text Editor"><span class="tooltip">Text Editor</span></div>
+        <div class="dock-item" data-window="contact-window"><img src="/assets/icons/yaru/application-json.png" alt="Contact"><span class="tooltip">Contact</span></div>
+        <div class="dock-item" data-action="blog"><img src="/assets/icons/yaru/folder-documents.png" alt="Blog"><span class="tooltip">Blog</span></div>
+        <div class="dock-spacer"></div>
+        <div class="dock-item show-apps" id="show-apps" title="Show Applications">
+            <svg viewBox="0 0 26 26"><circle cx="4" cy="4" r="2.6"/><circle cx="13" cy="4" r="2.6"/><circle cx="22" cy="4" r="2.6"/><circle cx="4" cy="13" r="2.6"/><circle cx="13" cy="13" r="2.6"/><circle cx="22" cy="13" r="2.6"/><circle cx="4" cy="22" r="2.6"/><circle cx="13" cy="22" r="2.6"/><circle cx="22" cy="22" r="2.6"/></svg>
+        </div>
+    </div>
+
+    <!-- App grid -->
+    <div class="app-grid" id="app-grid">
+        <div class="app-grid-inner">
+            <div class="app-launcher" data-window="projects-window"><img src="/assets/icons/yaru/filemanager-app.png" alt="">Files</div>
+            <div class="app-launcher" data-window="hero-window"><img src="/assets/icons/yaru/terminal-app.png" alt="">Terminal</div>
+            <div class="app-launcher" data-action="browser"><img src="/assets/icons/yaru/webbrowser-app.png" alt="">Web Browser</div>
+            <div class="app-launcher" data-window="about-window"><img src="/assets/icons/yaru/org.gnome.TextEditor.png" alt="">Text Editor</div>
+            <div class="app-launcher" data-action="blog"><img src="/assets/icons/yaru/folder-documents.png" alt="">Blog</div>
+            <div class="app-launcher" data-window="contact-window"><img src="/assets/icons/yaru/application-json.png" alt="">Contact</div>
+            <div class="app-launcher" data-action="resume"><img src="/assets/icons/yaru/application-pdf.png" alt="">Resume</div>
+            <div class="app-launcher" data-action="github"><img src="/assets/icons/yaru/webbrowser-app.png" alt="">GitHub</div>
+            <div class="app-launcher" data-action="linkedin"><img src="/assets/icons/yaru/webbrowser-app.png" alt="">LinkedIn</div>
+        </div>
+    </div>
+
+    <!-- Work area -->
+    <div class="desktop" id="desktop">
 
         <!-- Desktop Icons -->
         <div class="desktop-icons">
-            <div class="desktop-icon" data-window="about-window" style="top: 100px; left: 50px;">
-                <div class="icon-image">👨‍💻</div>
-                <div class="icon-label">About.exe</div>
-            </div>
-            
-            <div class="desktop-icon" data-window="projects-window" style="top: 100px; left: 200px;">
-                <div class="icon-image">📁</div>
+            <div class="desktop-icon" data-window="projects-window" style="top: 16px; left: 16px;">
+                <img class="icon-image" src="/assets/icons/yaru/folder.png" alt="">
                 <div class="icon-label">Projects</div>
             </div>
-            
-            <div class="desktop-icon" data-window="contact-window" style="top: 100px; left: 350px;">
-                <div class="icon-image">📞</div>
-                <div class="icon-label">Contact.json</div>
+            <div class="desktop-icon" data-window="about-window" style="top: 116px; left: 16px;">
+                <img class="icon-image" src="/assets/icons/yaru/text-markdown.png" alt="">
+                <div class="icon-label">about.md</div>
             </div>
-            
-            <div class="desktop-icon" data-action="resume" style="top: 250px; left: 50px;">
-                <div class="icon-image">📄</div>
+            <div class="desktop-icon" data-window="contact-window" style="top: 216px; left: 16px;">
+                <img class="icon-image" src="/assets/icons/yaru/application-json.png" alt="">
+                <div class="icon-label">contact.json</div>
+            </div>
+            <div class="desktop-icon" data-action="resume" style="top: 316px; left: 16px;">
+                <img class="icon-image" src="/assets/icons/yaru/application-pdf.png" alt="">
                 <div class="icon-label">Resume.pdf</div>
             </div>
-            
-            <div class="desktop-icon" data-action="github" style="top: 250px; left: 200px;">
-                <div class="icon-image">🐙</div>
-                <div class="icon-label">GitHub.link</div>
+            <div class="desktop-icon" data-action="blog" style="top: 416px; left: 16px;">
+                <img class="icon-image" src="/assets/icons/yaru/folder-documents.png" alt="">
+                <div class="icon-label">Blog</div>
             </div>
-            
-            <div class="desktop-icon" data-action="linkedin" style="top: 250px; left: 350px;">
-                <div class="icon-image">💼</div>
-                <div class="icon-label">LinkedIn.url</div>
+            <div class="desktop-icon" data-action="github" style="top: 16px; left: 112px;">
+                <img class="icon-image" src="/assets/icons/yaru/webbrowser-app.png" alt="">
+                <div class="icon-label">GitHub</div>
             </div>
-
-            <div class="desktop-icon" data-action="terminal" style="top: 400px; left: 50px;">
-                <div class="icon-image">⚡</div>
-                <div class="icon-label">Terminal.sh</div>
+            <div class="desktop-icon" data-action="linkedin" style="top: 116px; left: 112px;">
+                <img class="icon-image" src="/assets/icons/yaru/webbrowser-app.png" alt="">
+                <div class="icon-label">LinkedIn</div>
             </div>
-
-            <div class="desktop-icon" data-window="posts-window" style="top: 400px; left: 200px;">
-                <div class="icon-image">📝</div>
-                <div class="icon-label">Blog.md</div>
+            <div class="desktop-icon" data-action="terminal" style="top: 216px; left: 112px;">
+                <img class="icon-image" src="/assets/icons/yaru/terminal-app.png" alt="">
+                <div class="icon-label">Terminal</div>
+            </div>
+            <div class="desktop-icon" data-trash-target data-action="trash" style="top: 316px; left: 112px;">
+                <img class="icon-image" src="/assets/icons/yaru/user-trash.png" alt="">
+                <div class="icon-label">Trash</div>
             </div>
         </div>
 
-        <!-- Hero/Main Window -->
-        <div class="window hero-window active" id="hero-window">
+        <!-- Terminal (hero) -->
+        <div class="window hero-window terminal-app active" id="hero-window">
             <div class="window-header">
+                <div class="window-title">jordan@waterloo: ~</div>
                 <div class="window-controls">
-                    <div class="window-control close" data-action="close"></div>
-                    <div class="window-control minimize" data-action="minimize"></div>
-                    <div class="window-control maximize" data-action="maximize"></div>
+                    <div class="window-control minimize" data-action="minimize" title="Minimize"><svg viewBox="0 0 16 16"><path d="M3.5 11h9"/></svg></div>
+                    <div class="window-control maximize" data-action="maximize" title="Maximize"><svg viewBox="0 0 16 16"><rect x="3.5" y="3.5" width="9" height="9" rx="1"/></svg></div>
+                    <div class="window-control close" data-action="close" title="Close"><svg viewBox="0 0 16 16"><path d="M4.5 4.5l7 7M11.5 4.5l-7 7"/></svg></div>
                 </div>
-                <div class="window-title">jordan@waterloo:~$ one_layer_down.sh</div>
             </div>
             <div class="window-content">
+                <div id="terminal-intro">
                 <div class="ascii-art">
      ██╗ ██████╗ ██████╗ ██████╗  █████╗ ███╗   ██╗    ██╗     ███████╗██╗███████╗
      ██║██╔═══██╗██╔══██╗██╔══██╗██╔══██╗████╗  ██║    ██║     ██╔════╝██║██╔════╝
@@ -1023,76 +148,81 @@
  ╚════╝  ╚═════╝ ╚═╝  ╚═╝╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═══╝    ╚══════╝╚══════╝╚═╝╚══════╝</div>
 
                 <div class="terminal-line">
-                    <span class="prompt">jordan@waterloo:~$</span> <span class="command">./hello.sh</span>
+                    <span class="prompt"><span class="user">jordan@waterloo</span>:<span class="path">~</span>$</span> <span class="command">./hello.sh</span>
                 </div>
                 <div class="terminal-line">
                     <div class="output hello-line"><span id="hello-text">Hi, I'm Jordan. I like to build.</span><span class="cursor done" id="hello-cursor"></span></div>
                 </div>
 
                 <div class="terminal-line">
-                    <span class="prompt">jordan@waterloo:~$</span> <span class="command">whoami</span>
+                    <span class="prompt"><span class="user">jordan@waterloo</span>:<span class="path">~</span>$</span> <span class="command">whoami</span>
                 </div>
                 <div class="terminal-line">
-                    <div class="output">Electrical Engineering @ <span class="highlight">University of Waterloo</span> (3B)<br>
+                    <div class="output" id="identity-text">Electrical Engineering @ <span class="highlight">University of Waterloo</span> (3B)<br>
                     Research → ML → software → hardware. Currently: <span class="highlight">RTL on Zynq UltraScale+</span>.<br>
                     I build at whatever layer the problem is stuck at.<br>
                     <span class="highlight">Cansbridge Fellow</span> — 1 of 15 selected nationally</div>
                 </div>
 
                 <div class="terminal-line">
-                    <span class="prompt">jordan@waterloo:~$</span> <span class="command">cat mission.txt</span>
+                    <span class="prompt"><span class="user">jordan@waterloo</span>:<span class="path">~</span>$</span> <span class="command">cat mission.txt</span>
                 </div>
                 <div class="terminal-line">
-                    <div class="output">Making compute <span class="success">cheaper</span> and <span class="success">more available</span> —<br>
+                    <div class="output" id="mission-text">Making compute <span class="success">cheaper</span> and <span class="success">more available</span> —<br>
                     at the model, the software, or the silicon, whichever is the bottleneck.</div>
                 </div>
 
                 <div class="terminal-line">
-                    <span class="prompt">jordan@waterloo:~$</span> <span class="command">tree ~/work --depth=1</span>
+                    <span class="prompt"><span class="user">jordan@waterloo</span>:<span class="path">~</span>$</span> <span class="command">tree ~/work --depth=1</span>
                 </div>
                 <div class="terminal-line">
-<pre class="output tree"><span class="success">~/hardware/</span>          <span class="dir-comment"># where I am now</span>
+<pre class="output tree" id="work-tree"><span class="success">~/hardware/          </span><span class="dir-comment"># where I am now</span>
   <span class="success">mvm_accelerator/</span>     128 lanes, 450 MHz, ~850 GOPS
   <span class="success">tanh_pipeline/</span>       280 -> 840 MHz over four rewrites
   <span class="success">wordle_on_kria/</span>      FSM in fabric, baremetal C on the PS
 
-<span class="success">~/research/</span>          <span class="dir-comment"># where I came from</span>
+<span class="success">~/papers/            </span><span class="dir-comment"># where I came from</span>
   <span class="success">microgrid_rl/</span>        first-author, CUCAI 2026, -23% diesel
   <span class="success">rag_agents/</span>          co-author, CUCAI 2025
 
-<span class="success">~/software/</span>          <span class="dir-comment"># things I built because I wanted them to exist</span>
+<span class="success">~/software/          </span><span class="dir-comment"># things I built because I wanted them to exist</span>
+  <span class="success">summarization_tool/</span>
+  <span class="success">uw_awards_search/</span>
   <span class="success">coursify/</span>
-  <span class="success">lasercal/</span></pre>
+  <span class="success">sred_copilot/</span>
+  <span class="success">lasercal/</span>
+  <span class="success">relaycalc/</span>
+  <span class="success">linxicon_solver/</span></pre>
                 </div>
 
                 <div class="terminal-line">
-                    <span class="prompt">jordan@waterloo:~$</span> <span class="command">cat looking_for.txt | head -1</span>
+                    <span class="prompt"><span class="user">jordan@waterloo</span>:<span class="path">~</span>$</span> <span class="command">cat looking_for.txt | head -1</span>
                 </div>
                 <div class="terminal-line">
-                    <div class="output">FPGA / RTL co-op, 2027.  <span class="dir-comment"># full ask in Contact.json</span></div>
+                    <div class="output">FPGA / RTL co-op, 2027.  <span class="dir-comment"># full ask in contact.json</span></div>
                 </div>
+                </div>
+                <button id="intro-skip" class="intro-skip" hidden>Skip introduction</button>
+                <div id="terminal-output" aria-live="polite"></div>
+                <form id="terminal-form" autocomplete="off">
+                    <label for="terminal-input" class="prompt"><span class="user">jordan@waterloo</span>:<span class="path" id="terminal-path">~</span>$</label>
+                    <input id="terminal-input" aria-label="Terminal command" spellcheck="false" autocapitalize="off" autocomplete="off">
+                </form>
             </div>
         </div>
 
         <!-- About Window -->
-        <div class="window about-window" id="about-window">
+        <div class="window about-window editor-app" id="about-window">
             <div class="window-header">
+                <div class="window-title">about.md</div>
                 <div class="window-controls">
-                    <div class="window-control close" data-action="close"></div>
-                    <div class="window-control minimize" data-action="minimize"></div>
-                    <div class="window-control maximize" data-action="maximize"></div>
+                    <div class="window-control minimize" data-action="minimize" title="Minimize"><svg viewBox="0 0 16 16"><path d="M3.5 11h9"/></svg></div>
+                    <div class="window-control maximize" data-action="maximize" title="Maximize"><svg viewBox="0 0 16 16"><rect x="3.5" y="3.5" width="9" height="9" rx="1"/></svg></div>
+                    <div class="window-control close" data-action="close" title="Close"><svg viewBox="0 0 16 16"><path d="M4.5 4.5l7 7M11.5 4.5l-7 7"/></svg></div>
                 </div>
-                <div class="window-title">about_jordan.sh</div>
             </div>
             <div class="window-content">
                 <div class="about-content">
-                    <div class="about-visual">
-                        <div class="about-avatar">🚀</div>
-                        <div class="status-indicator">
-                            <div class="status-dot"></div>
-                            3B EE @ Waterloo • Cansbridge Fellow
-                        </div>
-                    </div>
                     <div class="about-text">
                         <h2>I like to build.</h2>
                         <p>I'm a <span class="highlight">3B Electrical Engineering student</span> at the University of Waterloo. I've built at every layer I've needed to: an RL controller and the paper behind it, RAG pipelines over 300-page regulatory documents, a Qt/C++ motion-control app, PCBs through EMI/EMC compliance, and now <span class="highlight">pipelined fixed-point accelerators in SystemVerilog</span>. Not to collect skills. The problem kept moving.</p>
@@ -1109,9 +239,6 @@
                     </div>
                 </div>
 
-                <div class="terminal-line" style="margin-top: 2rem;">
-                    <span class="prompt">jordan@waterloo:~$</span> <span class="command">git log --oneline experience/</span>
-                </div>
                 <div class="terminal-line">
 <pre class="output tree"><span class="highlight">2026 Jan–Aug</span>       ML Engineer (Research), Health Canada (PMRA)
 <span class="highlight">2026 Jan–Apr</span>       Director, Wat.AI
@@ -1124,129 +251,73 @@
             </div>
         </div>
 
-        <!-- Projects Window -->
-        <div class="window projects-window" id="projects-window">
-            <div class="window-header">
+        <!-- Files: Projects live here, as folders -->
+        <div class="window files-window files-app" id="projects-window">
+            <div class="window-header files-header">
+                <div class="files-nav">
+                    <button class="hb-btn" id="files-back" title="Back" disabled><svg viewBox="0 0 16 16"><path d="M10 3 5 8l5 5"/></svg></button>
+                    <button class="hb-btn" id="files-forward" title="Forward" disabled><svg viewBox="0 0 16 16"><path d="m6 3 5 5-5 5"/></svg></button>
+                </div>
+                <div class="files-path" id="files-path"></div>
+                <div class="files-tools">
+                    <div class="hb-btn" title="Search"><svg viewBox="0 0 16 16"><circle cx="7" cy="7" r="4.5"/><path d="m10.5 10.5 3 3"/></svg></div>
+                    <div class="hb-btn" title="View options"><svg viewBox="0 0 16 16"><rect x="2.5" y="2.5" width="4" height="4" rx=".8"/><rect x="9.5" y="2.5" width="4" height="4" rx=".8"/><rect x="2.5" y="9.5" width="4" height="4" rx=".8"/><rect x="9.5" y="9.5" width="4" height="4" rx=".8"/></svg></div>
+                    <div class="hb-btn" title="Main Menu"><svg viewBox="0 0 16 16"><path d="M2.5 4h11M2.5 8h11M2.5 12h11"/></svg></div>
+                </div>
                 <div class="window-controls">
-                    <div class="window-control close" data-action="close"></div>
-                    <div class="window-control minimize" data-action="minimize"></div>
-                    <div class="window-control maximize" data-action="maximize"></div>
-                </div>
-                <div class="window-title">projects_portfolio.exe</div>
-            </div>
-            <div class="window-content">
-                <div class="project-group">
-                    <div class="terminal-line">
-                        <span class="prompt">jordan@waterloo:~$</span> <span class="command">ls ~/hardware/</span> <span class="dir-comment"># where I am now</span>
-                    </div>
-                    <div class="projects-grid">
-                        <div class="project-card" data-url="https://github.com/Jordan-Leis/mvm-in-system-verilog">
-                            <div class="project-icon">🔲</div>
-                            <h3 class="project-title">MVM Accelerator</h3>
-                            <p class="project-subtitle">SystemVerilog • Zynq UltraScale+ MPSoC</p>
-                            <p class="project-description">128-lane fixed-point matrix-vector engine running 1024 MACs per cycle at 450 MHz, sustaining ~850 GOPS. Same architecture family Microsoft built BrainWave on. Timing closed entirely through RTL structure — register fanout trees, an address tree with fanout 1 — with no synthesis flags, XDC hacks, or <code>phys_opt_design</code>.</p>
-                            <div class="project-tech">
-                                <span class="tech-tag">SystemVerilog</span>
-                                <span class="tech-tag">Vivado</span>
-                                <span class="tech-tag">DSP48E2</span>
-                                <span class="tech-tag">Timing Closure</span>
-                            </div>
-                        </div>
-
-                        <div class="project-card" data-url="https://github.com/Jordan-Leis/tanh-in-system-verilog">
-                            <div class="project-icon">📈</div>
-                            <h3 class="project-title">tanh Accelerator</h3>
-                            <p class="project-subtitle">SystemVerilog • Fixed-Point Pipeline</p>
-                            <p class="project-description">Pipelined Q2.12 tanh core with a ready/valid streaming interface, driven from 280 MHz to 840 MHz across four rewrites. The last gain came from registering every inter-DSP link, moving the design from routing-bound to logic-bound. Verified against a golden model with randomized stimulus and mid-stream backpressure testing.</p>
-                            <div class="project-tech">
-                                <span class="tech-tag">SystemVerilog</span>
-                                <span class="tech-tag">DSP48E2</span>
-                                <span class="tech-tag">Fixed-Point</span>
-                                <span class="tech-tag">Verification</span>
-                            </div>
-                        </div>
-
-                        <div class="project-card" data-url="https://github.com/Jordan-Leis/wordle-in-system-verilog">
-                            <div class="project-icon">🟩</div>
-                            <h3 class="project-title">Wordle on Kria</h3>
-                            <p class="project-subtitle">SystemVerilog • Hardware/Software Co-Design</p>
-                            <p class="project-description">Wordle running in FPGA fabric on a Xilinx Kria board. Game logic is a 5-state FSM in programmable logic; a baremetal C application on the ARM processing system drives it over seven AXI-GPIO blocks and UART. Vivado block design generated from Tcl, exported to Vitis via XSA handoff.</p>
-                            <div class="project-tech">
-                                <span class="tech-tag">SystemVerilog</span>
-                                <span class="tech-tag">AXI-GPIO</span>
-                                <span class="tech-tag">Vitis</span>
-                                <span class="tech-tag">Baremetal C</span>
-                                <span class="tech-tag">FSM</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="project-group">
-                    <div class="terminal-line">
-                        <span class="prompt">jordan@waterloo:~$</span> <span class="command">ls ~/research/</span> <span class="dir-comment"># where I came from</span>
-                    </div>
-                    <div class="projects-grid">
-                        <div class="project-card" data-url="https://cucai.ca/papers/48">
-                            <div class="project-icon">🔋</div>
-                            <h3 class="project-title">Microgrid RL Controller</h3>
-                            <p class="project-subtitle">first author • CUCAI 2026</p>
-                            <p class="project-description">Reinforcement learning controller for off-grid hybrid microgrids in rural sub-Saharan Africa. Most work in the field treats electricity as a commodity to sell back to a grid; this treated it as a scarce resource, optimizing how many people one generator can reach. A 150-run benchmark on five years of NASA POWER climate data found DDPG optimal: <span class="highlight">23% less diesel per year at equal reliability</span>. Led an 11-person team. First-authored, accepted at CUCAI 2026.</p>
-                            <div class="project-tech">
-                                <span class="tech-tag">Reinforcement Learning</span>
-                                <span class="tech-tag">TensorFlow</span>
-                                <span class="tech-tag">Gymnasium</span>
-                                <span class="tech-tag">NASA POWER</span>
-                            </div>
-                        </div>
-
-                        <div class="project-card" data-url="https://github.com/Madhav-Malhotra/political-chatbot">
-                            <div class="project-icon">🏛️</div>
-                            <h3 class="project-title">RAG Agent Architectures</h3>
-                            <p class="project-subtitle">co-author • CUCAI 2025</p>
-                            <p class="project-description">Evaluated retrieval-augmented generation architectures for generalized decision-making across domains. 400+ simulated games measuring strategic consistency, extended to political analysis with human evaluation from 50+ participants. Co-authored; presented at CUCAI 2025 and the Ethical Tech for Global Futures Symposium, where it received Best Undergraduate Research Presentation.</p>
-                            <div class="project-tech">
-                                <span class="tech-tag">RAG</span>
-                                <span class="tech-tag">LLM Evaluation</span>
-                                <span class="tech-tag">Multi-Agent</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="project-group">
-                    <div class="terminal-line">
-                        <span class="prompt">jordan@waterloo:~$</span> <span class="command">ls ~/software/</span> <span class="dir-comment"># things I built because I wanted them to exist</span>
-                    </div>
-                    <a class="project-card compact" href="/linxicon-solver/" style="display: block; text-decoration: none; color: inherit; margin-bottom: 0.75rem;">
-                        <h3 class="project-title">linxicon_atlas/ ↗</h3>
-                        <p class="project-description">An interactive atlas of today's word puzzle. Replay breadth-first search, explore vector neighborhoods, and inspect server-verified routes through meaning.</p>
-                    </a>
-                    <div class="project-card compact" data-url="https://github.com/Jordan-Leis/Course-Selector">
-                        <h3 class="project-title">coursify/</h3>
-                        <p class="project-description">Natural language course scheduling for Waterloo Engineering students, built on LLMs.</p>
-                    </div>
-                    <div class="project-card compact" data-url="https://github.com/Jordan-Leis/LaserCal-Embedded-Motion-Control-and-Sensor-Integration" style="margin-top: 0.75rem;">
-                        <h3 class="project-title">lasercal/</h3>
-                        <p class="project-description">Two-axis motion control and sensor processing in Qt/C++, with moving-average filtering and calibration stored in SQLite.</p>
-                    </div>
+                    <div class="window-control minimize" data-action="minimize" title="Minimize"><svg viewBox="0 0 16 16"><path d="M3.5 11h9"/></svg></div>
+                    <div class="window-control maximize" data-action="maximize" title="Maximize"><svg viewBox="0 0 16 16"><rect x="3.5" y="3.5" width="9" height="9" rx="1"/></svg></div>
+                    <div class="window-control close" data-action="close" title="Close"><svg viewBox="0 0 16 16"><path d="M4.5 4.5l7 7M11.5 4.5l-7 7"/></svg></div>
                 </div>
             </div>
+            <div class="files-body">
+                <div class="files-sidebar">
+                    <button class="sb-item" data-path="/Recent"><img src="/assets/icons/yaru/document-open-recent.png" alt="">Recent</button>
+                    <button class="sb-item" data-path="/Starred"><span class="sb-star">★</span>Starred</button>
+                    <button class="sb-item" data-path="/"><img src="/assets/icons/yaru/user-home.png" alt="">Home</button>
+                    <button class="sb-item" data-path="/Desktop"><img src="/assets/icons/yaru/user-desktop.png" alt="">Desktop</button>
+                    <button class="sb-item" data-path="/Documents"><img src="/assets/icons/yaru/folder-documents.png" alt="">Documents</button>
+                    <button class="sb-item" data-path="/Downloads"><img src="/assets/icons/yaru/folder-download.png" alt="">Downloads</button>
+                    <button class="sb-item" data-path="/Photos"><img src="/assets/icons/yaru/folder-pictures.png" alt="">Photos</button>
+                    <button class="sb-item" data-path="/Projects"><img src="/assets/icons/yaru/folder.png" alt="">Projects</button>
+                    <button class="sb-item" data-path="/posts"><img src="/assets/icons/yaru/folder-documents.png" alt="">posts</button>
+                    <button class="sb-item" data-path="/Trash" data-trash-target><img src="/assets/icons/yaru/user-trash.png" alt="">Trash</button>
+                </div>
+                <div class="files-main">
+                    <div class="files-grid" id="files-grid"></div>
+                    <div class="files-empty" id="files-empty" hidden>
+                        <img src="/assets/icons/yaru/folder-open.png" alt="">
+                        <div class="files-empty-title">Folder is Empty</div>
+                        <div class="files-empty-sub" id="files-empty-sub"></div>
+                    </div>
+                    <div class="files-footer"><div class="files-status" id="files-status"></div><button id="files-hidden" title="Show hidden files (Ctrl+H)" aria-pressed="false">Show hidden files</button><button id="files-trash" data-trash-target title="Open Trash">Trash</button></div>
+                </div>
+                <div class="files-details" id="files-details" hidden></div>
+            </div>
+
+            <!-- Post list generated by Jekyll from _posts/; the Files app reads it -->
+            <template id="posts-data">
+{% if site.posts.size > 0 %}{% for post in site.posts %}
+                <a class="post-entry" href="{{ post.url }}" data-date="{{ post.date | date: "%Y-%m-%d" }}" data-tags="{% for tag in post.tags %}{{ tag }} {% endfor %}">{{ post.title }}</a>
+{% endfor %}{% else %}
+                <span class="posts-empty">First post coming.</span>
+{% endif %}
+            </template>
         </div>
 
         <!-- Contact Window -->
-        <div class="window contact-window" id="contact-window">
+        <div class="window contact-window editor-app" id="contact-window">
             <div class="window-header">
+                <div class="window-title">contact.json</div>
                 <div class="window-controls">
-                    <div class="window-control close" data-action="close"></div>
-                    <div class="window-control minimize" data-action="minimize"></div>
-                    <div class="window-control maximize" data-action="maximize"></div>
+                    <div class="window-control minimize" data-action="minimize" title="Minimize"><svg viewBox="0 0 16 16"><path d="M3.5 11h9"/></svg></div>
+                    <div class="window-control maximize" data-action="maximize" title="Maximize"><svg viewBox="0 0 16 16"><rect x="3.5" y="3.5" width="9" height="9" rx="1"/></svg></div>
+                    <div class="window-control close" data-action="close" title="Close"><svg viewBox="0 0 16 16"><path d="M4.5 4.5l7 7M11.5 4.5l-7 7"/></svg></div>
                 </div>
-                <div class="window-title">contact_info.json</div>
             </div>
             <div class="window-content">
                 <div class="terminal-line">
-                    <span class="prompt">jordan@waterloo:~$</span> <span class="command">cat looking_for.txt</span>
+                    <span class="prompt"><span class="user">jordan@waterloo</span>:<span class="path">~</span>$</span> <span class="command">cat looking_for.txt</span>
                 </div>
                 <div class="terminal-line">
 <pre class="output ask"><span class="success">FPGA / RTL co-op, 2027.</span>
@@ -1262,677 +333,81 @@ reach more people, I'm interested.
 
 → <a href="mailto:jordan.jay.leis@gmail.com">jordan.jay.leis@gmail.com</a></pre>
                 </div>
-                <div class="terminal-line">
-                    <span class="prompt">jordan@waterloo:~$</span> <span class="command">_</span>
-                </div>
 
-                <div class="contact-grid">
-                    <div class="contact-card" data-url="mailto:jordan.jay.leis@gmail.com">
-                        <span class="contact-icon">📧</span>
-                        <h3>Email</h3>
-                        <p>Direct communication for opportunities</p>
-                    </div>
-                    <div class="contact-card" data-url="https://www.linkedin.com/in/jordan-leis/">
-                        <span class="contact-icon">💼</span>
-                        <h3>LinkedIn</h3>
-                        <p>Professional network and updates</p>
-                    </div>
-                    <div class="contact-card" data-url="https://github.com/Jordan-Leis">
-                        <span class="contact-icon">🐙</span>
-                        <h3>GitHub</h3>
-                        <p>Open source projects and code</p>
-                    </div>
-                    <div class="contact-card" data-url="https://drive.google.com/file/d/1jHbSPjZX3hLAVGLmC30Kj_MwDdtXkR9Z/view?usp=sharing">
-                        <span class="contact-icon">📄</span>
-                        <h3>Resume</h3>
-                        <p>Detailed experience and skills</p>
-                    </div>
-                </div>
+                <nav class="contact-links" aria-label="Contact links">
+                    <a class="contact-row" href="mailto:jordan.jay.leis@gmail.com">
+                        <img src="/assets/icons/yaru/text-x-generic.png" alt="">
+                        <span><strong>Email</strong><span class="contact-description">jordan.jay.leis@gmail.com</span></span>
+                        <span class="contact-arrow" aria-hidden="true">↗</span>
+                    </a>
+                    <a class="contact-row" href="https://www.linkedin.com/in/jordan-leis/">
+                        <img src="/assets/icons/yaru/webbrowser-app.png" alt="">
+                        <span><strong>LinkedIn</strong><span class="contact-description">Professional network and updates</span></span>
+                        <span class="contact-arrow" aria-hidden="true">↗</span>
+                    </a>
+                    <a class="contact-row" href="https://github.com/Jordan-Leis">
+                        <img src="/assets/icons/yaru/webbrowser-app.png" alt="">
+                        <span><strong>GitHub</strong><span class="contact-description">Open source projects and code</span></span>
+                        <span class="contact-arrow" aria-hidden="true">↗</span>
+                    </a>
+                    <a class="contact-row" href="https://drive.google.com/file/d/1jHbSPjZX3hLAVGLmC30Kj_MwDdtXkR9Z/view?usp=sharing">
+                        <img src="/assets/icons/yaru/application-pdf.png" alt="">
+                        <span><strong>Resume</strong><span class="contact-description">Detailed experience and skills</span></span>
+                        <span class="contact-arrow" aria-hidden="true">↗</span>
+                    </a>
+                </nav>
             </div>
         </div>
 
-        <!-- Blog Window (post list generated by Jekyll from _posts/) -->
-        <div class="window posts-window" id="posts-window">
+        <!-- Browser: every external link opens here, in an iframe, with a way out -->
+        <div class="window browser-window browser-app" id="browser-window">
             <div class="window-header">
-                <div class="window-controls">
-                    <div class="window-control close" data-action="close"></div>
-                    <div class="window-control minimize" data-action="minimize"></div>
-                    <div class="window-control maximize" data-action="maximize"></div>
-                </div>
-                <div class="window-title">~/posts/</div>
-            </div>
-            <div class="window-content">
-                <div class="terminal-line">
-                    <span class="prompt">jordan@waterloo:~$</span> <span class="command">ls -lt ~/posts/</span>
-                </div>
-                <div class="terminal-line">
-                    <div class="output">
-{% if site.posts.size > 0 %}{% for post in site.posts %}
-                        <a class="post-entry" href="{{ post.url }}"><span class="highlight">{{ post.date | date: "%Y-%m-%d" }}</span>  {{ post.title }}{% if post.tags.size > 0 %}<span class="post-tags">{% for tag in post.tags %}#{{ tag }} {% endfor %}</span>{% endif %}</a>
-{% endfor %}{% else %}
-                        <span class="dir-comment">ls: ~/posts/: directory is empty. First post coming.</span>
-{% endif %}
+                <div class="browser-tabs">
+                    <div class="browser-tab">
+                        <span class="tab-favicon" id="browser-tab-favicon"></span>
+                        <span class="tab-title" id="browser-tab-title">New Tab</span>
                     </div>
+                    <div class="browser-newtab" title="New tab">+</div>
                 </div>
-                <div class="terminal-line">
-                    <span class="prompt">jordan@waterloo:~$</span> <span class="command">_</span>
+                <div class="window-controls">
+                    <div class="window-control minimize" data-action="minimize" title="Minimize"><svg viewBox="0 0 16 16"><path d="M3.5 11h9"/></svg></div>
+                    <div class="window-control maximize" data-action="maximize" title="Maximize"><svg viewBox="0 0 16 16"><rect x="3.5" y="3.5" width="9" height="9" rx="1"/></svg></div>
+                    <div class="window-control close" data-action="close" title="Close"><svg viewBox="0 0 16 16"><path d="M4.5 4.5l7 7M11.5 4.5l-7 7"/></svg></div>
+                </div>
+            </div>
+            <div class="browser-toolbar">
+                <button class="nav-btn" id="browser-back" title="Back" disabled><svg viewBox="0 0 16 16"><path d="M10 3 5 8l5 5"/></svg></button>
+                <button class="nav-btn" id="browser-forward" title="Forward" disabled><svg viewBox="0 0 16 16"><path d="m6 3 5 5-5 5"/></svg></button>
+                <button class="nav-btn" id="browser-reload" title="Reload"><svg viewBox="0 0 16 16"><path d="M13 8a5 5 0 1 1-1.5-3.6"/><path d="M13 2v3.5H9.5"/></svg></button>
+                <div class="address-bar">
+                    <svg class="lock" viewBox="0 0 16 16"><rect x="3" y="7" width="10" height="7" rx="1.5"/><path d="M5 7V5a3 3 0 0 1 6 0v2" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
+                    <form id="browser-location"><input class="address" id="browser-address" aria-label="Browser address" autocomplete="off" spellcheck="false"></form>
+                </div>
+                <a class="open-external" id="browser-external" href="#" target="_blank" rel="noopener">Open in browser ↗</a>
+                <div class="nav-btn menu" title="Open application menu"><svg viewBox="0 0 16 16"><path d="M2.5 4h11M2.5 8h11M2.5 12h11"/></svg></div>
+            </div>
+            <div class="browser-loading" id="browser-loading"></div>
+            <div class="window-content browser-body">
+                <iframe id="browser-frame" title="Page" sandbox="allow-scripts allow-same-origin allow-popups allow-forms allow-downloads allow-popups-to-escape-sandbox" referrerpolicy="no-referrer"></iframe>
+                <div class="browser-fallback" id="browser-fallback">
+                    <h2>Hmm. This page isn't loading here.</h2>
+                    <p>The site may not allow itself to be shown inside another page, or it's taking too long.</p>
+                    <a class="fallback-btn" id="browser-fallback-link" href="#" target="_blank" rel="noopener">Open in your browser ↗</a>
                 </div>
             </div>
         </div>
 
     </div>
 
-    <!-- Taskbar -->
-    <div class="taskbar">
-        <div class="taskbar-logo">jordan.leis</div>
-        <div class="taskbar-items">
-            <div class="taskbar-item active" data-window="hero-window">Terminal</div>
-            <div class="taskbar-item" data-window="about-window">About</div>
-            <div class="taskbar-item" data-window="projects-window">Projects</div>
-            <div class="taskbar-item" data-window="contact-window">Contact</div>
-            <div class="taskbar-item" data-window="posts-window">Blog</div>
-        </div>
-        <div class="taskbar-status" style="margin-left: auto; color: var(--text-muted); font-size: 0.8rem;">
-            RL to RTL · co-op 2027
-        </div>
-    </div>
-
-    <script>
-        // Global variables
-        let activeWindow = null;
-        let dragData = {
-            isDragging: false,
-            startX: 0,
-            startY: 0,
-            startLeft: 0,
-            startTop: 0,
-            element: null
-        };
-        let selectedIcon = null;
-        let iconDragData = {
-            isDragging: false,
-            startX: 0,
-            startY: 0,
-            startLeft: 0,
-            startTop: 0,
-            element: null
-        };
-
-        // Initialize window system
-        function initializeWindows() {
-            const windows = document.querySelectorAll('.window');
-            const taskbarItems = document.querySelectorAll('.taskbar-item');
-
-            // Set initial z-index values
-            windows.forEach((window, index) => {
-                window.style.zIndex = 1000 + index;
-            });
-
-            // Setup window controls
-            windows.forEach(window => {
-                const controls = window.querySelectorAll('.window-control');
-                const header = window.querySelector('.window-header');
-
-                // Window control actions
-                controls.forEach(control => {
-                    control.addEventListener('click', (e) => {
-                        e.stopPropagation();
-                        const action = control.getAttribute('data-action');
-                        const windowId = window.id;
-
-                        switch(action) {
-                            case 'close':
-                                closeWindow(windowId);
-                                break;
-                            case 'minimize':
-                                minimizeWindow(windowId);
-                                break;
-                            case 'maximize':
-                                toggleMaximize(windowId);
-                                break;
-                        }
-                    });
-                });
-
-                // Make window draggable
-                header.addEventListener('mousedown', (e) => {
-                    if (e.target.classList.contains('window-control')) return;
-                    
-                    startDrag(e, window);
-                    bringToFront(window);
-                });
-
-                // Click to focus
-                window.addEventListener('mousedown', () => {
-                    bringToFront(window);
-                });
-            });
-
-            // Taskbar item clicks
-            taskbarItems.forEach(item => {
-                item.addEventListener('click', () => {
-                    const windowId = item.getAttribute('data-window');
-                    toggleWindow(windowId);
-                    updateTaskbar();
-                });
-            });
-
-            // Global mouse events for dragging
-            document.addEventListener('mousemove', handleDrag);
-            document.addEventListener('mouseup', stopDrag);
-
-            // Initial state
-            bringToFront(document.getElementById('hero-window'));
-            updateTaskbar();
-        }
-
-        // Window drag functions
-        function startDrag(e, window) {
-            dragData.isDragging = true;
-            dragData.element = window;
-            dragData.startX = e.clientX;
-            dragData.startY = e.clientY;
-            
-            const rect = window.getBoundingClientRect();
-            dragData.startLeft = rect.left;
-            dragData.startTop = rect.top;
-
-            window.style.cursor = 'grabbing';
-            document.body.style.userSelect = 'none';
-        }
-
-        function handleDrag(e) {
-            if (!dragData.isDragging || !dragData.element) return;
-
-            const deltaX = e.clientX - dragData.startX;
-            const deltaY = e.clientY - dragData.startY;
-
-            let newLeft = dragData.startLeft + deltaX;
-            let newTop = dragData.startTop + deltaY;
-
-            // Boundary constraints
-            const windowRect = dragData.element.getBoundingClientRect();
-            const maxLeft = window.innerWidth - windowRect.width;
-            const maxTop = window.innerHeight - windowRect.height - 60;
-
-            newLeft = Math.max(0, Math.min(newLeft, maxLeft));
-            newTop = Math.max(0, Math.min(newTop, maxTop));
-
-            dragData.element.style.left = newLeft + 'px';
-            dragData.element.style.top = newTop + 'px';
-            dragData.element.style.transform = 'none';
-        }
-
-        function stopDrag() {
-            if (dragData.element) {
-                dragData.element.style.cursor = '';
-            }
-            document.body.style.userSelect = '';
-            dragData.isDragging = false;
-            dragData.element = null;
-        }
-
-        // Window management functions
-        function bringToFront(window) {
-            let maxZ = 1000;
-            document.querySelectorAll('.window').forEach(w => {
-                const z = parseInt(w.style.zIndex || 1000);
-                if (z > maxZ) maxZ = z;
-            });
-
-            window.style.zIndex = maxZ + 1;
-            activeWindow = window.id;
-            updateTaskbar();
-        }
-
-        function closeWindow(windowId) {
-            const window = document.getElementById(windowId);
-            window.classList.remove('active');
-            window.classList.add('minimized');
-            
-            if (activeWindow === windowId) {
-                const openWindows = document.querySelectorAll('.window.active');
-                if (openWindows.length > 0) {
-                    bringToFront(openWindows[0]);
-                } else {
-                    activeWindow = null;
-                }
-            }
-            updateTaskbar();
-        }
-
-        function minimizeWindow(windowId) {
-            const window = document.getElementById(windowId);
-            window.classList.remove('active');
-            window.classList.add('minimized');
-            
-            if (activeWindow === windowId) {
-                activeWindow = null;
-            }
-            updateTaskbar();
-        }
-
-        function toggleMaximize(windowId) {
-            const window = document.getElementById(windowId);
-            
-            if (window.classList.contains('maximized')) {
-                window.classList.remove('maximized');
-                window.style.width = '';
-                window.style.height = '';
-                window.style.top = '';
-                window.style.left = '';
-                window.style.transform = '';
-            } else {
-                window.classList.add('maximized');
-                window.style.width = '95vw';
-                window.style.height = 'calc(95vh - 60px)';
-                window.style.top = '2.5vh';
-                window.style.left = '2.5vw';
-                window.style.transform = 'none';
-            }
-        }
-
-        function toggleWindow(windowId) {
-            const window = document.getElementById(windowId);
-            
-            if (window.classList.contains('active')) {
-                minimizeWindow(windowId);
-            } else {
-                window.classList.remove('minimized');
-                window.classList.add('active');
-                bringToFront(window);
-            }
-        }
-
-        function updateTaskbar() {
-            const taskbarItems = document.querySelectorAll('.taskbar-item');
-            
-            taskbarItems.forEach(item => {
-                const windowId = item.getAttribute('data-window');
-                const window = document.getElementById(windowId);
-                
-                item.classList.remove('active', 'minimized');
-                
-                if (window.classList.contains('active')) {
-                    if (activeWindow === windowId) {
-                        item.classList.add('active');
-                    }
-                } else if (window.classList.contains('minimized')) {
-                    item.classList.add('minimized');
-                }
-            });
-        }
-
-        // Desktop icons functionality
-        function initializeDesktopIcons() {
-            const icons = document.querySelectorAll('.desktop-icon');
-
-            icons.forEach(icon => {
-                // Double-click to open
-                icon.addEventListener('dblclick', (e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    openIconTarget(icon);
-                });
-
-                // Single click to select
-                icon.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    selectIcon(icon);
-                });
-
-                // Drag functionality
-                icon.addEventListener('mousedown', (e) => {
-                    if (e.button === 0) {
-                        startIconDrag(e, icon);
-                        selectIcon(icon);
-                    }
-                });
-            });
-
-            // Global click to deselect
-            document.addEventListener('click', (e) => {
-                if (!e.target.closest('.desktop-icon')) {
-                    deselectAllIcons();
-                }
-            });
-
-            // Global mouse events for icon dragging
-            document.addEventListener('mousemove', handleIconDrag);
-            document.addEventListener('mouseup', stopIconDrag);
-        }
-
-        function selectIcon(icon) {
-            deselectAllIcons();
-            icon.classList.add('selected');
-            selectedIcon = icon;
-        }
-
-        function deselectAllIcons() {
-            document.querySelectorAll('.desktop-icon').forEach(icon => {
-                icon.classList.remove('selected');
-            });
-            selectedIcon = null;
-        }
-
-        function openIconTarget(icon) {
-            const windowId = icon.getAttribute('data-window');
-            const action = icon.getAttribute('data-action');
-
-            if (windowId) {
-                const window = document.getElementById(windowId);
-                window.classList.remove('minimized');
-                window.classList.add('active');
-                bringToFront(window);
-                updateTaskbar();
-            } else if (action) {
-                switch(action) {
-                    case 'resume':
-                        window.open('https://drive.google.com/file/d/1jHbSPjZX3hLAVGLmC30Kj_MwDdtXkR9Z/view?usp=sharing', '_blank');
-                        break;
-                    case 'github':
-                        window.open('https://github.com/Jordan-Leis', '_blank');
-                        break;
-                    case 'linkedin':
-                        window.open('https://www.linkedin.com/in/jordan-leis/', '_blank');
-                        break;
-                    case 'terminal':
-                        toggleWindow('hero-window');
-                        updateTaskbar();
-                        break;
-                }
-            }
-
-            // Opening animation
-            icon.style.transform = 'scale(1.2)';
-            setTimeout(() => {
-                icon.style.transform = '';
-            }, 200);
-        }
-
-        function startIconDrag(e, icon) {
-            iconDragData.isDragging = true;
-            iconDragData.element = icon;
-            iconDragData.startX = e.clientX;
-            iconDragData.startY = e.clientY;
-            
-            const rect = icon.getBoundingClientRect();
-            iconDragData.startLeft = rect.left;
-            iconDragData.startTop = rect.top;
-
-            icon.style.cursor = 'grabbing';
-            icon.style.zIndex = '1000';
-            document.body.style.userSelect = 'none';
-        }
-
-        function handleIconDrag(e) {
-            if (!iconDragData.isDragging || !iconDragData.element) return;
-
-            const deltaX = e.clientX - iconDragData.startX;
-            const deltaY = e.clientY - iconDragData.startY;
-
-            let newLeft = iconDragData.startLeft + deltaX;
-            let newTop = iconDragData.startTop + deltaY;
-
-            // Boundary constraints
-            const desktop = document.getElementById('desktop');
-            const desktopRect = desktop.getBoundingClientRect();
-            const iconRect = iconDragData.element.getBoundingClientRect();
-
-            newLeft = Math.max(0, Math.min(newLeft, desktopRect.width - iconRect.width));
-            newTop = Math.max(0, Math.min(newTop, desktopRect.height - iconRect.height - 60));
-
-            // Grid snapping
-            const gridSize = 100;
-            const snappedLeft = Math.round(newLeft / gridSize) * gridSize;
-            const snappedTop = Math.round(newTop / gridSize) * gridSize;
-
-            if (Math.abs(newLeft - snappedLeft) < 20) newLeft = snappedLeft;
-            if (Math.abs(newTop - snappedTop) < 20) newTop = snappedTop;
-
-            iconDragData.element.style.left = newLeft + 'px';
-            iconDragData.element.style.top = newTop + 'px';
-        }
-
-        function stopIconDrag() {
-            if (iconDragData.element) {
-                iconDragData.element.style.cursor = '';
-                iconDragData.element.style.zIndex = '';
-            }
-            document.body.style.userSelect = '';
-            iconDragData.isDragging = false;
-            iconDragData.element = null;
-        }
-
-        // Project card clicks
-        function initializeProjectCards() {
-            document.querySelectorAll('.project-card').forEach(card => {
-                card.addEventListener('click', () => {
-                    const url = card.getAttribute('data-url');
-                    if (url && url !== '#') {
-                        window.open(url, '_blank');
-                    }
-                });
-            });
-        }
-
-        // Contact card clicks
-        function initializeContactCards() {
-            document.querySelectorAll('.contact-card').forEach(card => {
-                card.addEventListener('click', () => {
-                    const url = card.getAttribute('data-url');
-                    if (url) {
-                        if (url.startsWith('mailto:')) {
-                            window.location.href = url;
-                        } else {
-                            window.open(url, '_blank');
-                        }
-                    }
-                });
-            });
-        }
-
-        // Desktop Clock
-        function updateClock() {
-            const now = new Date();
-            const timeElement = document.querySelector('.desktop-clock .time');
-            const dateElement = document.querySelector('.desktop-clock .date');
-            
-            if (timeElement && dateElement) {
-                const timeString = now.toLocaleTimeString('en-US', { 
-                    hour12: false,
-                    hour: '2-digit',
-                    minute: '2-digit',
-                    second: '2-digit'
-                });
-                
-                const dateString = now.toLocaleDateString('en-US', {
-                    weekday: 'short',
-                    month: 'short',
-                    day: 'numeric',
-                    year: 'numeric'
-                });
-                
-                timeElement.textContent = timeString;
-                dateElement.textContent = dateString;
-            }
-        }
-
-        // Window effects
-        function addWindowEffects() {
-            const windows = document.querySelectorAll('.window');
-            
-            windows.forEach(window => {
-                const closeBtn = window.querySelector('.window-control.close');
-                closeBtn.addEventListener('mouseenter', () => {
-                    window.querySelector('.window-header').style.animation =
-    'windowShake 0.5s ease-in-out';
-                });
-                
-                closeBtn.addEventListener('mouseleave', () => {
-                    window.querySelector('.window-header').style.animation = '';
-
-                });
-            });
-        }
-
-        // Boot sequence + hello line
-        // Edit these arrays to change what plays on first visit.
-        const BOOT_LINES = [
-            ['JORDAN-OS v3B  —  University of Waterloo build', 350],
-            ['POST ..................................... OK', 300],
-            ['Detecting hardware ........... Zynq UltraScale+ (fabric online)', 400],
-            ['Loading modules ..... research.ko  ml.ko  software.ko  hardware.ko', 450],
-            ['Mounting ~/hardware ~/research ~/software ~/posts ....... OK', 300],
-            ['Checking timing .................... closed, no phys_opt_design', 350],
-            ['Starting desktop ...', 400]
-        ];
-        const HELLO_PREFIX = "Hi, I'm Jordan. ";
-        const HELLO_ROLES = [
-            "I'm a research engineer.",
-            "I'm a hardware engineer.",
-            "I'm a software engineer.",
-            "I'm an ML engineer."
-        ];
-        const HELLO_FINAL = "I like to build.";
-        const TYPE_MS = 35, DELETE_MS = 15, HOLD_MS = 650;
-
-        const reducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-        function sessionFlag(key, value) {
-            try {
-                if (value === undefined) return sessionStorage.getItem(key);
-                sessionStorage.setItem(key, value);
-            } catch (e) { return null; }
-        }
-
-        // Resolves when the user presses a key or taps, or when the timer ends.
-        function waitOrSkip(ms, onSkip) {
-            return new Promise(resolve => {
-                let done = false;
-                const finish = (skipped) => {
-                    if (done) return;
-                    done = true;
-                    clearTimeout(timer);
-                    document.removeEventListener('keydown', skip);
-                    document.removeEventListener('pointerdown', skip);
-                    if (skipped && onSkip) onSkip();
-                    resolve(skipped);
-                };
-                const skip = () => finish(true);
-                const timer = setTimeout(() => finish(false), ms);
-                document.addEventListener('keydown', skip);
-                document.addEventListener('pointerdown', skip);
-            });
-        }
-
-        function runBoot() {
-            const screen = document.getElementById('boot-screen');
-            const log = document.getElementById('boot-log');
-            if (!screen || !log || reducedMotion || sessionFlag('booted')) {
-                if (screen) screen.remove();
-                return Promise.resolve();
-            }
-
-            screen.classList.add('on');
-            let skipped = false;
-
-            const showLines = async () => {
-                for (const [text, delay] of BOOT_LINES) {
-                    if (skipped) break;
-                    log.textContent += text + '\n';
-                    skipped = await waitOrSkip(delay);
-                }
-            };
-
-            return showLines().then(() => {
-                sessionFlag('booted', '1');
-                screen.classList.add('off');
-                return new Promise(resolve => setTimeout(resolve, 450));
-            }).then(() => screen.remove());
-        }
-
-        function runHello() {
-            const text = document.getElementById('hello-text');
-            const cursor = document.getElementById('hello-cursor');
-            if (!text || !cursor || reducedMotion || sessionFlag('hello')) return;
-
-            let cancelled = false;
-            const finish = () => {
-                cancelled = true;
-                text.textContent = HELLO_PREFIX + HELLO_FINAL;
-                cursor.classList.add('done');
-                sessionFlag('hello', '1');
-                document.removeEventListener('keydown', finish);
-                document.removeEventListener('pointerdown', finish);
-            };
-            document.addEventListener('keydown', finish);
-            document.addEventListener('pointerdown', finish);
-
-            const sleep = (ms) => new Promise(r => setTimeout(r, ms));
-            const typeTo = async (target) => {
-                while (!cancelled && text.textContent.length > 0 && !target.startsWith(text.textContent)) {
-                    text.textContent = text.textContent.slice(0, -1);
-                    await sleep(DELETE_MS);
-                }
-                while (!cancelled && text.textContent.length < target.length) {
-                    text.textContent = target.slice(0, text.textContent.length + 1);
-                    await sleep(TYPE_MS);
-                }
-            };
-
-            (async () => {
-                text.textContent = '';
-                cursor.classList.remove('done');
-                for (const role of HELLO_ROLES) {
-                    await typeTo(HELLO_PREFIX + role);
-                    if (cancelled) return;
-                    await sleep(HOLD_MS);
-                }
-                await typeTo(HELLO_PREFIX + HELLO_FINAL);
-                if (cancelled) return;
-                await sleep(2000);
-                finish();
-            })();
-        }
-
-        // Initialize everything
-        document.addEventListener('DOMContentLoaded', () => {
-            initializeWindows();
-            initializeDesktopIcons();
-            initializeProjectCards();
-            initializeContactCards();
-            addWindowEffects();
-
-            // Start clock
-            setInterval(updateClock, 1000);
-            updateClock();
-
-            // Start with all windows closed except main terminal
-            document.querySelectorAll('.window:not(.hero-window)').forEach(window => {
-                closeWindow(window.id);
-            });
-
-            runBoot().then(runHello);
-        });
-
-        // Keyboard shortcuts
-        document.addEventListener('keydown', (e) => {
-            if (e.altKey && e.key === 'Tab') {
-                e.preventDefault();
-                const activeWindows = Array.from(document.querySelectorAll('.window.active'));
-                if (activeWindows.length > 1) {
-                    const currentIndex = activeWindows.findIndex(w => w.id === activeWindow);
-                    const nextIndex = (currentIndex + 1) % activeWindows.length;
-                    bringToFront(activeWindows[nextIndex]);
-                }
-            }
-            
-            if (e.key === 'Escape' && activeWindow) {
-                closeWindow(activeWindow);
-            }
-        });
-    </script>
+    <script src="{{ "/assets/js/projects.js" | relative_url }}"></script>
+    <script src="{{ "/assets/js/gallery-data.js" | relative_url }}"></script>
+    <script src="{{ "/assets/js/session.js" | relative_url }}"></script>
+    <script src="{{ "/assets/js/pointer.js" | relative_url }}"></script>
+    <script src="{{ "/assets/js/apps.js" | relative_url }}"></script>
+    <script src="{{ "/assets/js/files.js" | relative_url }}"></script>
+    <script src="{{ "/assets/js/terminal.js" | relative_url }}"></script>
+    <script src="{{ "/assets/js/media.js" | relative_url }}"></script>
+    <script src="{{ "/assets/js/solitaire.js" | relative_url }}"></script>
+    <script src="{{ "/assets/js/desktop.js" | relative_url }}"></script>
 </body>
 </html>
