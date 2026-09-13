@@ -54,7 +54,8 @@ export function weight(g,wordA,wordB){
   return i<0?null:g.scores[i];
 }
 
-const compareWords=(x,y)=>{for(let i=0;i<Math.min(x.length,y.length);i++){if(x[i]<y[i])return -1;if(x[i]>y[i])return 1;}return x.length-y.length;};
+// Word indices are alphabetical in the export, so comparing index paths compares word tuples.
+const comparePaths=(x,y)=>{for(let i=0;i<Math.min(x.length,y.length);i++){if(x[i]!==y[i])return x[i]-y[i];}return x.length-y.length;};
 
 /** Port of Graph.shortest_chains: BFS layers from src, then k-best DP over layer-advancing links. */
 export function shortestChains(g,src,dst,k=5){
@@ -70,15 +71,22 @@ export function shortestChains(g,src,dst,k=5){
   }
   const visited=order.length;
   if(dist[t]<0)return {chains:[],visited,layers:dist[order[order.length-1]]};
+  // Only words on some shortest path matter for the DP: walk back from the target by layer.
+  const onPath=new Uint8Array(g.words.length);onPath[t]=1;
+  for(let j=order.length-1;j>=0;j--){
+    const u=order[j];
+    if(!onPath[u]||u===s)continue;
+    for(let i=g.offsets[u];i<g.offsets[u+1];i++){const p=g.neighbors[i];if(dist[p]===dist[u]-1)onPath[p]=1;}
+  }
   const best=new Map([[s,[{total:0,path:[s]}]]]);
   for(const u of order){
-    if(u===s||dist[u]>dist[t])continue;
+    if(u===s||!onPath[u]||dist[u]>dist[t])continue;
     const cands=[];
     for(let i=g.offsets[u];i<g.offsets[u+1];i++){
       const p=g.neighbors[i];
       if(dist[p]===dist[u]-1&&best.has(p))for(const entry of best.get(p))cands.push({total:entry.total+g.scores[i],path:[...entry.path,u]});
     }
-    cands.sort((x,y)=>y.total-x.total||compareWords(x.path.map(i=>g.words[i]),y.path.map(i=>g.words[i])));
+    cands.sort((x,y)=>y.total-x.total||comparePaths(x.path,y.path));
     best.set(u,cands.slice(0,k));
   }
   const chains=(best.get(t)||[]).map(({path})=>{
