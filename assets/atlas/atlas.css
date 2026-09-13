@@ -242,8 +242,9 @@ strong, b { font-weight: 600; }
 .tabs button {
   flex: 1 1 0;
   min-height: 44px;
-  padding: 0 10px;
-  font-size: 15px;
+  padding: 0 6px;
+  font-size: 14px;
+  white-space: nowrap;
   font-weight: 500;
   color: var(--muted);
   border-radius: var(--radius);
@@ -419,6 +420,41 @@ input[type=range]::-moz-range-thumb { width: 14px; height: 14px; border-radius: 
 
 .narration { margin: 16px 2px 0; font-size: 16px; color: var(--muted); }
 
+/* Any pair: solve in the browser ---------------------------------------- */
+.solve-panel { padding: 16px 12px 22px; min-height: 360px; }
+.solve-form { display: grid; gap: 10px; }
+.solve-form label { display: block; font-size: 14px; color: var(--muted); }
+.solve-form input {
+  display: block;
+  width: 100%;
+  min-height: 48px;
+  margin-top: 4px;
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--sheet);
+  font-size: 18px;
+}
+.solve-form input:focus { border-color: var(--route); outline: none; box-shadow: 0 0 0 3px var(--route-soft); }
+.solve-status { margin-top: 12px; font-size: 15px; color: var(--muted); max-width: 60ch; }
+.solve-status.error { color: var(--ink); }
+.solve-result { margin-top: 6px; }
+.solve-result .verdict { display: inline-flex; align-items: center; gap: 8px; margin-top: 14px; font-size: 15px; font-weight: 600; }
+.solve-result .verdict::before { content: ''; width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
+.solve-result .verdict.verified { color: var(--verified); }
+.solve-result .verdict.unverified { color: var(--muted); }
+.route.compact { margin: 14px 0 6px; --route-scale: 1; }
+.route.compact .stop b { font-size: clamp(24px, 6.5vw, 32px); }
+.route.compact .terminus b { font-size: clamp(28px, 8vw, 40px); }
+.route.compact .leg { height: 44px; }
+.solve-result .note { margin-top: 10px; font-size: 15px; color: var(--muted); max-width: 60ch; }
+.solve-result .note a { color: var(--route); }
+.solve-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 12px; }
+.solve-result h3 { margin-top: 20px; font-size: 16px; font-weight: 600; color: var(--muted); }
+.board-note { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; margin-top: 16px; font-size: 15px; color: var(--muted); }
+.board-note button { min-height: 40px; padding: 0 12px; border: 1px solid var(--line); font-size: 14px; }
+.board-note button:hover { border-color: var(--route); color: var(--route); }
+
 /* Word finder ----------------------------------------------------------- */
 .exploration { margin-top: 22px; }
 .exploration summary {
@@ -510,11 +546,18 @@ footer a:first-child { color: var(--ink); font-weight: 600; }
   .route .leg i { width: 100%; height: 6px; transform-origin: left; }
   .route .leg.pending i { width: 100%; height: 0; border-left: 0; border-top: 4px dashed var(--line); }
   .solution { grid-template-columns: 1.2fr 1fr; gap: 32px; }
+  .solve-panel { padding: 20px 20px 26px; }
+  .solve-form { grid-template-columns: 1fr 1fr auto; align-items: end; }
+  .route.compact { gap: 10px; }
+  .route.compact .stop { flex: 0 0 auto; }
+  .route.compact .stop b { font-size: calc(clamp(22px, 2.6vw, 30px) * var(--route-scale)); overflow-wrap: normal; white-space: nowrap; }
+  .route.compact .terminus b { font-size: calc(clamp(26px, 3.4vw, 38px) * var(--route-scale)); }
+  .route.compact .leg { height: auto; flex: 1 1 20px; min-width: 20px; }
   .legend { display: flex; }
   .map-intro { left: auto; right: 12px; top: 40px; bottom: auto; max-width: 300px; }
   .map-count { display: inline; }
   .tabs { width: auto; }
-  .tabs button { flex: 0 0 auto; padding: 0 16px; }
+  .tabs button { flex: 0 0 auto; padding: 0 16px; font-size: 15px; }
   .reading-grid { grid-template-columns: repeat(3, 1fr); gap: 28px; }
   .map-stats { display: flex; gap: 32px; }
   .map-stats div { display: flex; align-items: baseline; gap: 8px; }

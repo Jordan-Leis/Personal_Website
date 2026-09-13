@@ -1,4 +1,5 @@
 import {createTimeline,initialState,transition} from './replay.js';
+import {parseGraph,shortestChains,simulate,normalize} from './solver.js';
 const $=id=>document.getElementById(id);
 const escape=text=>String(text??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const number=n=>Number(n).toLocaleString('en-US');
@@ -11,6 +12,7 @@ let data,state,timeline,nodes,edges,svg,world,nodeElements,edgeElements,contours
 const reduced=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 const narrow=()=>window.innerWidth<600;
 let speed=1,lastNarration='',heroKey='',labelUnit=16,flipped=null,viewBounds=null;
+let graph=null,graphLoading=null,custom=null,solveKey='';// the in-browser solver's graph and the last solved pair
 const ICON={play:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5v15l12-7.5z"/></svg>',pause:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 4h4.5v16H6zM13.5 4H18v16h-4.5z"/></svg>'};
 const position=n=>[80+(n.x+1)*420,65+(n.y+1)*235];
 
@@ -98,7 +100,7 @@ function frameMap(){
 }
 function bind(){
   $('watch').onclick=()=>{if(state.index>=timeline.length-1)dispatch({type:'restart'});if(!state.playing)dispatch({type:'play'});dispatch({type:'step',delta:1});$('atlas').scrollIntoView({behavior:reduced?'auto':'smooth',block:'start'});};
-  $('reveal').onclick=()=>dispatch({type:'reveal'});
+  $('reveal').onclick=()=>{if(custom)custom.onBoard=false;dispatch({type:'reveal'});};
   $('play').onclick=()=>{if(state.index>=timeline.length-1)dispatch({type:'restart'});dispatch({type:'play'});};
   $('previous').onclick=()=>dispatch({type:'seek',index:state.index-1});
   $('next').onclick=()=>dispatch({type:'seek',index:state.index+1});
@@ -106,7 +108,7 @@ function bind(){
   $('timeline').oninput=event=>dispatch({type:'seek',index:Number(event.target.value)});
   $('speed').onclick=event=>{const button=event.target.closest('[data-speed]');if(!button)return;speed=Number(button.dataset.speed);document.querySelectorAll('[data-speed]').forEach(b=>b.setAttribute('aria-pressed',b===button));schedule();};
   document.querySelectorAll('[data-view]').forEach(button=>button.onclick=()=>dispatch({type:'view',value:button.dataset.view}));
-  document.querySelector('.tabs').onkeydown=event=>{if(!['ArrowLeft','ArrowRight'].includes(event.key))return;event.preventDefault();const buttons=[...document.querySelectorAll('[data-view]')];const i=buttons.indexOf(document.activeElement);const next=buttons[(i+(event.key==='ArrowRight'?1:2))%3];next.focus();next.click();};
+  document.querySelector('.tabs').onkeydown=event=>{if(!['ArrowLeft','ArrowRight'].includes(event.key))return;event.preventDefault();const buttons=[...document.querySelectorAll('[data-view]')];const i=buttons.indexOf(document.activeElement);const next=buttons[(i+(event.key==='ArrowRight'?1:buttons.length-1))%buttons.length];next.focus();next.click();};
   $('word-filter').oninput=renderWords;
   $('word-list').onclick=event=>{const button=event.target.closest('[data-word]');if(button)dispatch({type:'word',word:button.dataset.word});};
   $('inspector-content').onclick=event=>{
@@ -114,22 +116,30 @@ function bind(){
     if(word)dispatch({type:'word',word:word.dataset.word});
     if(edge)dispatch({type:'edge',edge:edge.dataset.edge});
     if(source)dispatch({type:'source',value:source.dataset.source});
+    if(event.target.closest('[data-daily-board]')&&custom){custom.onBoard=false;render();}
   };
   $('solution').onclick=event=>{
     const candidate=event.target.closest('[data-candidate]'),word=event.target.closest('[data-word]'),edge=event.target.closest('[data-edge]');
-    if(candidate)dispatch({type:'candidate',index:Number(candidate.dataset.candidate)});
+    if(candidate){if(custom)custom.onBoard=false;dispatch({type:'candidate',index:Number(candidate.dataset.candidate)});}
     if(edge)dispatch({type:'edge',edge:edge.dataset.edge});
     if(word)dispatch({type:'word',word:word.dataset.word});
   };
   $('hero-route').onclick=event=>{const word=event.target.closest('[data-word]');if(word)dispatch({type:'word',word:word.dataset.word});};
+  $('solve-form').onsubmit=event=>{event.preventDefault();solvePair($('solve-from').value,$('solve-to').value);};
+  $('solve-results').onclick=event=>{
+    const pick=event.target.closest('[data-custom-candidate]'),board=event.target.closest('[data-show-board]');
+    if(pick&&custom){custom.selected=Number(pick.dataset.customCandidate);custom.sim=simulate(graph,custom.tl,custom.br,custom.chains[custom.selected].words.slice(1,-1));renderSolve();}
+    if(board&&custom){custom.onBoard=true;dispatch({type:'view',value:'board'});}
+  };
   document.addEventListener('visibilitychange',()=>{if(document.hidden&&state.playing)dispatch({type:'play'});});
 }
 function dispatch(action){
   const previous=state;
   state=transition(state,action,data);
   if(['step','seek'].includes(action.type)&&state.stage==='board'&&previous.stage!=='board')state.view='board';
-  if(state.view!==previous.view){frameMap();svg.call(zoom.transform,homeTransform);}
   render();schedule();
+  // Re-frame after rendering so the sheet has its real size (it is hidden in the Any pair view).
+  if(state.view!==previous.view&&state.view!=='solve'){frameMap();svg.call(zoom.transform,homeTransform);renderMap();}
   if(!previous.revealed&&state.revealed)animateReveal();
 }
 function schedule(){
@@ -147,10 +157,15 @@ function render(){
   const stageNames={ready:'Ready',search:'Searching outward',ranking:'Comparing shortest chains',verification:'Checking with the game',board:'Replaying the game board',complete:'Done'};
   $('stage-label').textContent=stageNames[state.stage];
   $('visited').textContent=number(state.visited);$('frontier').textContent=number(state.frontier);$('layer').textContent=state.depth;
-  $('map-label').textContent={search:'The space between the words',neighborhoods:'Nearest in the original vector space',board:'One word at a time'}[state.view];
+  $('map-label').textContent={search:'The space between the words',neighborhoods:'Nearest in the original vector space',board:'One word at a time',solve:'Any two words'}[state.view];
+  const solving=state.view==='solve';
+  $('solve-panel').hidden=!solving;$('map').toggleAttribute('hidden',solving);
+  document.querySelector('.map-topline').hidden=solving;document.querySelector('.map-bottom').hidden=solving;
+  document.querySelector('.playback').hidden=solving;document.querySelector('.map-stats').hidden=solving;
+  if(solving)$('map-intro').hidden=true;
   $('reveal').hidden=state.revealed;
   $('hint').textContent=(state.revealed?'':'The chain stays hidden until you ask. ')+'Search took '+data.timings.search.toFixed(2)+' s on the full graph.';
-  renderHero();renderMap();renderInspector();renderSolution();
+  renderHero();renderMap();renderInspector();renderSolution();renderSolve();
   const checking=data.candidates[state.checking];
   const captions={ready:'The solver has already made the trip. You can follow along.',
     search:`Looking ${state.depth} ${state.depth===1?'link':'links'} from the start. ${number(state.visited)} words discovered so far.`,
@@ -174,18 +189,88 @@ function renderHero(){
   const c=data.candidates[state.candidate],words=state.revealed&&c?currentWords():null;
   const nextKey=words?words.join('|'):'hidden';
   if(nextKey===heroKey)return;heroKey=nextKey;
-  const terminus=(w,label,id)=>`<span class="stop terminus"><b id="${id}">${escape(w)}</b><small>${label}</small></span>`;
   if(!words){
-    $('hero-route').innerHTML=terminus(data.game.tl,'start','starter-a')+'<span class="leg pending" aria-hidden="true"><i></i><em>?</em></span>'+terminus(data.game.br,'finish','starter-b');
+    $('hero-route').innerHTML=routeHTML([data.game.tl,data.game.br],null,{ids:true});
     return;
   }
   const scores=c.status==='verified'&&c.server_scores?.length===words.length-1?c.server_scores:c.scores;
-  $('hero-route').innerHTML=words.map((w,i)=>{
-    const leg=i?`<span class="leg" aria-hidden="true"><i></i><em>${scores?.[i-1]!=null?Number(scores[i-1]).toFixed(2):''}</em></span>`:'';
+  $('hero-route').innerHTML=routeHTML(words,scores,{ids:true,interactive:true});
+}
+/** Route markup shared by the hero and the Any pair results. scores=null draws a pending leg. */
+function routeHTML(words,scores,{ids=false,interactive=false}={}){
+  const terminus=(w,label,id)=>`<span class="stop terminus"><b${ids?` id="${id}"`:''}>${escape(w)}</b><small>${label}</small></span>`;
+  if(!scores)return terminus(words[0],'start','starter-a')+'<span class="leg pending" aria-hidden="true"><i></i><em>?</em></span>'+terminus(words[words.length-1],'finish','starter-b');
+  return words.map((w,i)=>{
+    const leg=i?`<span class="leg" aria-hidden="true"><i></i><em>${scores[i-1]!=null?Number(scores[i-1]).toFixed(2):''}</em></span>`:'';
     if(i===0)return terminus(w,'start','starter-a');
     if(i===words.length-1)return leg+terminus(w,'finish','starter-b');
-    return leg+`<button class="stop station" data-word="${escape(w)}"><b>${escape(w)}</b><small>add this</small></button>`;
+    return leg+(interactive?`<button class="stop station" data-word="${escape(w)}"><b>${escape(w)}</b><small>add this</small></button>`:`<span class="stop station"><b>${escape(w)}</b><small>add this</small></span>`);
   }).join('');
+}
+/** Which board to draw: the daily candidate, or the pair the visitor solved themselves. */
+function boardContext(){
+  if(custom?.onBoard&&custom.sim)return {frames:custom.sim.frames,tl:custom.tl,br:custom.br,source:'local',custom:true};
+  return {frames:currentFrames(),tl:data.game.tl,br:data.game.br,source:state.source,custom:false};
+}
+/** Load the link graph once, on demand, with the same integrity check as the daily bundle. */
+async function loadGraph(){
+  if(graph)return graph;
+  if(!graphLoading)graphLoading=(async()=>{
+    const status=$('solve-status');
+    if(typeof DecompressionStream==='undefined')throw new Error('This browser cannot unpack the word graph. Use the command-line solver instead.');
+    const manifestResponse=await fetch('./data/graph.json',{cache:'no-cache'});
+    if(!manifestResponse.ok)throw new Error('The word graph is unavailable right now.');
+    const manifest=await manifestResponse.json();
+    if(manifest.schema_version!==1||!/^graph-[a-f0-9]+\.bin$/.test(manifest.file))throw new Error('The word graph uses an unsupported format.');
+    const response=await fetch('./data/'+manifest.file);
+    if(!response.ok||!response.body)throw new Error('The word graph could not be downloaded.');
+    const total=Number(response.headers.get('content-length'))||0,reader=response.body.getReader(),chunks=[];
+    let received=0;
+    for(;;){const {done,value}=await reader.read();if(done)break;chunks.push(value);received+=value.length;status.textContent='Downloading the word graph once: '+(received/1048576).toFixed(1)+(total?' of '+(total/1048576).toFixed(1):'')+' MB.';}
+    const compressed=new Uint8Array(received);let at=0;for(const chunk of chunks){compressed.set(chunk,at);at+=chunk.length;}
+    if(globalThis.crypto?.subtle){
+      const digest=Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',compressed)),b=>b.toString(16).padStart(2,'0')).join('');
+      if(digest!==manifest.sha256)throw new Error('The word graph did not pass its integrity check.');
+    }
+    status.textContent='Unpacking '+number(manifest.words)+' words and '+number(manifest.edges)+' links.';
+    const raw=await new Response(new Blob([compressed]).stream().pipeThrough(new DecompressionStream('gzip'))).arrayBuffer();
+    graph=parseGraph(raw);
+    return graph;
+  })().catch(error=>{graphLoading=null;throw error;});
+  return graphLoading;
+}
+async function solvePair(fromValue,toValue){
+  const status=$('solve-status'),button=$('solve-button');
+  const tl=normalize(fromValue),br=normalize(toValue);
+  status.className='solve-status error';
+  if(!tl||!br){status.textContent='Each word needs 3 to 15 letters, a to z only.';return;}
+  if(tl===br){status.textContent='Pick two different words.';return;}
+  button.disabled=true;
+  try{
+    status.className='solve-status';
+    const g=await loadGraph();
+    const missing=[tl,br].filter(w=>!g.index.has(w));
+    if(missing.length){status.className='solve-status error';status.textContent=missing.map(w=>'“'+w+'”').join(' and ')+(missing.length===1?' isn’t':' aren’t')+' in the solver’s vocabulary of '+number(g.words.length)+' common words.';custom=null;renderSolve();return;}
+    const started=performance.now(),result=shortestChains(g,tl,br,5),elapsed=performance.now()-started;
+    if(!result.chains.length){status.textContent='No chain connects '+tl+' and '+br+' in this vocabulary after exploring '+number(result.visited)+' words. The game’s wider dictionary may still allow one.';custom=null;renderSolve();return;}
+    custom={tl,br,chains:result.chains,selected:0,visited:result.visited,layers:result.layers,elapsed,onBoard:false};
+    custom.sim=simulate(g,tl,br,result.chains[0].words.slice(1,-1));
+    status.textContent='Searched '+number(result.visited)+' words in '+(elapsed<1?'under a millisecond':Math.round(elapsed)+' ms')+'.';
+    renderSolve();
+  }catch(error){status.className='solve-status error';status.textContent=error.message;}
+  finally{button.disabled=false;}
+}
+function renderSolve(){
+  const box=$('solve-results');
+  const nextKey=custom?custom.tl+'|'+custom.br+'|'+custom.selected:'';
+  if(nextKey===solveKey)return;solveKey=nextKey;
+  if(!custom){box.innerHTML='';if(state.view==='solve')renderInspector();return;}
+  const chain=custom.chains[custom.selected],sim=custom.sim,n=chain.added;
+  const verdict=sim.won?`<p class="verdict verified">Wins under the game’s rules locally after adding ${n===0?'no words':n===1?'one word':n+' words'}</p>`:'<p class="verdict unverified">Not connected under the game’s top-five link rule</p>';
+  const alternates=custom.chains.length>1?`<h3>Shortest chains found</h3><ol class="alternates">${custom.chains.map((c,i)=>`<li><button data-custom-candidate="${i}" class="${custom.selected===i?'active':''}" aria-pressed="${custom.selected===i}"><span class="chain">${c.words.map(escape).join(' → ')}</span><span class="status">${c.total.toFixed(2)} total</span></button></li>`).join('')}</ol>`:'';
+  const letters=chain.words.join('').length+chain.words.length*2,scale=Math.min(1,40/letters).toFixed(2);// long chains shrink to stay on one line
+  box.innerHTML=`<div class="solve-result"><div class="route compact" style="--route-scale:${scale}" aria-label="Chain from ${escape(custom.tl)} to ${escape(custom.br)}">${routeHTML(chain.words,chain.scores)}</div>${verdict}<p class="note">Local model only, not checked against the game: the game’s dictionary and scores can differ. <a href="https://linxicon.com/practice">Try it in practice mode</a>.</p><div class="solve-actions"><button class="button-secondary" data-show-board>Show on the game board</button></div>${alternates}</div>`;
+  if(state.view==='solve')renderInspector();
 }
 /** One orchestrated moment: the route grows stop by stop, on the hero and on the map. */
 function animateReveal(){
@@ -207,10 +292,11 @@ function renderMap(){
   const boardWorld=world.select('.board-world');boardWorld.attr('display',board?null:'none');
   if(board){
     boardWorld.selectAll('*').remove();
-    if(!state.revealed){boardWorld.append('text').attr('x',500).attr('y',300).attr('text-anchor','middle').attr('class','map-frame-note').text('Watch the search or reveal the chain to see its board.');return;}
-    const frames=currentFrames();
-    if(!frames.length){boardWorld.append('text').attr('x',500).attr('y',300).attr('text-anchor','middle').attr('class','map-frame-note').text('No '+(state.source==='server'?'game':'local')+' board replay is available for this chain.');return;}
-    const frame=frames[state.stage==='board'?Math.min(state.boardIndex??0,frames.length-1):frames.length-1];
+    const ctx=boardContext();
+    if(!ctx.custom&&!state.revealed){boardWorld.append('text').attr('x',500).attr('y',300).attr('text-anchor','middle').attr('class','map-frame-note').text('Watch the search or reveal the chain to see its board.');return;}
+    const frames=ctx.frames;
+    if(!frames.length){boardWorld.append('text').attr('x',500).attr('y',300).attr('text-anchor','middle').attr('class','map-frame-note').text('No '+(ctx.source==='server'?'game':'local')+' board replay is available for this chain.');return;}
+    const frame=frames[!ctx.custom&&state.stage==='board'?Math.min(state.boardIndex??0,frames.length-1):frames.length-1];
     const positions=new Map(frame.words.map((word,i)=>[word,i===0?[170,290]:i===1?[830,290]:[250+(i-2)*Math.min(500/Math.max(1,frame.words.length-3),170),410-(i%2)*190]]));
     for(const edge of [...frame.pruned.map(e=>({...e,pruned:true})),...frame.edges]){
       const a=positions.get(edge.a),b=positions.get(edge.b);
@@ -218,8 +304,8 @@ function renderMap(){
       boardWorld.append('line').attr('class','board-edge').attr('x1',a[0]).attr('y1',a[1]).attr('x2',b[0]).attr('y2',b[1]).attr('stroke',edge.pruned?COLOR.explore:route?COLOR.route:COLOR.discovered).attr('stroke-width',route?4:1.6).attr('stroke-linecap','round').attr('stroke-dasharray',edge.pruned?'5 6':null).attr('opacity',edge.pruned?.5:.9).on('click',()=>dispatch({type:'edge',edge:key(edge.a,edge.b)}));
       boardWorld.append('text').attr('x',(a[0]+b[0])/2).attr('y',(a[1]+b[1])/2-10).attr('class','map-frame-note').attr('text-anchor','middle').text(edge.score.toFixed(2));
     }
-    for(const [word,p] of positions){const group=boardWorld.append('g').attr('class','board-node').attr('transform','translate('+p+')').on('click',()=>dispatch({type:'word',word}));group.append('circle').attr('r',8).attr('fill',[data.game.tl,data.game.br].includes(word)?COLOR.ink:COLOR.route);group.append('circle').attr('r',17).attr('fill','none').attr('stroke',COLOR.route).attr('opacity',.35);group.append('text').attr('x',0).attr('y',-30).attr('text-anchor','middle').text(word);}
-    boardWorld.append('text').attr('x',500).attr('y',520).attr('text-anchor','middle').attr('class','map-frame-note').text((frame.path.length?'Connected':'Not connected yet')+' with '+Math.max(0,frame.words.length-2)+' '+(frame.words.length===3?'word':'words')+' added, using '+(state.source==='server'?'game':'local')+' scores');
+    for(const [word,p] of positions){const group=boardWorld.append('g').attr('class','board-node').attr('transform','translate('+p+')').on('click',()=>dispatch({type:'word',word}));group.append('circle').attr('r',8).attr('fill',[ctx.tl,ctx.br].includes(word)?COLOR.ink:COLOR.route);group.append('circle').attr('r',17).attr('fill','none').attr('stroke',COLOR.route).attr('opacity',.35);group.append('text').attr('x',0).attr('y',-30).attr('text-anchor','middle').text(word);}
+    boardWorld.append('text').attr('x',500).attr('y',520).attr('text-anchor','middle').attr('class','map-frame-note').text((frame.path.length?'Connected':'Not connected yet')+' with '+Math.max(0,frame.words.length-2)+' '+(frame.words.length===3?'word':'words')+' added, using '+(ctx.source==='server'?'game':'local')+' scores');
     return;
   }
   const discovered=new Set(state.discovered),c=data.candidates[state.candidate];
@@ -265,7 +351,15 @@ function renderMap(){
 }
 function renderInspector(){
   const c=data.candidates[state.candidate];
-  const sourceSwitch=state.view==='board'?`<div class="source-switch" aria-label="Board scoring source"><button data-source="local" class="${state.source==='local'?'active':''}">Local model</button><button data-source="server" class="${state.source==='server'?'active':''}">Game scores</button></div>`:'';
+  const ctx=boardContext();
+  const boardNote=state.view==='board'&&ctx.custom?`<div class="board-note"><span>Showing your pair, ${escape(custom.tl)} → ${escape(custom.br)}.</span><button data-daily-board>Back to today’s puzzle</button></div>`:'';
+  if(state.view==='solve'||boardNote){
+    if(!custom){$('inspector-content').innerHTML='<h2>Solve any pair</h2><p>Type two words and the solver searches its graph of common words for the shortest chain, the same way it solves the daily puzzle.</p><p>Results use the local scoring model. The game itself has the final say on spelling and scores.</p>';return;}
+    const chain=custom.chains[custom.selected];
+    $('inspector-content').innerHTML=`<h2>${escape(custom.tl)}<span class="to">to</span>${escape(custom.br)}</h2><p class="word-kind">${chain.added===0?'Linked directly':chain.added===1?'One word between':chain.added+' words between'}</p><p class="section-label">Link scores</p>${chain.words.slice(1).map((w,i)=>`<div class="score-row"><span>${escape(chain.words[i])} → ${escape(w)}</span><b>${chain.scores[i].toFixed(4)}</b></div>`).join('')}<div class="score-row"><span>Total</span><b>${chain.total.toFixed(4)}</b></div><p>A link needs a score of at least 0.3995. Searched ${number(custom.visited)} words, ${custom.layers} ${custom.layers===1?'link':'links'} deep.</p>${boardNote}`;
+    return;
+  }
+  const sourceSwitch=state.view==='board'&&!ctx.custom?`<div class="source-switch" aria-label="Board scoring source"><button data-source="local" class="${state.source==='local'?'active':''}">Local model</button><button data-source="server" class="${state.source==='server'?'active':''}">Game scores</button></div>`:boardNote;
   if(state.edge&&edges.has(state.edge)){
     const edge=edges.get(state.edge);
     const pair=c?.server_pairs.find(p=>key(p.a,p.b)===state.edge);
@@ -273,7 +367,9 @@ function renderInspector(){
     $('inspector-content').innerHTML=`<button class="back-word" data-word="${escape(state.selected)}">‹ Back to ${escape(state.selected)}</button><h2>${escape(edge.a)}<span class="to">to</span>${escape(edge.b)}</h2><p>A link needs a score of at least 0.3995. The strongest local signal wins.</p><div class="score-row"><span>Vector similarity</span><b>${score(edge.cosine)}</b></div><div class="score-row"><span>WordNet boost</span><b>${score(edge.boost)}</b></div><div class="score-row"><span>Final local score</span><b>${score(edge.local)}</b></div><div class="score-row"><span>Game score</span><b>${score(remote)}</b></div><div class="threshold-meter" aria-hidden="true"><i style="width:${Math.max(0,Math.min(100,(remote??edge.local)*100))}%"></i></div><p>${remote==null?'The game has not scored this pair for the selected chain.':remote>=data.config.threshold?'The game allows this link.':'The game’s score falls below the link threshold.'}</p><details><summary>Why these words connect</summary><p>${escape(edge.relationship?.label||'The local score comes from the vectors alone.')}</p>${edge.relationship?.definition?'<p>'+escape(edge.relationship.definition)+'</p>':''}<p>Cosine similarity and WordNet boosts are separate signals. The game can disagree with the local model.</p></details>${sourceSwitch}`;
     return;
   }
-  const n=nodes.get(state.selected),kind=n.word===data.game.tl?'Start word':n.word===data.game.br?'Finish word':'A word near the puzzle';
+  const n=nodes.get(state.selected);
+  if(!n){$('inspector-content').innerHTML=`<h2>${escape(state.selected)}</h2><p>This word is not on today’s map.</p>${sourceSwitch}`;return;}
+  const kind=n.word===data.game.tl?'Start word':n.word===data.game.br?'Finish word':'A word near the puzzle';
   const relevant=data.edges.filter(e=>e.local>=data.config.threshold&&(e.a===n.word||e.b===n.word)).sort((a,b)=>b.local-a.local).slice(0,6);
   $('inspector-content').innerHTML=`<h2>${escape(n.word)}</h2><p class="word-kind">${kind}</p><p>Words nearby in the original vector space. A higher score means a more similar direction.</p><p class="section-label">Nearest by vector</p><ol class="neighbor-list">${n.neighbors.map(other=>`<li>${nodes.has(other.word)?`<button data-word="${escape(other.word)}">${escape(other.word)}</button>`:`<span class="outside" title="Not on this map">${escape(other.word)}</span>`}<span class="score">${other.score.toFixed(3)}</span><span class="neighbor-bar" aria-hidden="true"><i style="width:${Math.max(0,other.score)*100}%"></i></span></li>`).join('')}</ol><details><summary>Game links (${relevant.length})</summary><ul class="neighbor-list">${relevant.map(e=>`<li><button data-edge="${escape(key(e.a,e.b))}">${escape(e.a===n.word?e.b:e.a)}</button><span class="score">${score(e.local)}</span></li>`).join('')}</ul><p>These include WordNet boosts, so they differ from the vector ranking above.</p></details>${sourceSwitch}`;
 }
