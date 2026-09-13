@@ -5,15 +5,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Jordan Leis — RL to RTL</title>
+    <title>Jordan Leis</title>
     <meta name="description" content="Electrical Engineering student at the University of Waterloo. Research, ML, software, and now RTL — I build at whatever layer the problem is stuck at. Cansbridge Fellow.">
     <link rel="stylesheet" href="{{ "/assets/css/desktop.css" | relative_url }}">
 </head>
 <body>
-    <!-- Boot sequence (shown once per session; any key skips) -->
+    <!-- Boot sequence: each full desktop load and simulated reboot -->
     <div class="boot-screen" id="boot-screen" aria-hidden="true">
         <pre class="boot-log" id="boot-log"></pre>
-        <div class="boot-skip">press any key to skip</div>
+        <button class="boot-skip" id="boot-skip">Skip boot</button>
     </div>
 
     <!-- Wallpaper -->
@@ -34,14 +34,26 @@
         </div>
         <div class="panel-clock" id="panel-clock">--- --  --:--</div>
         <div class="panel-right">
-            <div class="panel-item panel-tray" title="Network · Sound · Battery">
+            <button class="panel-item panel-tray" id="system-toggle" title="Network · Sound · Battery" aria-label="System menu" aria-expanded="false">
                 <svg viewBox="0 0 16 16"><path d="M8 13.5 1 6.5C3 4.7 5.4 3.8 8 3.8s5 .9 7 2.7L8 13.5z"/></svg>
                 <svg viewBox="0 0 16 16"><path d="M2 6h3l4-3v10L5 10H2z"/><path d="M11 5.5a3.5 3.5 0 0 1 0 5" fill="none" stroke="#fff" stroke-width="1.4"/></svg>
                 <svg viewBox="0 0 16 16"><rect x="1" y="4" width="12" height="8" rx="1.5" fill="none" stroke="#fff" stroke-width="1.4"/><rect x="2.5" y="5.5" width="9" height="5"/><rect x="13.5" y="6.5" width="1.5" height="3"/></svg>
                 <svg viewBox="0 0 16 16"><path d="M8 1.5v6" fill="none" stroke="#fff" stroke-width="1.6" stroke-linecap="round"/><path d="M4.6 4.2a5 5 0 1 0 6.8 0" fill="none" stroke="#fff" stroke-width="1.6" stroke-linecap="round"/></svg>
-            </div>
+            </button>
         </div>
     </div>
+    <section id="system-menu" class="system-menu" hidden aria-label="System settings">
+        <div class="volume-row"><button id="system-mute" aria-label="Mute">♪</button><label for="system-volume">Volume</label><input id="system-volume" type="range" min="0" max="100" value="50"><output id="volume-value">50%</output></div>
+        <div class="system-row"><span>Wi-Fi</span><strong>eduroam</strong><span>Connected</span></div>
+        <div class="system-row"><span>Battery</span><strong>87%</strong><span>Charging</span></div>
+    </section>
+    <button id="egg-tracker" class="egg-tracker" hidden aria-live="polite"></button>
+    <div id="crash-screen" class="crash-screen" hidden role="alert"><pre>JORDAN-OS
+
+[FAILED] Desktop recursion limit exceeded.
+Kernel panic — recursive display server.
+
+Restarting display manager…</pre></div>
 
     <!-- Dock -->
     <div class="dock" id="dock">
@@ -109,7 +121,7 @@
                 <img class="icon-image" src="/assets/icons/yaru/terminal-app.png" alt="">
                 <div class="icon-label">Terminal</div>
             </div>
-            <div class="desktop-icon" data-action="trash" style="top: 316px; left: 112px;">
+            <div class="desktop-icon" data-trash-target data-action="trash" style="top: 316px; left: 112px;">
                 <img class="icon-image" src="/assets/icons/yaru/user-trash.png" alt="">
                 <div class="icon-label">Trash</div>
             </div>
@@ -126,6 +138,7 @@
                 </div>
             </div>
             <div class="window-content">
+                <div id="terminal-intro">
                 <div class="ascii-art">
      ██╗ ██████╗ ██████╗ ██████╗  █████╗ ███╗   ██╗    ██╗     ███████╗██╗███████╗
      ██║██╔═══██╗██╔══██╗██╔══██╗██╔══██╗████╗  ██║    ██║     ██╔════╝██║██╔════╝
@@ -145,7 +158,7 @@
                     <span class="prompt"><span class="user">jordan@waterloo</span>:<span class="path">~</span>$</span> <span class="command">whoami</span>
                 </div>
                 <div class="terminal-line">
-                    <div class="output">Electrical Engineering @ <span class="highlight">University of Waterloo</span> (3B)<br>
+                    <div class="output" id="identity-text">Electrical Engineering @ <span class="highlight">University of Waterloo</span> (3B)<br>
                     Research → ML → software → hardware. Currently: <span class="highlight">RTL on Zynq UltraScale+</span>.<br>
                     I build at whatever layer the problem is stuck at.<br>
                     <span class="highlight">Cansbridge Fellow</span> — 1 of 15 selected nationally</div>
@@ -155,7 +168,7 @@
                     <span class="prompt"><span class="user">jordan@waterloo</span>:<span class="path">~</span>$</span> <span class="command">cat mission.txt</span>
                 </div>
                 <div class="terminal-line">
-                    <div class="output">Making compute <span class="success">cheaper</span> and <span class="success">more available</span> —<br>
+                    <div class="output" id="mission-text">Making compute <span class="success">cheaper</span> and <span class="success">more available</span> —<br>
                     at the model, the software, or the silicon, whichever is the bottleneck.</div>
                 </div>
 
@@ -188,9 +201,13 @@
                 <div class="terminal-line">
                     <div class="output">FPGA / RTL co-op, 2027.  <span class="dir-comment"># full ask in contact.json</span></div>
                 </div>
-                <div class="terminal-line">
-                    <span class="prompt"><span class="user">jordan@waterloo</span>:<span class="path">~</span>$</span> <span class="cursor"></span>
                 </div>
+                <button id="intro-skip" class="intro-skip" hidden>Skip introduction</button>
+                <div id="terminal-output" aria-live="polite"></div>
+                <form id="terminal-form" autocomplete="off">
+                    <label for="terminal-input" class="prompt"><span class="user">jordan@waterloo</span>:<span class="path" id="terminal-path">~</span>$</label>
+                    <input id="terminal-input" aria-label="Terminal command" spellcheck="false" autocapitalize="off" autocomplete="off">
+                </form>
             </div>
         </div>
 
@@ -222,9 +239,6 @@
                     </div>
                 </div>
 
-                <div class="terminal-line" style="margin-top: 1.5rem;">
-                    <span class="prompt"><span class="user">jordan@waterloo</span>:<span class="path">~</span>$</span> <span class="command">git log --oneline experience/</span>
-                </div>
                 <div class="terminal-line">
 <pre class="output tree"><span class="highlight">2026 Jan–Aug</span>       ML Engineer (Research), Health Canada (PMRA)
 <span class="highlight">2026 Jan–Apr</span>       Director, Wat.AI
@@ -258,15 +272,16 @@
             </div>
             <div class="files-body">
                 <div class="files-sidebar">
-                    <div class="sb-item muted"><img src="/assets/icons/yaru/document-open-recent.png" alt="">Recent</div>
-                    <div class="sb-item muted"><span class="sb-star">★</span>Starred</div>
-                    <div class="sb-item" data-path="/"><img src="/assets/icons/yaru/user-home.png" alt="">Home</div>
-                    <div class="sb-item muted"><img src="/assets/icons/yaru/user-desktop.png" alt="">Desktop</div>
-                    <div class="sb-item muted"><img src="/assets/icons/yaru/folder-documents.png" alt="">Documents</div>
-                    <div class="sb-item muted"><img src="/assets/icons/yaru/folder-download.png" alt="">Downloads</div>
-                    <div class="sb-item" data-path="/Projects"><img src="/assets/icons/yaru/folder.png" alt="">Projects</div>
-                    <div class="sb-item" data-path="/posts"><img src="/assets/icons/yaru/folder-documents.png" alt="">posts</div>
-                    <div class="sb-item" data-path="/Trash"><img src="/assets/icons/yaru/user-trash.png" alt="">Trash</div>
+                    <button class="sb-item" data-path="/Recent"><img src="/assets/icons/yaru/document-open-recent.png" alt="">Recent</button>
+                    <button class="sb-item" data-path="/Starred"><span class="sb-star">★</span>Starred</button>
+                    <button class="sb-item" data-path="/"><img src="/assets/icons/yaru/user-home.png" alt="">Home</button>
+                    <button class="sb-item" data-path="/Desktop"><img src="/assets/icons/yaru/user-desktop.png" alt="">Desktop</button>
+                    <button class="sb-item" data-path="/Documents"><img src="/assets/icons/yaru/folder-documents.png" alt="">Documents</button>
+                    <button class="sb-item" data-path="/Downloads"><img src="/assets/icons/yaru/folder-download.png" alt="">Downloads</button>
+                    <button class="sb-item" data-path="/Photos"><img src="/assets/icons/yaru/folder-pictures.png" alt="">Photos</button>
+                    <button class="sb-item" data-path="/Projects"><img src="/assets/icons/yaru/folder.png" alt="">Projects</button>
+                    <button class="sb-item" data-path="/posts"><img src="/assets/icons/yaru/folder-documents.png" alt="">posts</button>
+                    <button class="sb-item" data-path="/Trash" data-trash-target><img src="/assets/icons/yaru/user-trash.png" alt="">Trash</button>
                 </div>
                 <div class="files-main">
                     <div class="files-grid" id="files-grid"></div>
@@ -275,7 +290,7 @@
                         <div class="files-empty-title">Folder is Empty</div>
                         <div class="files-empty-sub" id="files-empty-sub"></div>
                     </div>
-                    <div class="files-status" id="files-status"></div>
+                    <div class="files-footer"><div class="files-status" id="files-status"></div><button id="files-hidden" title="Show hidden files (Ctrl+H)" aria-pressed="false">Show hidden files</button><button id="files-trash" data-trash-target title="Open Trash">Trash</button></div>
                 </div>
                 <div class="files-details" id="files-details" hidden></div>
             </div>
@@ -366,7 +381,7 @@ reach more people, I'm interested.
                 <button class="nav-btn" id="browser-reload" title="Reload"><svg viewBox="0 0 16 16"><path d="M13 8a5 5 0 1 1-1.5-3.6"/><path d="M13 2v3.5H9.5"/></svg></button>
                 <div class="address-bar">
                     <svg class="lock" viewBox="0 0 16 16"><rect x="3" y="7" width="10" height="7" rx="1.5"/><path d="M5 7V5a3 3 0 0 1 6 0v2" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
-                    <span class="address" id="browser-address"></span>
+                    <form id="browser-location"><input class="address" id="browser-address" aria-label="Browser address" autocomplete="off" spellcheck="false"></form>
                 </div>
                 <a class="open-external" id="browser-external" href="#" target="_blank" rel="noopener">Open in browser ↗</a>
                 <div class="nav-btn menu" title="Open application menu"><svg viewBox="0 0 16 16"><path d="M2.5 4h11M2.5 8h11M2.5 12h11"/></svg></div>
@@ -385,6 +400,14 @@ reach more people, I'm interested.
     </div>
 
     <script src="{{ "/assets/js/projects.js" | relative_url }}"></script>
+    <script src="{{ "/assets/js/gallery-data.js" | relative_url }}"></script>
+    <script src="{{ "/assets/js/session.js" | relative_url }}"></script>
+    <script src="{{ "/assets/js/pointer.js" | relative_url }}"></script>
+    <script src="{{ "/assets/js/apps.js" | relative_url }}"></script>
+    <script src="{{ "/assets/js/files.js" | relative_url }}"></script>
+    <script src="{{ "/assets/js/terminal.js" | relative_url }}"></script>
+    <script src="{{ "/assets/js/media.js" | relative_url }}"></script>
+    <script src="{{ "/assets/js/solitaire.js" | relative_url }}"></script>
     <script src="{{ "/assets/js/desktop.js" | relative_url }}"></script>
 </body>
 </html>

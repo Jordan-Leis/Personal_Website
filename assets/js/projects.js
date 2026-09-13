@@ -101,6 +101,7 @@ const PROJECTS = [
     {
         id: 'rag', folder: 'papers', slug: 'rag_agents',
         name: 'RAG Agent Architectures', subtitle: 'co-author • CUCAI 2025',
+        paper: 'https://cucai.ca/2025_proceedings.pdf#page=118',
         repo: 'https://github.com/Madhav-Malhotra/political-chatbot',
         tags: ['RAG', 'LLM Evaluation', 'Multi-Agent'],
         note: 'co-author, CUCAI 2025',

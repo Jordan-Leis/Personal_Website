@@ -1547,3 +1547,115 @@ img {
     .window.active { animation: none; }
     .cursor { animation: none; }
 }
+
+/* Interactive desktop applications */
+[hidden], .desktop-icon[hidden] { display: none !important; }
+button, input { font: inherit; }
+button { cursor: pointer; }
+button:focus-visible, input:focus-visible, [tabindex]:focus-visible { outline: 2px solid var(--orange); outline-offset: -2px; }
+.panel-tray { border: 0; background: transparent; color: white; }
+.system-menu { position: fixed; z-index: 100000; right: 10px; top: 35px; width: min(360px, calc(100vw - 20px)); padding: 18px; background: #303030; border: 1px solid #555; border-radius: 14px; box-shadow: 0 12px 30px #0009; }
+.volume-row { display: flex; align-items: center; gap: 8px; margin-bottom: 18px; }
+.volume-row label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+.volume-row input { min-width: 0; flex: 1; accent-color: var(--orange); }
+.volume-row output { width: 38px; font-size: 12px; }
+#system-mute { background: #454545; color: white; border: 0; border-radius: 50%; width: 34px; height: 34px; }
+.system-row { display: flex; flex-wrap: wrap; gap: 10px; padding: 12px 0; border-top: 1px solid #ffffff18; }
+.system-row strong { margin-left: auto; }
+.system-row > span:last-child { font-size: 12px; color: var(--fg-muted); }
+.egg-tracker { position: fixed; bottom: 12px; right: 12px; z-index: 100000; border: 1px solid #ffffff30; color: #ccc; background: #242424e8; border-radius: 16px; padding: 6px 12px; font-size: 12px; }
+.egg-tracker.complete { color: #1e1700; background: #e9b949; border-color: #ffe3a0; }
+.has-eggs .desktop { bottom: 48px; }
+.crash-screen { position: fixed; inset: 0; z-index: 1000000; background: #160713; color: #eee; display: grid; place-items: center; padding: 24px; }
+.crash-screen pre { white-space: pre-wrap; max-width: 70ch; font: 16px/1.8 var(--font-mono); }
+.boot-screen { z-index: 1000001; }
+.boot-ok { color: var(--term-green); }
+.boot-skip { color: #ddd; border: 1px solid #555; padding: 8px 14px; border-radius: 5px; background: #222; }
+.window-header, .desktop-icon { touch-action: none; }
+.pointer-dragging { cursor: grabbing !important; user-select: none; }
+.pointer-dragging iframe { pointer-events: none !important; }
+.drag-source { opacity: 0.6; pointer-events: none !important; }
+.desktop-icon.drag-source { z-index: 100000; }
+.drop-ready { background: #e9542066 !important; outline: 2px solid var(--orange); }
+.sb-item { border: 0; background: transparent; text-align: left; flex-shrink: 0; }
+.fs-item { touch-action: pan-y; }
+.fs-repo-emblem { position: absolute; right: 0; bottom: 0; font: bold 10px/18px var(--font-mono); background: #eee; color: #222; border-radius: 50%; width: 22px; height: 22px; text-align: center; border: 2px solid #eee; }
+.files-footer { display: flex; align-items: center; gap: 8px; border-top: 1px solid #ffffff12; padding-right: 8px; }
+.files-footer .files-status { border-top: 0; margin-right: auto; }
+.files-footer button { border: 0; border-radius: 4px; color: var(--fg-dim); background: transparent; font-size: 11px; padding: 6px; }
+#files-hidden[aria-pressed="true"] { background: #ffffff1a; color: white; }
+.fs-photo .fs-icon img { object-fit: contain; }
+#browser-location { flex: 1; min-width: 0; }
+#browser-address { display: block; border: 0; background: transparent; color: inherit; width: 100%; min-width: 0; padding: 3px; text-overflow: ellipsis; }
+#terminal-form { display: flex; gap: 8px; align-items: baseline; padding-bottom: 8px; }
+#terminal-form .prompt { flex: 0 1 auto; max-width: 60%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#terminal-input { min-width: 40px; flex: 1; border: 0; background: transparent; color: var(--term-fg); caret-color: var(--term-fg); font: inherit; outline-offset: 2px; }
+#terminal-output { overflow-wrap: anywhere; }
+.terminal-response { white-space: pre-wrap; margin: 5px 0 14px; font: inherit; overflow-wrap: anywhere; }
+.terminal-echo { color: var(--term-green); white-space: pre-wrap; }
+.intro-skip { position: sticky; bottom: 5px; float: right; color: #ddd; background: #48213c; border: 1px solid #835274; border-radius: 5px; padding: 4px 10px; }
+.extra-window { width: 800px; height: 640px; top: 4%; left: 50%; transform: translateX(-50%); }
+.extra-window .window-content { min-width: 0; }
+#notes-content { white-space: pre-wrap; overflow-wrap: anywhere; font: 15px/1.7 var(--font-mono); }
+.photo-app .window-content { display: flex; flex-direction: column; padding: 0; background: #151515; }
+.photo-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px; background: #262626; }
+.photo-toolbar button, .game-toolbar button, .media-controls button { background: #414141; border: 1px solid #555; border-radius: 5px; color: #fff; min-width: 36px; min-height: 34px; }
+#photo-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.photo-stage { flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center; padding: 12px; }
+#photo-image { max-width: 100%; max-height: 100%; width: auto; height: auto; object-fit: contain; }
+.media-app { width: 680px; height: 640px; }
+.media-app .window-content { padding: 16px; }
+.youtube-stage { width: 100%; aspect-ratio: 16 / 9; min-height: 200px; background: #111; display: grid; place-items: center; border-radius: 5px; overflow: hidden; }
+.youtube-stage iframe { width: 100%; height: 100%; min-height: 200px; border: 0; }
+.media-start { background: var(--orange); color: white; padding: 10px 18px; border: 0; border-radius: 5px; }
+.media-info { margin: 14px 0; font-weight: 700; overflow-wrap: anywhere; }
+.media-controls { display: flex; align-items: center; gap: 8px; }
+.media-controls input { min-width: 0; flex: 1; accent-color: var(--orange); }
+.media-controls button:disabled { opacity: 0.35; cursor: default; }
+.media-message { font-size: 13px; color: var(--fg-muted); margin: 14px 0 8px; }
+.media-external { color: var(--orange-hover); font-size: 13px; }
+.solitaire-app { width: 900px; height: 700px; }
+.solitaire-app .window-content { padding: 0; display: flex; flex-direction: column; }
+.game-toolbar { display: flex; gap: 8px; align-items: center; padding: 10px; background: #292929; }
+.game-toolbar button { padding: 3px 12px; }
+.game-toolbar button:disabled { opacity: 0.4; }
+#game-status { margin-left: auto; font-size: 12px; color: #d0d0d0; }
+.game-board { --card-step: 26px; flex: 1; overflow-y: auto; padding: 18px; background: #254c3e; }
+.game-top, .game-tableau { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 10px; }
+.game-top { margin-bottom: 20px; }
+.playing-card, .pile-empty { aspect-ratio: 0.7; border-radius: 6px; width: 100%; }
+.playing-card { border: 1px solid #aaa; background: #f4f2ec; color: #252525; font: bold clamp(12px, 2vw, 23px)/1.2 var(--font-ui); text-align: left; padding: 5px; display: flex; align-items: flex-start; touch-action: none; box-shadow: 0 1px 3px #0004; }
+.card-red { color: #aa2435; }
+.card-back { background: repeating-linear-gradient(45deg, #654359 0 5px, #58314a 5px 10px); color: #e9c5dd; border: 3px solid #d7bacc; align-items: center; justify-content: center; }
+.card-pile { position: relative; min-width: 0; }
+.card-pile .playing-card { position: absolute; top: 0; left: 0; }
+.pile-empty { display: grid; place-items: center; color: #ffffff45; border: 1px solid #ffffff30; background: #0001; }
+.tableau-pile { min-height: calc((var(--pile-count) - 1) * var(--card-step) + 145px); }
+.tableau-pile .playing-card { top: calc(var(--card-index) * var(--card-step)); }
+.card-selected { outline: 3px solid #f5b963; outline-offset: -3px; }
+.card-ghost { position: fixed !important; z-index: 100000; pointer-events: none; opacity: 0.9; }
+@media (max-width: 1100px) and (min-width: 769px) {
+    .files-sidebar { flex-basis: 150px; }
+    .files-details { flex-basis: 250px; }
+    .files-grid { grid-template-columns: repeat(auto-fill, 90px); }
+    .fs-item { width: 90px; }
+}
+@media (max-width: 768px) {
+    .egg-tracker { bottom: 72px; }
+    .has-eggs .desktop { bottom: 106px; }
+    .crash-screen pre { font-size: 13px; }
+    .browser-app .browser-body { padding: 0; }
+    .extra-window .window-content { padding: 12px; }
+    .photo-app .window-content, .solitaire-app .window-content { padding: 0; }
+    .game-board { --card-step: 22px; padding: 8px 5px; }
+    .game-top, .game-tableau { gap: 4px; }
+    .playing-card { border-radius: 4px; font-size: 13px; padding: 3px; }
+    .card-back { border-width: 2px; }
+    .game-toolbar { padding: 8px; gap: 6px; }
+    .game-toolbar button { padding: 3px 8px; }
+    #game-status { max-width: 120px; text-align: right; }
+    .tableau-pile { min-height: calc((var(--pile-count) - 1) * var(--card-step) + 74px); }
+    .media-controls { gap: 5px; }
+    .media-controls button { min-width: 30px; }
+    .files-footer { gap: 2px; padding-right: 4px; }
+}

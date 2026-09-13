@@ -1,22 +1,6 @@
 // Global variables
 let activeWindow = null;
-let dragData = {
-    isDragging: false,
-    startX: 0,
-    startY: 0,
-    startLeft: 0,
-    startTop: 0,
-    element: null
-};
 let selectedIcon = null;
-let iconDragData = {
-    isDragging: false,
-    startX: 0,
-    startY: 0,
-    startLeft: 0,
-    startTop: 0,
-    element: null
-};
 
 // The work area: everything below the top panel and beside the dock.
 // Window and icon coordinates are relative to it.
@@ -61,13 +45,16 @@ function initializeWindows() {
             });
         });
 
-        // Make window draggable
-        header.addEventListener('mousedown', (e) => {
-            if (e.target.closest('.window-control, button, a, input, .hb-btn')) return;
-            if (window.classList.contains('maximized')) return;
-
-            startDrag(e, window);
-            bringToFront(window);
+        PointerDrag.bind(header, {
+            ignore: e => e.target.closest('.window-control, button, a, input, .hb-btn') || window.classList.contains('maximized'),
+            prepare: () => { const r = window.getBoundingClientRect(), area = workArea(); return { left: r.left - area.left, top: r.top - area.top }; },
+            start: () => bringToFront(window),
+            move: (e, start, dx, dy) => {
+                const area = workArea(), rect = window.getBoundingClientRect();
+                window.style.left = Math.max(0, Math.min(start.left + dx, Math.max(0, area.width - rect.width))) + 'px';
+                window.style.top = Math.max(0, Math.min(start.top + dy, area.height - 46)) + 'px';
+                window.style.right = 'auto'; window.style.transform = 'none';
+            }
         });
 
         // Double-click the header bar to maximize, like GNOME
@@ -77,7 +64,7 @@ function initializeWindows() {
         });
 
         // Click to focus
-        window.addEventListener('mousedown', () => {
+        window.addEventListener('pointerdown', () => {
             bringToFront(window);
         });
     });
@@ -98,62 +85,9 @@ function initializeWindows() {
         });
     });
 
-    // Global mouse events for dragging
-    document.addEventListener('mousemove', handleDrag);
-    document.addEventListener('mouseup', stopDrag);
-
     // Initial state
     bringToFront(document.getElementById('hero-window'));
     updateDock();
-}
-
-// Window drag functions
-function startDrag(e, window) {
-    dragData.isDragging = true;
-    dragData.element = window;
-    dragData.startX = e.clientX;
-    dragData.startY = e.clientY;
-
-    const rect = window.getBoundingClientRect();
-    const area = workArea();
-    dragData.startLeft = rect.left - area.left;
-    dragData.startTop = rect.top - area.top;
-
-    window.style.cursor = 'grabbing';
-    document.body.style.userSelect = 'none';
-}
-
-function handleDrag(e) {
-    if (!dragData.isDragging || !dragData.element) return;
-
-    const deltaX = e.clientX - dragData.startX;
-    const deltaY = e.clientY - dragData.startY;
-
-    let newLeft = dragData.startLeft + deltaX;
-    let newTop = dragData.startTop + deltaY;
-
-    // Keep the header bar reachable inside the work area
-    const windowRect = dragData.element.getBoundingClientRect();
-    const area = workArea();
-    const maxLeft = area.width - windowRect.width;
-    const maxTop = area.height - 46;
-
-    newLeft = Math.max(Math.min(0, maxLeft), Math.min(newLeft, Math.max(0, maxLeft)));
-    newTop = Math.max(0, Math.min(newTop, maxTop));
-
-    dragData.element.style.left = newLeft + 'px';
-    dragData.element.style.top = newTop + 'px';
-    dragData.element.style.right = 'auto';
-    dragData.element.style.transform = 'none';
-}
-
-function stopDrag() {
-    if (dragData.element) {
-        dragData.element.style.cursor = '';
-    }
-    document.body.style.userSelect = '';
-    dragData.isDragging = false;
-    dragData.element = null;
 }
 
 // Window management functions
@@ -183,6 +117,7 @@ function openWindow(windowId, { navigateHome = true } = {}) {
     window.classList.remove('minimized');
     window.classList.add('active', 'is-open');
     bringToFront(window);
+    if (windowId === 'music-window' || windowId === 'video-window') Media.prepare(windowId);
     if (windowId === 'browser-window' && navigateHome && Browser.history.length === 0) {
         Browser.navigate(BROWSER_HOME);
     }
@@ -193,6 +128,8 @@ function closeWindow(windowId) {
     window.classList.remove('active', 'focused', 'is-open');
     window.classList.add('minimized');
     if (windowId === 'browser-window') Browser.reset();
+    if (windowId === 'music-window' || windowId === 'video-window') Media.close(windowId);
+    if (PointerDrag.active?.element.closest('.window') === window) PointerDrag.stop();
 
     if (activeWindow === windowId) {
         focusVisibleWindow();
@@ -278,11 +215,30 @@ function initializeDesktopIcons() {
             selectIcon(icon);
         });
 
-        // Drag functionality
-        icon.addEventListener('mousedown', (e) => {
-            if (e.button === 0) {
-                startIconDrag(e, icon);
-                selectIcon(icon);
+        icon.tabIndex = 0;
+        icon.setAttribute('role', 'button');
+        icon.setAttribute('aria-label', icon.querySelector('.icon-label').textContent);
+        icon.addEventListener('keydown', e => {
+            if (e.key === 'Enter') openIconTarget(icon);
+            if (e.key === 'Delete') { e.preventDefault(); Session.trash(icon.dataset.entryId); }
+        });
+        icon.addEventListener('contextmenu', e => {
+            e.preventDefault(); Files.openPath('/Desktop');
+            const item = Files.els().grid.querySelector('[data-entry-id="' + CSS.escape(icon.dataset.entryId) + '"]');
+            item?.click();
+        });
+        PointerDrag.bind(icon, {
+            itemId: () => icon.dataset.entryId,
+            prepare: () => { const r = icon.getBoundingClientRect(), area = workArea(); return { left: r.left - area.left, top: r.top - area.top }; },
+            move: (e, start, dx, dy) => {
+                if (getComputedStyle(icon).position !== 'absolute') return;
+                const area = workArea(), r = icon.getBoundingClientRect();
+                let x = Math.max(0, Math.min(start.left + dx, area.width - r.width));
+                let y = Math.max(0, Math.min(start.top + dy, area.height - r.height));
+                const snapX = Math.round((x - 16) / 96) * 96 + 16, snapY = Math.round((y - 16) / 100) * 100 + 16;
+                if (Math.abs(x - snapX) < 16) x = Math.max(0, snapX);
+                if (Math.abs(y - snapY) < 16) y = Math.max(0, snapY);
+                icon.style.left = x + 'px'; icon.style.top = y + 'px';
             }
         });
     });
@@ -294,9 +250,6 @@ function initializeDesktopIcons() {
         }
     });
 
-    // Global mouse events for icon dragging
-    document.addEventListener('mousemove', handleIconDrag);
-    document.addEventListener('mouseup', stopIconDrag);
 }
 
 function selectIcon(icon) {
@@ -314,6 +267,8 @@ function deselectAllIcons() {
 
 // Desktop icons and app-grid launchers share this
 function openIconTarget(icon) {
+    if (icon.dataset.path) { Files.openPath(icon.dataset.path); return; }
+    if (icon.dataset.entryId) Session.opened(Session.node(icon.dataset.entryId));
     const windowId = icon.getAttribute('data-window');
     const action = icon.getAttribute('data-action');
 
@@ -345,60 +300,6 @@ function openIconTarget(icon) {
                 break;
         }
     }
-}
-
-function startIconDrag(e, icon) {
-    iconDragData.isDragging = true;
-    iconDragData.element = icon;
-    iconDragData.startX = e.clientX;
-    iconDragData.startY = e.clientY;
-
-    const rect = icon.getBoundingClientRect();
-    const area = workArea();
-    iconDragData.startLeft = rect.left - area.left;
-    iconDragData.startTop = rect.top - area.top;
-
-    icon.style.cursor = 'grabbing';
-    icon.style.zIndex = '1000';
-    document.body.style.userSelect = 'none';
-}
-
-function handleIconDrag(e) {
-    if (!iconDragData.isDragging || !iconDragData.element) return;
-    if (window.getComputedStyle(iconDragData.element).position !== 'absolute') return;
-
-    const deltaX = e.clientX - iconDragData.startX;
-    const deltaY = e.clientY - iconDragData.startY;
-
-    let newLeft = iconDragData.startLeft + deltaX;
-    let newTop = iconDragData.startTop + deltaY;
-
-    // Boundary constraints
-    const desktopRect = workArea();
-    const iconRect = iconDragData.element.getBoundingClientRect();
-
-    newLeft = Math.max(0, Math.min(newLeft, desktopRect.width - iconRect.width));
-    newTop = Math.max(0, Math.min(newTop, desktopRect.height - iconRect.height));
-
-    // Grid snapping (matches the 96x100 icon grid)
-    const snappedLeft = Math.round((newLeft - 16) / 96) * 96 + 16;
-    const snappedTop = Math.round((newTop - 16) / 100) * 100 + 16;
-
-    if (Math.abs(newLeft - snappedLeft) < 20) newLeft = snappedLeft;
-    if (Math.abs(newTop - snappedTop) < 20) newTop = snappedTop;
-
-    iconDragData.element.style.left = newLeft + 'px';
-    iconDragData.element.style.top = newTop + 'px';
-}
-
-function stopIconDrag() {
-    if (iconDragData.element) {
-        iconDragData.element.style.cursor = '';
-        iconDragData.element.style.zIndex = '';
-    }
-    document.body.style.userSelect = '';
-    iconDragData.isDragging = false;
-    iconDragData.element = null;
 }
 
 // Contact links share the desktop browser routing.
@@ -453,6 +354,13 @@ const Browser = {
         let u;
         try { u = new URL(url); } catch (e) { return url; }
         const host = u.hostname.replace(/^www\./, '');
+        if (host === 'jordanleis.com') u = new URL(u.pathname + u.search + u.hash, location.origin);
+        if (u.origin === location.origin && ['/', '/index.html'].includes(u.pathname)) {
+            // Distinct URLs let browsers render bounded, real nested documents.
+            u.searchParams.set('desktop-depth', DesktopHost.depth + 1);
+            return u.href;
+        }
+        if (host === 'jordanleis.com') return u.href;
         if (host === 'github.com') {
             const parts = u.pathname.split('/').filter(Boolean);
             if (parts.length === 1) return 'https://github1s.com/' + parts[0] + '/' + parts[0];
@@ -481,6 +389,10 @@ const Browser = {
     },
 
     navigate(url) {
+        const target = new URL(this.resolve(url), location.origin);
+        if (target.origin === location.origin && ['/', '/index.html'].includes(target.pathname) && DesktopHost.depth >= 2) {
+            DesktopHost.root.postMessage({ type: 'desktop:recursion' }, location.origin); return;
+        }
         this.history = this.history.slice(0, this.index + 1);
         this.history.push(url);
         this.index = this.history.length - 1;
@@ -490,7 +402,7 @@ const Browser = {
     load(url) {
         const el = this.els();
         if (!el.frame) return;
-        el.address.textContent = this.display(url);
+        el.address.value = this.display(url);
         el.title.textContent = this.hostname(url);
         el.external.href = url;
         el.fallbackLink.href = url;
@@ -526,6 +438,7 @@ const Browser = {
             return;
         }
         if (!href || href === 'about:blank') return;
+        if (href === this.resolve(this.history[this.index])) href = this.history[this.index];
         clearTimeout(this.loadTimer);
         el.loading.classList.remove('on');
         el.fallback.classList.remove('on');
@@ -534,7 +447,7 @@ const Browser = {
             this.history.push(href);
             this.index = this.history.length - 1;
         }
-        el.address.textContent = this.display(href);
+        el.address.value = this.display(href);
         el.title.textContent = title || this.hostname(href);
         el.external.href = href;
         el.fallbackLink.href = href;
@@ -565,7 +478,9 @@ const Browser = {
         this.history = [];
         this.index = -1;
         el.frame.removeAttribute('src');
-        el.address.textContent = '';
+        el.address.value = '';
+        el.external.removeAttribute('href');
+        el.fallbackLink.removeAttribute('href');
         el.title.textContent = 'New Tab';
         el.loading.classList.remove('on');
         el.fallback.classList.remove('on');
@@ -586,6 +501,12 @@ const Browser = {
         el.back.addEventListener('click', () => this.back());
         el.forward.addEventListener('click', () => this.forward());
         el.reload.addEventListener('click', () => this.reload());
+        document.getElementById('browser-location').onsubmit = e => {
+            e.preventDefault(); let value = el.address.value.trim();
+            if (!value) return;
+            if (!/^[a-z][a-z0-9+.-]*:/i.test(value) && !value.startsWith('/')) value = 'https://' + value;
+            try { openUrl(new URL(value, location.origin).href); } catch { el.address.value = this.history[this.index] || ''; }
+        };
     }
 };
 
@@ -596,6 +517,7 @@ function openUrl(url) {
         window.location.href = url;
         return;
     }
+    try { if (!['http:', 'https:'].includes(new URL(url, location.origin).protocol)) return; } catch { return; }
     if (!Browser.canEmbed(url)) {
         window.open(url, '_blank', 'noopener');
         return;
@@ -615,308 +537,6 @@ function deepLinkTarget() {
         return null;
     }
 }
-
-// Files (Nautilus). A small virtual filesystem over PROJECTS and the
-// Jekyll-rendered post list; single-click selects, double-click opens.
-const ICON = (name) => '/assets/icons/yaru/' + name + '.png';
-const GITHUB_MARK = 'M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z';
-
-const Files = {
-    path: '/',
-    history: ['/'],
-    index: 0,
-    selected: null,
-
-    els() {
-        return {
-            win: document.getElementById('projects-window'),
-            grid: document.getElementById('files-grid'),
-            empty: document.getElementById('files-empty'),
-            emptySub: document.getElementById('files-empty-sub'),
-            status: document.getElementById('files-status'),
-            pathBar: document.getElementById('files-path'),
-            details: document.getElementById('files-details'),
-            back: document.getElementById('files-back'),
-            forward: document.getElementById('files-forward'),
-            title: document.querySelector('#projects-window .window-title')
-        };
-    },
-
-    projectItem(p) {
-        return {
-            type: 'project', name: p.name, subtitle: p.subtitle, project: p,
-            icon: p.folder === 'papers' ? ICON('application-pdf') : ICON('folder'),
-            emblem: !!p.repo,
-            open: () => {
-                const url = p.paper || p.repo || p.site;
-                if (url) openUrl(url);
-            }
-        };
-    },
-
-    posts() {
-        const tpl = document.getElementById('posts-data');
-        if (!tpl) return [];
-        return Array.from(tpl.content.querySelectorAll('.post-entry')).map(a => ({
-            type: 'post', name: a.textContent.trim(), icon: ICON('text-markdown'),
-            subtitle: a.dataset.date, tags: (a.dataset.tags || '').trim().split(/\s+/).filter(Boolean),
-            url: a.getAttribute('href'),
-            open: () => openUrl(location.origin + a.getAttribute('href'))
-        }));
-    },
-
-    // Folder contents by path
-    list(path) {
-        const folder = (name, target, icon) => ({
-            type: 'folder', name, icon: ICON(icon || 'folder'),
-            subtitle: this.list(target).length + ' items', open: () => this.go(target)
-        });
-        switch (path) {
-            case '/':
-                return [
-                    folder('Projects', '/Projects'),
-                    folder('posts', '/posts', 'folder-documents'),
-                    { type: 'file', name: 'about.md', icon: ICON('text-markdown'), subtitle: 'Markdown', open: () => openWindow('about-window') },
-                    { type: 'file', name: 'contact.json', icon: ICON('application-json'), subtitle: 'JSON', open: () => openWindow('contact-window') },
-                    { type: 'file', name: 'Resume.pdf', icon: ICON('application-pdf'), subtitle: 'PDF', open: () => openUrl(LINKS.resume) }
-                ];
-            case '/Projects':
-                return PROJECT_FOLDERS.map(f => folder(f.id, '/Projects/' + f.id));
-            case '/posts':
-                return this.posts();
-            case '/Trash':
-                return [];
-            default: {
-                const m = path.match(/^\/Projects\/(\w+)$/);
-                if (!m) return [];
-                return PROJECTS.filter(p => p.folder === m[1]).map(p => this.projectItem(p));
-            }
-        }
-    },
-
-    crumbs(path) {
-        const parts = path.split('/').filter(Boolean);
-        const out = [{ name: 'Home', path: '/' }];
-        let acc = '';
-        for (const part of parts) {
-            acc += '/' + part;
-            out.push({ name: part, path: acc });
-        }
-        return out;
-    },
-
-    go(path) {
-        if (path === this.path) return;
-        this.history = this.history.slice(0, this.index + 1);
-        this.history.push(path);
-        this.index = this.history.length - 1;
-        this.render(path);
-    },
-
-    back() {
-        if (this.index <= 0) return;
-        this.index -= 1;
-        this.render(this.history[this.index]);
-    },
-
-    forward() {
-        if (this.index >= this.history.length - 1) return;
-        this.index += 1;
-        this.render(this.history[this.index]);
-    },
-
-    render(path) {
-        const el = this.els();
-        if (!el.grid) return;
-        this.path = path;
-        this.select(null);
-
-        const crumbs = this.crumbs(path);
-        el.pathBar.innerHTML = '';
-        crumbs.forEach((c, i) => {
-            if (i > 0) {
-                const sep = document.createElement('span');
-                sep.className = 'crumb-sep';
-                sep.textContent = '›';
-                el.pathBar.appendChild(sep);
-            }
-            const b = document.createElement('button');
-            b.className = 'crumb' + (i === crumbs.length - 1 ? ' current' : '');
-            b.textContent = c.name;
-            b.addEventListener('click', () => this.go(c.path));
-            el.pathBar.appendChild(b);
-        });
-        el.pathBar.scrollLeft = el.pathBar.scrollWidth;
-        if (el.title) el.title.textContent = crumbs[crumbs.length - 1].name;
-
-        const items = this.list(path);
-        el.grid.innerHTML = '';
-        items.forEach(item => el.grid.appendChild(this.renderItem(item)));
-
-        const isEmpty = items.length === 0;
-        el.empty.hidden = !isEmpty;
-        el.grid.hidden = isEmpty;
-        if (isEmpty) {
-            const tpl = document.getElementById('posts-data');
-            const note = path === '/posts' && tpl && tpl.content.querySelector('.posts-empty');
-            el.emptySub.textContent = note ? note.textContent : '';
-        }
-        el.status.textContent = items.length === 1 ? '1 item' : items.length + ' items';
-
-        el.back.disabled = this.index <= 0;
-        el.forward.disabled = this.index >= this.history.length - 1;
-
-        document.querySelectorAll('.files-sidebar .sb-item[data-path]').forEach(sb => {
-            sb.classList.toggle('current', sb.dataset.path === path);
-        });
-    },
-
-    renderItem(item) {
-        const div = document.createElement('div');
-        div.className = 'fs-item fs-' + item.type;
-        if (item.project) div.dataset.project = item.project.id;
-
-        const iconWrap = document.createElement('div');
-        iconWrap.className = 'fs-icon';
-        const img = document.createElement('img');
-        img.src = item.icon;
-        img.alt = '';
-        iconWrap.appendChild(img);
-        if (item.emblem) {
-            iconWrap.insertAdjacentHTML('beforeend',
-                '<svg class="fs-emblem" viewBox="0 0 16 16"><path d="' + GITHUB_MARK + '"/></svg>');
-        }
-
-        const label = document.createElement('div');
-        label.className = 'fs-label';
-        label.textContent = item.name;
-
-        div.append(iconWrap, label);
-        div.tabIndex = 0;
-        div.setAttribute('role', 'button');
-        div.setAttribute('aria-label', item.name);
-        if (item.type === 'folder') {
-            const count = document.createElement('div');
-            count.className = 'fs-count';
-            count.textContent = item.subtitle;
-            div.appendChild(count);
-        }
-        div.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                this.select(item, div);
-                item.open();
-            } else if (e.key === ' ') {
-                e.preventDefault();
-                this.select(item, div);
-            }
-        });
-        div.addEventListener('click', (e) => {
-            e.stopPropagation();
-            this.select(item, div);
-        });
-        div.addEventListener('dblclick', (e) => {
-            e.stopPropagation();
-            item.open();
-        });
-        return div;
-    },
-
-    select(item, div) {
-        const el = this.els();
-        el.grid.querySelectorAll('.fs-item.selected').forEach(d => d.classList.remove('selected'));
-        this.selected = item;
-        if (!item) {
-            el.details.hidden = true;
-            el.details.innerHTML = '';
-            return;
-        }
-        div.classList.add('selected');
-        el.details.innerHTML = '';
-        el.details.hidden = false;
-
-        const head = document.createElement('div');
-        head.className = 'dt-head';
-        const img = document.createElement('img');
-        img.src = item.icon;
-        img.alt = '';
-        const name = document.createElement('div');
-        name.className = 'dt-name';
-        name.textContent = item.name;
-        const sub = document.createElement('div');
-        sub.className = 'dt-sub';
-        sub.textContent = item.subtitle || '';
-        head.append(img, name, sub);
-        el.details.appendChild(head);
-
-        const closeBtn = document.createElement('button');
-        closeBtn.className = 'dt-close';
-        closeBtn.title = 'Close';
-        closeBtn.innerHTML = '<svg viewBox="0 0 16 16"><path d="M4.5 4.5l7 7M11.5 4.5l-7 7"/></svg>';
-        closeBtn.addEventListener('click', () => this.select(null));
-        el.details.appendChild(closeBtn);
-
-        const p = item.project;
-        if (p) {
-            const desc = document.createElement('p');
-            desc.className = 'dt-desc';
-            desc.textContent = p.description;
-            el.details.appendChild(desc);
-        }
-        const tags = p ? p.tags : item.tags;
-        if (tags && tags.length) {
-            const wrap = document.createElement('div');
-            wrap.className = 'dt-tags';
-            tags.forEach(t => {
-                const chip = document.createElement('span');
-                chip.className = 'chip';
-                chip.textContent = t;
-                wrap.appendChild(chip);
-            });
-            el.details.appendChild(wrap);
-        }
-
-        const actions = document.createElement('div');
-        actions.className = 'dt-actions';
-        const button = (label, fn, primary) => {
-            const b = document.createElement('button');
-            b.className = 'dt-btn' + (primary ? ' primary' : '');
-            b.textContent = label;
-            b.addEventListener('click', fn);
-            actions.appendChild(b);
-        };
-        if (p) {
-            if (p.paper) button('Open paper', () => openUrl(p.paper), true);
-            if (p.repo) button('Open on GitHub', () => openUrl(p.repo), !p.paper);
-            if (p.site) button('Open site', () => openUrl(p.site), false);
-            if (!p.repo && !p.paper && !p.site) {
-                const note = document.createElement('div');
-                note.className = 'dt-note';
-                note.textContent = 'Repository not public yet.';
-                actions.appendChild(note);
-            }
-        } else if (item.type === 'folder') {
-            button('Open', () => item.open(), true);
-        } else {
-            button('Open', () => item.open(), true);
-        }
-        el.details.appendChild(actions);
-    },
-
-    init() {
-        const el = this.els();
-        if (!el.grid) return;
-        el.back.addEventListener('click', () => this.back());
-        el.forward.addEventListener('click', () => this.forward());
-        document.querySelectorAll('.files-sidebar .sb-item[data-path]').forEach(sb => {
-            sb.addEventListener('click', () => this.go(sb.dataset.path));
-        });
-        el.grid.addEventListener('click', () => this.select(null));
-        this.history = ['/Projects'];
-        this.index = 0;
-        this.render('/Projects');
-    }
-};
 
 // The terminal's `tree ~/work` output, from the same data
 function renderWorkTree() {
@@ -982,156 +602,25 @@ function initializeAppGrid() {
     }, true);
 }
 
-// Boot sequence + hello line
-// Edit these arrays to change what plays on first visit.
-// A line starting with "[  OK  ]" gets the green systemd treatment.
-const BOOT_LINES = [
-    ['[  OK  ] Started JORDAN-OS v3B (University of Waterloo build).', 350],
-    ['[  OK  ] Found device Zynq UltraScale+ MPSoC. Fabric online.', 300],
-    ['[  OK  ] Loaded kernel modules: research.ko ml.ko software.ko hardware.ko.', 400],
-    ['[  OK  ] Mounted /home/jordan/hardware.', 200],
-    ['[  OK  ] Mounted /home/jordan/papers.', 200],
-    ['[  OK  ] Mounted /home/jordan/software.', 200],
-    ['[  OK  ] Mounted /home/jordan/posts.', 250],
-    ['[  OK  ] Reached target Timing Closure. No phys_opt_design required.', 350],
-    ['         Starting Display Manager...', 400]
-];
-const HELLO_PREFIX = "Hi, I'm Jordan. ";
-const HELLO_ROLES = [
-    "I'm a research engineer.",
-    "I'm a hardware engineer.",
-    "I'm a software engineer.",
-    "I'm an ML engineer."
-];
-const HELLO_FINAL = "I like to build.";
-const TYPE_MS = 35, DELETE_MS = 15, HOLD_MS = 650;
-
-const reducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-function sessionFlag(key, value) {
-    try {
-        if (value === undefined) return sessionStorage.getItem(key);
-        sessionStorage.setItem(key, value);
-    } catch (e) { return null; }
-}
-
-// Resolves when the user presses a key or taps, or when the timer ends.
-function waitOrSkip(ms, onSkip) {
-    return new Promise(resolve => {
-        let done = false;
-        const finish = (skipped) => {
-            if (done) return;
-            done = true;
-            clearTimeout(timer);
-            document.removeEventListener('keydown', skip);
-            document.removeEventListener('pointerdown', skip);
-            if (skipped && onSkip) onSkip();
-            resolve(skipped);
-        };
-        const skip = () => finish(true);
-        const timer = setTimeout(() => finish(false), ms);
-        document.addEventListener('keydown', skip);
-        document.addEventListener('pointerdown', skip);
-    });
-}
-
-function appendBootLine(log, text) {
-    const OK = '[  OK  ]';
-    if (text.startsWith(OK)) {
-        const tag = document.createElement('span');
-        tag.className = 'ok';
-        tag.append('[  ');
-        const b = document.createElement('b');
-        b.textContent = 'OK';
-        tag.append(b, '  ]');
-        log.append(tag, text.slice(OK.length) + '\n');
-    } else {
-        log.append(text + '\n');
-    }
-}
-
-function runBoot() {
-    const screen = document.getElementById('boot-screen');
-    const log = document.getElementById('boot-log');
-    if (!screen || !log || reducedMotion || sessionFlag('booted')) {
-        if (screen) screen.remove();
-        return Promise.resolve();
-    }
-
-    screen.classList.add('on');
-    let skipped = false;
-
-    const showLines = async () => {
-        for (const [text, delay] of BOOT_LINES) {
-            if (skipped) break;
-            appendBootLine(log, text);
-            skipped = await waitOrSkip(delay);
-        }
-    };
-
-    return showLines().then(() => {
-        sessionFlag('booted', '1');
-        screen.classList.add('off');
-        return new Promise(resolve => setTimeout(resolve, 450));
-    }).then(() => screen.remove());
-}
-
-function runHello() {
-    const text = document.getElementById('hello-text');
-    const cursor = document.getElementById('hello-cursor');
-    if (!text || !cursor || reducedMotion || sessionFlag('hello')) return;
-
-    let cancelled = false;
-    const finish = () => {
-        cancelled = true;
-        text.textContent = HELLO_PREFIX + HELLO_FINAL;
-        cursor.classList.add('done');
-        sessionFlag('hello', '1');
-        document.removeEventListener('keydown', finish);
-        document.removeEventListener('pointerdown', finish);
-    };
-    document.addEventListener('keydown', finish);
-    document.addEventListener('pointerdown', finish);
-
-    const sleep = (ms) => new Promise(r => setTimeout(r, ms));
-    const typeTo = async (target) => {
-        while (!cancelled && text.textContent.length > 0 && !target.startsWith(text.textContent)) {
-            text.textContent = text.textContent.slice(0, -1);
-            await sleep(DELETE_MS);
-        }
-        while (!cancelled && text.textContent.length < target.length) {
-            text.textContent = target.slice(0, text.textContent.length + 1);
-            await sleep(TYPE_MS);
-        }
-    };
-
-    (async () => {
-        text.textContent = '';
-        cursor.classList.remove('done');
-        for (const role of HELLO_ROLES) {
-            await typeTo(HELLO_PREFIX + role);
-            if (cancelled) return;
-            await sleep(HOLD_MS);
-        }
-        await typeTo(HELLO_PREFIX + HELLO_FINAL);
-        if (cancelled) return;
-        await sleep(2000);
-        finish();
-    })();
-}
-
 // Initialize everything
 document.addEventListener('DOMContentLoaded', () => {
+    Apps.init();
+    Files.init();
+    PointerDrag.init();
     initializeWindows();
     initializeDesktopIcons();
     initializeContactLinks();
     initializeAppGrid();
     Browser.init();
-    Files.init();
     renderWorkTree();
+    Terminal.init();
+    Media.init();
+    Solitaire.init();
+    SystemUI.init();
 
     // Start clock
-    setInterval(updateClock, 1000);
+    const clockTimer = setInterval(updateClock, 1000);
+    window.addEventListener('pagehide', () => clearInterval(clockTimer), { once: true });
     updateClock();
 
     // Start with all windows closed except main terminal
@@ -1139,17 +628,12 @@ document.addEventListener('DOMContentLoaded', () => {
         closeWindow(window.id);
     });
 
-    runBoot().then(() => {
-        runHello();
+    Boot.run().then(() => {
+        Terminal.introduce();
         const target = deepLinkTarget();
         if (target) openUrl(target);
     });
 });
-
-// If the desktop ends up inside its own browser window, break out.
-if (window.self !== window.top) {
-    try { window.top.location.href = window.location.href; } catch (e) {}
-}
 
 // Keyboard shortcuts
 document.addEventListener('keydown', (e) => {
@@ -1163,7 +647,7 @@ document.addEventListener('keydown', (e) => {
         }
     }
 
-    if (e.key === 'Escape' && activeWindow) {
+    if (e.key === 'Escape' && activeWindow && !e.defaultPrevented) {
         closeWindow(activeWindow);
     }
 });
