@@ -1,0 +1,258 @@
+{
+ "vocabulary": 51029,
+ "pairs": [
+  {
+   "src": "chest",
+   "dst": "setting",
+   "chains": [
+    {
+     "words": [
+      "chest",
+      "breast",
+      "reach",
+      "scope",
+      "setting"
+     ],
+     "scores": [
+      1.0,
+      0.6,
+      1.0,
+      1.0
+     ]
+    },
+    {
+     "words": [
+      "chest",
+      "breast",
+      "reaches",
+      "scope",
+      "setting"
+     ],
+     "scores": [
+      1.0,
+      0.6,
+      1.0,
+      1.0
+     ]
+    },
+    {
+     "words": [
+      "chest",
+      "breasts",
+      "reach",
+      "scope",
+      "setting"
+     ],
+     "scores": [
+      1.0,
+      0.6,
+      1.0,
+      1.0
+     ]
+    },
+    {
+     "words": [
+      "chest",
+      "bureau",
+      "office",
+      "place",
+      "setting"
+     ],
+     "scores": [
+      1.0,
+      1.0,
+      1.0,
+      0.6
+     ]
+    },
+    {
+     "words": [
+      "chest",
+      "bureau",
+      "office",
+      "places",
+      "setting"
+     ],
+     "scores": [
+      1.0,
+      1.0,
+      1.0,
+      0.6
+     ]
+    }
+   ],
+   "board": {
+    "won": true,
+    "path": [
+     "chest",
+     "breast",
+     "reach",
+     "scope",
+     "setting"
+    ],
+    "words_added": 3,
+    "frames": 4
+   }
+  },
+  {
+   "src": "bridge",
+   "dst": "running",
+   "chains": [
+    {
+     "words": [
+      "bridge",
+      "track",
+      "running"
+     ],
+     "scores": [
+      0.6,
+      1.0
+     ]
+    },
+    {
+     "words": [
+      "bridge",
+      "tracks",
+      "running"
+     ],
+     "scores": [
+      0.6,
+      1.0
+     ]
+    }
+   ],
+   "board": {
+    "won": true,
+    "path": [
+     "bridge",
+     "track",
+     "running"
+    ],
+    "words_added": 1,
+    "frames": 2
+   }
+  },
+  {
+   "src": "apple",
+   "dst": "fruit",
+   "chains": [
+    {
+     "words": [
+      "apple",
+      "fruit"
+     ],
+     "scores": [
+      0.453662
+     ]
+    }
+   ],
+   "board": {
+    "won": true,
+    "path": [
+     "apple",
+     "fruit"
+    ],
+    "words_added": 0,
+    "frames": 1
+   }
+  },
+  {
+   "src": "zygote",
+   "dst": "quilt",
+   "chains": [
+    {
+     "words": [
+      "zygote",
+      "conception",
+      "design",
+      "tailor",
+      "quilt"
+     ],
+     "scores": [
+      0.460295,
+      1.0,
+      0.6,
+      0.6
+     ]
+    },
+    {
+     "words": [
+      "zygote",
+      "conception",
+      "design",
+      "tailors",
+      "quilt"
+     ],
+     "scores": [
+      0.460295,
+      1.0,
+      0.6,
+      0.6
+     ]
+    },
+    {
+     "words": [
+      "zygote",
+      "conception",
+      "designs",
+      "tailor",
+      "quilt"
+     ],
+     "scores": [
+      0.460295,
+      1.0,
+      0.6,
+      0.6
+     ]
+    },
+    {
+     "words": [
+      "zygote",
+      "conception",
+      "creation",
+      "needlework",
+      "quilt"
+     ],
+     "scores": [
+      0.460295,
+      1.0,
+      0.6,
+      0.546759
+     ]
+    },
+    {
+     "words": [
+      "zygote",
+      "conception",
+      "creations",
+      "needlework",
+      "quilt"
+     ],
+     "scores": [
+      0.460295,
+      1.0,
+      0.6,
+      0.546759
+     ]
+    }
+   ],
+   "board": {
+    "won": true,
+    "path": [
+     "zygote",
+     "conception",
+     "design",
+     "tailor",
+     "quilt"
+    ],
+    "words_added": 3,
+    "frames": 4
+   }
+  },
+  {
+   "src": "aff",
+   "dst": "bridge",
+   "chains": []
+  }
+ ]
+}

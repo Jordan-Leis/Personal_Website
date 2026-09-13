@@ -55,7 +55,8 @@
         <div class="tabs" role="tablist" aria-label="Map views">
           <button id="tab-search" role="tab" aria-selected="true" data-view="search">Search</button>
           <button id="tab-neighborhoods" role="tab" aria-selected="false" data-view="neighborhoods">Neighbors</button>
-          <button id="tab-board" role="tab" aria-selected="false" data-view="board">Game board</button>
+          <button id="tab-board" role="tab" aria-selected="false" data-view="board">Board</button>
+          <button id="tab-solve" role="tab" aria-selected="false" data-view="solve">Any pair</button>
         </div>
         <span id="map-count" class="map-count">Preparing the map</span>
       </div>
@@ -64,6 +65,15 @@
         <div class="map-panel" role="tabpanel" aria-labelledby="tab-search">
           <p class="map-topline"><span id="map-label">The space between the words</span></p>
           <svg id="map" viewBox="0 0 1000 620" role="img" aria-label="A sampled map of words near the puzzle. Use the word finder below for keyboard exploration."></svg>
+          <div id="solve-panel" class="solve-panel" hidden>
+            <form id="solve-form" class="solve-form" autocomplete="off">
+              <label>From <input id="solve-from" type="text" inputmode="latin" autocapitalize="off" spellcheck="false" maxlength="15" placeholder="chest" required></label>
+              <label>To <input id="solve-to" type="text" inputmode="latin" autocapitalize="off" spellcheck="false" maxlength="15" placeholder="setting" required></label>
+              <button id="solve-button" type="submit" class="button-primary">Solve</button>
+            </form>
+            <p id="solve-status" class="solve-status" role="status" aria-live="polite">Type any two words. The solver's 51,029-word graph downloads once (5 MB) and then every solve is instant.</p>
+            <div id="solve-results"></div>
+          </div>
           <div id="map-intro" class="map-intro">
             <p>Every dot is a word. The search spreads out from the start, one link at a time, until it reaches the finish.</p>
           </div>

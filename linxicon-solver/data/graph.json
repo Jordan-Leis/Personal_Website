@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "file": "graph-f272f467e683b834.bin",
+  "sha256": "f272f467e683b834f43c1a1691ad099ace4d012d0449eb27542b5f2b72aabac5",
+  "words": 51029,
+  "edges": 1679661,
+  "threshold": 0.3995,
+  "min_zipf": 2.0,
+  "scoring_version": "nb19.08-exact-wordnet-v1",
+  "vector_key": "53f18001079b656c",
+  "solver_revision": "22022fa11ec3d4ab9ffcb775fa269561f8ce531f",
+  "generated_at": "2026-09-13T19:08:42.128729+00:00"
+}
