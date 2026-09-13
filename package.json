@@ -1,0 +1,1 @@
+{"name":"jordanleis-atlas-checks","private":true,"type":"module","scripts":{"test":"node --test tests/atlas/*.test.js","test:browser":"playwright test"},"devDependencies":{"@playwright/test":"1.58.2"}}
