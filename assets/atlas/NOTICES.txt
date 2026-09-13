@@ -13,14 +13,16 @@ An Open Multilingual Graph of General Knowledge, AAAI 2017.
 WordNet 3.0 copyright 2006 Princeton University.
 The full notice and disclaimer are in WordNet-LICENSE.txt.
 
-Newsreader by Production Type. SIL Open Font License 1.1.
-See fonts/Newsreader-LICENSE.txt.
-IBM Plex Sans and IBM Plex Mono by IBM. SIL Open Font License 1.1.
-See fonts/IBMPlexSans-LICENSE.txt and fonts/IBMPlexMono-LICENSE.txt.
-Fonts are self-hosted Latin WOFF2 subsets distributed through Google Fonts.
+Bricolage Grotesque by Mathieu Triay (Atelier Triay). SIL Open Font
+License 1.1. See fonts/BricolageGrotesque-LICENSE.txt. The font is a
+self-hosted Latin variable WOFF2 subset distributed through Google Fonts.
 
 D3 7.9.0, copyright Mike Bostock. ISC license.
 See vendor/d3-LICENSE.txt. Bundled without modifications.
+
+GSAP 3.15.0 with DrawSVGPlugin, copyright GreenSock. GreenSock standard
+"no charge" license. See vendor/gsap-LICENSE.txt. Bundled without
+modifications.
 
 Linxicon is a game by Trainwreck Labs. This independent solver and atlas
 are not affiliated with Linxicon or Trainwreck Labs.

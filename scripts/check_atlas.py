@@ -26,6 +26,6 @@ for candidate in data['candidates']:
 assets=[p for p in (root/'assets/atlas').rglob('*') if p.suffix in ['.css','.js','.woff2']]
 compressed=sum(len(gzip.compress(p.read_bytes())) for p in [page,*assets])+len(gzip.compress(raw))
 assert compressed<=1_000_000,f'Initial asset budget exceeded: {compressed}'
-for name in ['WordNet-LICENSE.txt','NOTICES.txt','vendor/d3-LICENSE.txt','fonts/Newsreader-LICENSE.txt','fonts/IBMPlexSans-LICENSE.txt','fonts/IBMPlexMono-LICENSE.txt']:
+for name in ['WordNet-LICENSE.txt','NOTICES.txt','vendor/d3-LICENSE.txt','vendor/gsap-LICENSE.txt','fonts/BricolageGrotesque-LICENSE.txt']:
     assert (root/'assets/atlas'/name).is_file(),f'Missing notice: {name}'
 print(f'Atlas valid: game {data["game"]["id"]}, {len(words)} nodes, {compressed:,} gzip bytes including all bundled fonts.')
