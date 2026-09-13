@@ -1,48 +1,169 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Linxicon — An atlas of meaning · Jordan Leis</title>
-  <meta name="description" content="Watch a word puzzle become a route through language. An interactive atlas of graph search, word vectors, and today's Linxicon solution.">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Today's Linxicon, solved · Jordan Leis</title>
+  <meta name="description" content="Today's Linxicon puzzle solved by graph search over word vectors. Reveal the shortest chain, watch the search spread across a map of meaning, and check every link against the game's own scores.">
   <link rel="canonical" href="https://jordanleis.com/linxicon-solver/">
-  <meta name="theme-color" content="#F4F0E6">
-  <link rel="stylesheet" href="/assets/atlas/fonts.css"><link rel="stylesheet" href="/assets/atlas/atlas.css">
+  <meta name="theme-color" content="#E7ECEF">
+  <link rel="stylesheet" href="/assets/atlas/fonts.css">
+  <link rel="stylesheet" href="/assets/atlas/atlas.css">
   <script defer src="/assets/atlas/vendor/d3.v7.9.0.min.js"></script>
+  <script defer src="/assets/atlas/vendor/gsap.min.js"></script>
+  <script defer src="/assets/atlas/vendor/DrawSVGPlugin.min.js"></script>
   <script type="module" src="/assets/atlas/app.js"></script>
 </head>
 <body>
-<a class="skip" href="#atlas">Skip to the atlas</a>
+<a class="skip" href="#atlas">Skip to the map</a>
 <div class="page">
-  <header class="site-header"><a class="home" href="/">JL<span> / FIELDWORK</span></a><span class="edition">COMPUTATIONAL EXPLORATIONS — NO. 01</span><a href="https://github.com/Jordan-Leis/linxicon-optimal-solver" class="source-link">View source <span aria-hidden="true">↗</span></a></header>
+  <header class="site-header">
+    <a class="home" href="/">Jordan Leis</a>
+    <nav aria-label="Related links">
+      <a href="https://linxicon.com/">Play Linxicon</a>
+      <a href="https://github.com/Jordan-Leis/linxicon-optimal-solver">Solver source</a>
+    </nav>
+  </header>
+
   <main>
-    <section class="intro" aria-labelledby="title">
-      <div><p class="eyebrow">A DAILY EXPEDITION THROUGH LANGUAGE</p><h1 id="title">Linxicon<span class="title-dot">.</span></h1><p class="subtitle">An atlas of meaning</p></div>
-      <div class="intro-note"><span class="annotation">01 / THE QUESTION</span><p>How do you get from <br><strong id="intro-start">one word</strong> to <strong id="intro-end">another</strong>?</p><p class="intro-small">A word puzzle, a search through meaning,<br>and the surprising connections in between.</p></div>
+    <section class="puzzle" aria-labelledby="title">
+      <div class="puzzle-meta">
+        <h1 id="title"><span id="puzzle-id">Linxicon</span></h1>
+        <time id="puzzle-date"></time>
+      </div>
+      <p id="freshness" class="freshness" hidden></p>
+
+      <p class="puzzle-question">Connect <strong id="intro-start">one word</strong> to <strong id="intro-end">another</strong> using as few words as possible. Each link has to score at least 0.3995 by the game's own measure of meaning.</p>
+
+      <div id="hero-route" class="route" aria-label="Today's chain">
+        <span class="stop terminus"><b id="starter-a">—</b><small>start</small></span>
+        <span class="leg pending" aria-hidden="true"><i></i><em>?</em></span>
+        <span class="stop terminus"><b id="starter-b">—</b><small>finish</small></span>
+      </div>
+
+      <div class="actions">
+        <button id="reveal" class="button-primary" disabled>Reveal today's chain</button>
+        <button id="watch" class="button-secondary" disabled>Watch the search</button>
+      </div>
+      <p class="hint" id="hint">The chain stays hidden until you ask.</p>
+
+      <section id="solution" class="solution" hidden aria-labelledby="solution-title"></section>
     </section>
-    <section class="expedition" aria-label="Puzzle information"><div class="puzzle-meta"><span class="live-dot" aria-hidden="true"></span><span id="puzzle-id">LOADING EXPEDITION</span><span class="divider">/</span><time id="puzzle-date"></time></div><div class="puzzle-words"><span id="starter-a">—</span><svg width="71" height="14" viewBox="0 0 71 14" aria-hidden="true"><path d="M0 7H68M61 1l7 6-7 6"/></svg><span id="starter-b">—</span></div><span class="recorded">RECORDED SOLVE <span id="compute-time"></span></span></section>
-    <p id="freshness" class="freshness" hidden></p>
-    <section id="atlas" class="atlas" aria-label="Interactive semantic atlas">
-      <div class="atlas-toolbar"><div class="tabs" role="tablist" aria-label="Atlas views"><button id="tab-search" role="tab" aria-selected="true" data-view="search">01 <span>Search</span></button><button id="tab-neighborhoods" role="tab" aria-selected="false" data-view="neighborhoods">02 <span>Word neighborhoods</span></button><button id="tab-board" role="tab" aria-selected="false" data-view="board">03 <span>Game board</span></button></div><span class="map-caption">MEANING, MAPPED</span></div>
+
+    <section id="atlas" class="atlas" aria-label="Interactive map of the search">
+      <div class="atlas-toolbar">
+        <div class="tabs" role="tablist" aria-label="Map views">
+          <button id="tab-search" role="tab" aria-selected="true" data-view="search">Search</button>
+          <button id="tab-neighborhoods" role="tab" aria-selected="false" data-view="neighborhoods">Neighbors</button>
+          <button id="tab-board" role="tab" aria-selected="false" data-view="board">Game board</button>
+        </div>
+        <span id="map-count" class="map-count">Preparing the map</span>
+      </div>
+
       <div class="atlas-body">
         <div class="map-panel" role="tabpanel" aria-labelledby="tab-search">
-          <div class="map-topline"><span id="map-label">THE SPACE BETWEEN WORDS</span><span id="map-count">Preparing map…</span></div>
-          <svg id="map" viewBox="0 0 1000 620" role="img" aria-label="Sampled word map. Use the word list below for keyboard exploration."></svg>
-          <div id="map-intro" class="map-intro"><span class="small-mark" aria-hidden="true">↗</span><p>Every word is a place.<br>Every connection, a possible way through.</p><div class="entry-actions"><button id="watch" class="button-primary" disabled><span aria-hidden="true">▶</span> Watch the search</button><button id="reveal" class="button-text" disabled>Show solution <span aria-hidden="true">↗</span></button></div><span class="entry-note">The answer stays hidden until you choose.</span></div>
-          <div class="map-bottom"><div class="legend"><span><i class="legend-start"></i>Start</span><span><i class="legend-context"></i>Neighborhood</span><span><i class="legend-route"></i>Route</span></div><div class="zoom-controls"><button id="zoom-out" aria-label="Zoom out">−</button><button id="zoom-reset" aria-label="Reset map zoom">↺</button><button id="zoom-in" aria-label="Zoom in">+</button></div></div>
+          <p class="map-topline"><span id="map-label">The space between the words</span></p>
+          <svg id="map" viewBox="0 0 1000 620" role="img" aria-label="A sampled map of words near the puzzle. Use the word finder below for keyboard exploration."></svg>
+          <div id="map-intro" class="map-intro">
+            <p>Every dot is a word. The search spreads out from the start, one link at a time, until it reaches the finish.</p>
+          </div>
+          <div class="map-bottom">
+            <div class="legend" aria-hidden="true">
+              <span><i class="legend-start"></i>Start and finish</span>
+              <span><i class="legend-context"></i>Discovered</span>
+              <span><i class="legend-route"></i>Route</span>
+            </div>
+            <div class="zoom-controls">
+              <button id="zoom-out" aria-label="Zoom out">−</button>
+              <button id="zoom-reset" aria-label="Reset map view">Reset</button>
+              <button id="zoom-in" aria-label="Zoom in">+</button>
+            </div>
+          </div>
         </div>
-        <aside class="inspector" aria-label="Word and link inspector"><span class="annotation">02 / FIELD NOTES</span><div id="inspector-content"><h2>The map is loading.</h2><p>Fetching the latest recorded expedition.</p></div></aside>
+
+        <aside class="inspector" aria-label="Word and link details">
+          <div id="inspector-content">
+            <h2>Loading the map</h2>
+            <p>Fetching the latest recorded solve.</p>
+          </div>
+        </aside>
       </div>
-      <div class="playback"><button id="play" class="play-toggle" aria-label="Play recorded solve" disabled>▶</button><div class="timeline-block"><div class="timeline-label"><span id="stage-label">Ready to explore</span><span id="step-count">00 / 00</span></div><input id="timeline" type="range" min="0" max="1" value="0" aria-label="Replay position" disabled></div><div class="step-controls"><button id="previous" aria-label="Previous step">‹</button><button id="next" aria-label="Next step">›</button><button id="restart" aria-label="Restart and hide solution">↺</button></div><label class="speed-label">Speed<select id="speed" aria-label="Playback speed"><option value="0.5">0.5×</option><option value="1" selected>1×</option><option value="2">2×</option></select></label></div>
-      <div class="map-stats"><span><b id="visited">0</b> words discovered</span><span><b id="frontier">0</b> waiting to explore</span><span><b id="layer">0</b> links from start</span><span class="sample-note">A sampled map. Counts reflect the full search.</span></div>
+
+      <div class="playback">
+        <button id="play" class="play-toggle" aria-label="Play recorded solve" disabled><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5v15l12-7.5z"/></svg></button>
+        <div class="timeline-block">
+          <div class="timeline-label">
+            <span id="stage-label">Ready</span>
+            <span id="step-count">0 / 0</span>
+          </div>
+          <input id="timeline" type="range" min="0" max="1" value="0" aria-label="Replay position" disabled>
+        </div>
+        <div class="step-controls">
+          <button id="previous" aria-label="Previous step"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+          <button id="next" aria-label="Next step"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+          <button id="restart" aria-label="Restart and hide the chain"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12a8 8 0 1 0 2.5-5.8" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M4 4v5h5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+        </div>
+        <div id="speed" class="speed" role="group" aria-label="Playback speed">
+          <button data-speed="0.5" aria-pressed="false">0.5×</button>
+          <button data-speed="1" aria-pressed="true">1×</button>
+          <button data-speed="2" aria-pressed="false">2×</button>
+        </div>
+      </div>
+
+      <dl class="map-stats">
+        <div><dt>Words discovered</dt><dd id="visited">0</dd></div>
+        <div><dt>Waiting to explore</dt><dd id="frontier">0</dd></div>
+        <div><dt>Links from start</dt><dd id="layer">0</dd></div>
+      </dl>
     </section>
-    <div id="narration" class="narration" role="status" aria-live="polite">The solver has already made the journey. You can follow its footsteps.</div>
-    <section id="solution" class="solution" hidden aria-labelledby="solution-title"></section>
-    <section class="exploration" aria-label="Accessible word explorer"><details id="word-details"><summary><span>Explore the words</span><span class="annotation">SEARCH THIS EXPEDITION +</span></summary><label for="word-filter">Find a word in this map</label><input id="word-filter" type="search" placeholder="Search the neighborhood…"><div id="word-list" class="word-list"></div></details></section>
-    <section class="reading" aria-label="How the atlas works"><div class="reading-heading"><span class="annotation">03 / READING THE ATLAS</span><h2>Meaning has <br>more than one route.</h2></div><article><span class="chapter-number">I.</span><h3>Words have neighbors.</h3><p>Each word has a position in a 300-dimensional space, learned from language and common knowledge. Similar directions often mean related words. This map compresses that space into two dimensions: a useful sketch, not an exact measurement.</p></article><article><span class="chapter-number">II.</span><h3>The search fans out.</h3><p>Breadth-first search looks one link away, then two, and so on. It finds routes with the fewest added words. Among routes of equal length, the solver prefers the highest total link score.</p></article><article><span class="chapter-number">III.</span><h3>The game has the final say.</h3><p>WordNet relationships can strengthen a link beyond its vector similarity. The game's scores can still disagree with our model. We check the final candidates and replay its top-five link rule before marking a route verified.</p></article></section>
-    <details class="methodology"><summary>Method, limitations &amp; data credits</summary><div><p>The animation replays recorded events at an adjustable pace. Discovery counts come from the full local graph; at most 500 words and a bounded edge set are drawn. Map contours show density of displayed points. Exact cosine scores are computed in the original vector space. Only the bundled daily neighborhood is navigable.</p><p>A server-verified route means its words passed validation and a board replay using captured server scores connected the starters. It does not mean a browser win screen was observed. “Optimal” is limited to the selected vocabulary and local model; server-only behavior may admit another route.</p><p>This data contains semantic vectors from ConceptNet Numberbatch, by Luminoso Technologies, Inc. Derived atlas data is distributed under <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>. See <a href="https://github.com/commonsense/conceptnet-numberbatch">Numberbatch</a> and Speer, Chin &amp; Havasi (2017), <em>ConceptNet 5.5</em>.</p><p>WordNet 3.0 © 2006 Princeton University. <a href="/assets/atlas/WordNet-LICENSE.txt">WordNet license and disclaimer</a>. Typography: Newsreader by Production Type and IBM Plex. Visualization: D3, ISC license. <a href="/assets/atlas/NOTICES.txt">Bundled notices</a>.</p><p>This is an independent exploration by Jordan Leis, not affiliated with Linxicon or Trainwreck Labs.</p></div></details>
+
+    <p id="narration" class="narration" role="status" aria-live="polite">The solver has already made the trip. You can follow along.</p>
+
+    <section class="exploration" aria-label="Word finder">
+      <details id="word-details">
+        <summary>Find a word on the map</summary>
+        <label for="word-filter">Type part of a word</label>
+        <input id="word-filter" type="search" placeholder="e.g. track" autocomplete="off">
+        <div id="word-list" class="word-list"></div>
+      </details>
+    </section>
+
+    <section class="reading" aria-labelledby="reading-title">
+      <h2 id="reading-title">How the solver works</h2>
+      <div class="reading-grid">
+        <article>
+          <h3>Words have neighbors</h3>
+          <p>Each word has a position in a 300-dimensional space learned from language and common knowledge. Similar directions usually mean related words. The map squashes that space into two dimensions: a useful sketch, not an exact measurement.</p>
+        </article>
+        <article>
+          <h3>The search fans out</h3>
+          <p>Breadth-first search looks one link away, then two, and so on, so the first chain it finds has the fewest added words. Among chains of the same length, the solver prefers the highest total link score.</p>
+        </article>
+        <article>
+          <h3>The game has the final say</h3>
+          <p>WordNet relationships can strengthen a link beyond its vector similarity, and the game's scores can still disagree with the local model. The final candidates are checked against the game's own scores and replayed under its top-five link rule before a chain is marked verified.</p>
+        </article>
+      </div>
+    </section>
+
+    <details class="methodology">
+      <summary>Method, limits and data credits</summary>
+      <div>
+        <p>The replay plays back recorded search events at an adjustable pace. Discovery counts come from the full local graph; at most 500 words and a bounded set of links are drawn. Contours show the density of drawn points. Cosine scores are computed in the original vector space. Only the bundled daily neighborhood is navigable.</p>
+        <p>A verified chain means every word passed the game's dictionary check and a board replay using captured game scores connected the two starters. It does not mean a browser win screen was observed. "Shortest" is limited to the selected vocabulary and local model; the game's own behavior may admit another chain.</p>
+        <p>This data contains semantic vectors from ConceptNet Numberbatch, by Luminoso Technologies, Inc. Derived atlas data is distributed under <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>. See <a href="https://github.com/commonsense/conceptnet-numberbatch">Numberbatch</a> and Speer, Chin &amp; Havasi (2017), <em>ConceptNet 5.5</em>.</p>
+        <p>WordNet 3.0 © 2006 Princeton University. <a href="/assets/atlas/WordNet-LICENSE.txt">WordNet license and disclaimer</a>. Typography: Bricolage Grotesque by Atelier Triay. Visualization: D3 (ISC) and GSAP. <a href="/assets/atlas/NOTICES.txt">Bundled notices</a>.</p>
+        <p>An independent project by Jordan Leis, not affiliated with Linxicon or Trainwreck Labs.</p>
+      </div>
+    </details>
   </main>
-  <footer><a href="/">Jordan Leis <span aria-hidden="true">↗</span></a><span>FOLLOW THE CONNECTIONS.</span><a href="https://linxicon.com/">Play Linxicon <span aria-hidden="true">↗</span></a></footer>
+
+  <footer>
+    <a href="/">Jordan Leis</a>
+    <a href="https://github.com/Jordan-Leis/linxicon-optimal-solver">Solver source</a>
+    <a href="https://linxicon.com/">Play Linxicon</a>
+  </footer>
 </div>
-<noscript><p class="noscript">JavaScript is required for interactive replay. You can still read the method above or <a href="https://linxicon.com/">play Linxicon</a>.</p></noscript>
+<noscript><p class="noscript">JavaScript is required for the replay. You can still read how the solver works above, or <a href="https://linxicon.com/">play Linxicon</a>.</p></noscript>
 </body>
 </html>
