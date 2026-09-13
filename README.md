@@ -24,9 +24,13 @@ Ruby isn't required locally. Push a non-`main` branch and the `jekyll-check` wor
 
 ## Linxicon Semantic Atlas
 
-`/linxicon-solver/` is a standalone static atlas, with `/linixcon-solver/`
-redirecting to it. The page has its own CSS and self-hosted fonts in
-`assets/atlas/`; it does not depend on the desktop redesign branch.
+`/linxicon-solver/` is a standalone static page, with `/linixcon-solver/`
+redirecting to it. It shows today's puzzle as a route: the two starters, one
+button to reveal the chain, and a map of the search underneath. Everything it
+needs lives in `assets/atlas/`: one self-hosted variable font (Bricolage
+Grotesque), D3 for the map, and GSAP with DrawSVG for the single reveal
+animation. The page is laid out mobile-first (no text under 14 px, controls at
+least 44 px tall) and does not depend on the desktop redesign branch.
 
 Run a local preview and checks:
 
