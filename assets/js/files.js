@@ -124,7 +124,7 @@ const Files = {
         if (el.hidden) return;
         const n = Session.target(node);
         const head = document.createElement('div'); head.className = 'dt-head';
-        const img = document.createElement('img'); img.alt = ''; img.src = this.icon(node);
+        const img = document.createElement('img'); img.alt = ''; img.src = n.type === 'photo' ? n.thumbnail : this.icon(node);
         const name = document.createElement('div'); name.className = 'dt-name'; name.textContent = node.name;
         const sub = document.createElement('div'); sub.className = 'dt-sub'; sub.textContent = n.project?.subtitle || node.date || (node.type === 'folder' ? Session.list(node.id).length + ' items' : node.type);
         head.append(img, name, sub); el.append(head);

@@ -447,7 +447,8 @@ const Browser = {
             this.history.push(href);
             this.index = this.history.length - 1;
         }
-        el.address.value = this.display(href);
+        // Don't clobber an address the visitor is typing.
+        if (document.activeElement !== el.address) el.address.value = this.display(href);
         el.title.textContent = title || this.hostname(href);
         el.external.href = href;
         el.fallbackLink.href = href;
@@ -504,8 +505,12 @@ const Browser = {
         document.getElementById('browser-location').onsubmit = e => {
             e.preventDefault(); let value = el.address.value.trim();
             if (!value) return;
-            if (!/^[a-z][a-z0-9+.-]*:/i.test(value) && !value.startsWith('/')) value = 'https://' + value;
+            // A bare host gets https; the displayed form of this site's own address stays on this origin.
+            if (!/^[a-z][a-z0-9+.-]*:/i.test(value) && !value.startsWith('/')) {
+                value = (value === location.host || value.startsWith(location.host + '/') ? location.protocol + '//' : 'https://') + value;
+            }
             try { openUrl(new URL(value, location.origin).href); } catch { el.address.value = this.history[this.index] || ''; }
+            el.address.blur();
         };
     }
 };

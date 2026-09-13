@@ -232,7 +232,14 @@ test.describe('system menu, terminal, filesystem, and Easter eggs', () => {
     ok((await p.locator('#files-details').innerText()).includes('Repository not public yet.')); ok(await p.locator('#browser-window').isVisible(), false);
     await p.evaluate(() => { Session.node('/Projects/software/linxicon_atlas').project = PROJECTS.find(x => x.id === 'linxicon-atlas'); });
 
-    await launch(p, 'browser-window'); await p.locator('#browser-frame').contentFrame().locator('a[href="/blog/hello-world/"]').click();
+    await launch(p, 'browser-window');
+    // The site's own displayed address (no scheme) stays on this origin.
+    const host = new URL(baseURL).host;
+    await p.locator('#browser-address').fill(host + '/blog/hello-world/'); await p.locator('#browser-address').press('Enter');
+    await p.waitForFunction(() => document.querySelector('#browser-frame').contentWindow.location.pathname === '/blog/hello-world/');
+    ok(await p.locator('#browser-address').inputValue(), host + '/blog/hello-world/');
+    await p.locator('#browser-back').click(); await p.waitForFunction(() => document.querySelector('#browser-address').value.endsWith('/blog/'));
+    await p.locator('#browser-frame').contentFrame().locator('a[href="/blog/hello-world/"]').click();
     await p.waitForFunction(() => document.querySelector('#browser-address').value.includes('/blog/hello-world/'));
     await p.locator('#browser-back').click(); await p.waitForFunction(() => document.querySelector('#browser-address').value.endsWith('/blog/'));
     await p.locator('#browser-forward').click(); await p.waitForFunction(() => document.querySelector('#browser-address').value.includes('/blog/hello-world/'));
@@ -421,7 +428,7 @@ test.describe('media', () => {
     await p.keyboard.press('ArrowRight'); assert.equal(await p.locator('#photo-name').innerText(), 'aero speaks.jpg');
     await p.locator('#photo-next').click(); assert.equal(await p.locator('#photo-name').innerText(), 'aero way too close.jpg');
     assert.ok((await p.locator('#photo-image').getAttribute('src')).endsWith('/assets/media/photos/aero-way-too-close.webp'));
-    assert.ok(await p.locator('#photo-image').evaluate(e => e.naturalWidth > 0), 'display copy loads');
+    await p.waitForFunction(() => document.getElementById('photo-image').naturalWidth > 0);
     assert.ok(await p.locator('#photo-window .window-content').evaluate(c => c.scrollWidth <= c.clientWidth + 1), 'viewer content fits');
     assert.equal(await p.evaluate(() => Session.list('/Recent').filter(n => n.type === 'photo').length), 3, 'each viewed photo is listed once in Recent');
     noIssues(p); await p.close();
@@ -438,7 +445,7 @@ test.describe('boot, introduction, and reboot lifecycle', () => {
     assert.equal(await p.evaluate(() => Media.audio.volume), 0.29);
     await command('cd Downloads'); await command('cat .notes.txt');
     await p.evaluate(() => { Session.star('/Downloads/.notes.txt'); Session.trash('/Documents/mission.txt'); Solitaire.game.draw(); });
-    const navigate = async frame => { await frame.locator('.dock-item[data-window="browser-window"]').click(); await frame.locator('#browser-address').fill('jordanleis.com'); await frame.locator('#browser-address').press('Enter'); };
+    const navigate = async frame => { await frame.locator('.dock-item[data-window="browser-window"]').click(); await frame.waitForFunction(() => !document.querySelector('#browser-loading').classList.contains('on')); await frame.locator('#browser-address').fill('jordanleis.com'); await frame.locator('#browser-address').press('Enter'); };
     const child = parent => p.frames().find(f => f.parentFrame() === parent && f.url().startsWith(baseURL + '/?desktop-depth='));
     await navigate(p);
     await p.waitForFunction(() => document.querySelector('#browser-frame').contentWindow.DesktopHost?.depth === 1);
