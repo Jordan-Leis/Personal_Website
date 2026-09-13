@@ -39,18 +39,55 @@ The desktop uses vanilla HTML, CSS, and JavaScript. There is no application buil
 | `index.html` | Desktop markup, application windows, and the Liquid post-list template. |
 | `assets/css/desktop.css` | Desktop shell, application layouts, responsive rules, and animations. |
 | `assets/js/projects.js` | Verified project descriptions, links, folder order, and terminal-tree annotations. |
-| `assets/js/desktop.js` | Window management, dock, app grid, boot/greeting, Files, browser, and link routing. |
+| `assets/js/desktop.js` | Window management, dock, app grid, browser, and link routing. |
+| `assets/js/session.js` | Root-owned in-memory filesystem, Recent, Starred, Trash, discoveries, volume, and nested-view registration. |
+| `assets/js/pointer.js` | Shared pointer capture, drag threshold, drop targets, and cancellation. |
+| `assets/js/apps.js` | Additional window/launcher markup and the system dropdown. |
+| `assets/js/files.js` | Files navigation and shared document/project/shortcut entries. |
+| `assets/js/terminal.js` | Boot, progressive introduction, simulated commands, and fake reboot. |
+| `assets/js/media.js` | Photo viewer, native audio, and the shared official YouTube IFrame API loader. |
+| `assets/js/gallery-data.js`, `assets/media/` | Photo labels, public thumbnail/display paths, and the supplied audio clip. |
+| `assets/js/solitaire.js` | Dependency-free Klondike rules and mouse/touch rendering. |
 | `_posts/`, `blog/index.html`, `_layouts/` | Jekyll posts, blog listing, and standalone/embedded terminal layouts. |
 | `assets/css/syntax.css` | Blog code highlighting. |
 | `assets/icons/yaru/` | Bundled desktop icons; attribution below. |
 
 Edit `PROJECTS` to update a project. Entries retain their array order within each folder; `PROJECT_FOLDERS` controls folder order. `slug` and optional `note` provide the terminal tree text. Keep links null when unavailable: Linxicon currently displays “Repository not public yet.” without an outgoing link.
 
-Files opens at Projects, with hardware, papers, and software folders. Select an item for details; double-click or press Enter for its primary action. On touch screens, select an item and use its details action. Home also contains posts, About, Contact, and Resume. Trash is an empty view; muted sidebar entries and decorative toolbar controls have no action.
+Files opens at Projects, with hardware, papers, and software folders. Select an item for details; double-click or press Enter for its primary action. On touch screens, select an item and use its Open action. Home provides Desktop, Documents, Downloads, Photos, Projects, posts, and Trash. Documents uses the existing portfolio text and Resume link. Desktop mirrors active shortcuts; deleting a shortcut leaves its application available in the app grid.
+
+Use the details buttons to star items, move them to Trash, or restore their original locations. Mouse dragging also supports Trash drop targets. Trashing a folder hides its descendants from ordinary views, Recent, and Starred. Recent lists opened files once, newest first. The Show hidden files button and Ctrl+H in Files reveal dotfiles. Downloads contains a virtual video item and a hidden clues file. The remaining search/view/menu glyphs in the Files header are decorative.
+
+Terminal input supports `help`, `ls [-a] [path]`, `pwd`, `cd`, `clear`, `whoami`, `date`, `cat`, and `echo`, plus safe simulations of the existing introduction commands. Paths use `/home/jordan` or `~`, relative paths, `.`/`..`, and quoted filenames. Up/Down browses command history. Input is rendered as text and never passed to a shell or evaluated as JavaScript; arbitrary pipelines are not implemented. `clear` clears the transcript without replaying the introduction. Easter egg commands are intentionally omitted from `help`.
 
 The Blog launcher opens `/blog/` in the desktop browser. Files → Home → posts provides another way to open posts. A URL such as `/?open=/blog/hello-world/` opens a same-origin page after boot. The standalone blog pages include an “open on desktop” link.
 
-The dock opens or raises applications; clicking the focused application minimizes it. Orange dots remain for minimized applications. Alt+Tab cycles through open applications, including minimized ones. Escape dismisses the app grid or closes the focused window when keyboard focus is on the desktop. Boot and greeting animations can be skipped with a key or pointer press, and respect reduced-motion preferences.
+The dock opens or raises applications; clicking the focused application minimizes it. Orange dots remain for minimized applications. Alt+Tab cycles through open applications, including minimized ones. Escape dismisses the app grid or closes the focused window when keyboard focus is on the desktop. Window headers, desktop shortcuts, Files items, and cards share a Pointer Events lifecycle that ends on release, cancellation, lost capture, blur, or page hiding. Files keeps vertical touch scrolling; touch users can use its accessible Trash/Restore actions.
+
+Root boot runs on every full load for a randomized 6–8 seconds, including its transition. A key, pointer press, or Skip boot button skips it. The complete terminal introduction types over 12–15 seconds, then cycles its roles and settles on “I like to build.” Skip introduction or focus the input to finish immediately. Reduced motion reveals the final introduction without waiting. Raising or reopening Terminal does not replay it.
+
+## Session, media, and games
+
+All mutable state lives in memory. A real refresh restores the default filesystem, clears discoveries, restores volume to 50%, and deals a new game. A simulated recursive crash retains only discoveries and volume, disposes of nested frames/media, resets the other applications, and boots again. The root owns shared progress and audio; nested desktop views do not create additional audio engines or boot sequences. Opening the portfolio through three successive desktop browsers triggers the harmless two-second failure overlay before a third nested desktop is created. Depth-specific frame URLs keep actual nested documents bounded; messages are accepted only from registered same-origin views.
+
+The system dropdown contains volume/mute controls and simulated connected `eduroam` and 87% battery indicators. Playback begins only through a user action. The subtle discovery tracker appears after the first discovery and turns gold at three; it remains above the mobile dock with space reserved below application windows.
+
+Photos uses the eight supplied JPEG filenames as labels. `assets/media/photos/` contains WebP thumbnails (maximum edge 320 px) and display copies (maximum edge 1920 px), without upscaling. Derivatives preserve orientation/aspect ratio and remove metadata. The originals remain untouched in ignored `media-before-commit/`; shipped files use only public `/assets/media/` paths. `assets/media/audio/work-work.m4a` is an exact copy of the supplied clip. Update `gallery-data.js` alongside new optimized media. The viewer supports previous/next buttons and Left/Right arrow keys.
+
+Music embeds the supplied YouTube playlist with visible video and play/pause, previous/next, seek, and available track information. The virtual `secret.mp4` item opens a YouTube video, not a downloaded or rehosted file. Both use the [official YouTube IFrame API](https://developers.google.com/youtube/iframe_api_reference), an explicit origin, and a referrer policy suitable for player identification. A playlist track that YouTube reports as missing or not embeddable is skipped (at most once per track per session). If the API, the network, or playback itself fails, the player displays an external YouTube link and disables unavailable controls. Playback in a separate browser tab has its own volume controls and cannot follow the site slider. Minimized music may keep playing; closing its window or rebooting stops it.
+
+Solitaire is draw-one Klondike with unlimited stock recycling. Select a face-up card or valid stack, then select a destination; mouse and touch pointer dragging also work. Tableau sequences descend with alternating colors, only kings fill empty columns, and foundations ascend from ace to king by suit. Exposed cards flip automatically. Undo restores the previous move, draw, or recycle. New Game deals again. Minimizing preserves the deal; refresh and fake reboot reset it. There is no scoring or external game dependency.
+
+## Local Jekyll verification
+
+For changes that must stay uncommitted, build locally without invoking CI. Use an isolated Ruby/Jekyll installation outside this repository; the expansion was checked with Ruby 3.3.6, Jekyll 3.10.0, and `kramdown-parser-gfm`. Copy the source to a temporary directory while excluding `.git`, `.agents`, `.codex`, `media-before-commit`, `_site`, and caches. Run Jekyll **from that temporary source directory** so layouts are resolved from the same copy:
+
+```sh
+JEKYLL_ENV=development jekyll build --destination /tmp/jordanleis-preview/development-seeded
+JEKYLL_ENV=production jekyll build --destination /tmp/jordanleis-preview/production-seeded
+```
+
+Repeat from a second temporary copy with `_posts/` removed to check the empty-post cases. Serve each generated directory with a local HTTP server as in the artifact workflow above. Keep Playwright tooling, screenshots, downloaded toolchains, and test fixtures outside the repository. Build copies must exclude staging originals so missing public media paths cannot be masked by the source directory.
 
 ## Browser destinations
 
@@ -60,15 +97,16 @@ Resume links use Google Drive's preview endpoint inside the frame. LinkedIn open
 
 ## Icon attribution
 
-The 19 PNGs in `assets/icons/yaru/` are from the [Yaru icon theme](https://github.com/ubuntu/yaru), by the Yaru contributors, distributed under [Creative Commons Attribution-ShareAlike 4.0 International](https://creativecommons.org/licenses/by-sa/4.0/). See the [upstream icon license](https://github.com/ubuntu/yaru/blob/master/icons/LICENSE_CCBYSA).
+The 23 PNGs in `assets/icons/yaru/` are from the [Yaru icon theme](https://github.com/ubuntu/yaru), by the Yaru contributors, distributed under [Creative Commons Attribution-ShareAlike 4.0 International](https://creativecommons.org/licenses/by-sa/4.0/). See the [upstream icon license](https://github.com/ubuntu/yaru/blob/master/icons/LICENSE_CCBYSA).
 
-The PNG artwork is bundled without pixel edits and scaled with CSS. Repository emblems are separate SVG overlays. Upstream sources are in [`icons/Yaru/48x48@2x/`](https://github.com/ubuntu/yaru/tree/master/icons/Yaru/48x48%402x), in the following categories:
+The PNG artwork is bundled without pixel edits and scaled with CSS. Repository badges are separate HTML/CSS overlays. Upstream sources are in [`icons/Yaru/48x48@2x/`](https://github.com/ubuntu/yaru/tree/master/icons/Yaru/48x48%402x), in the following categories:
 
 | Category | Bundled filenames |
 | --- | --- |
 | `apps` | `filemanager-app.png`, `org.gnome.TextEditor.png`, `system-settings.png`, `terminal-app.png`, `webbrowser-app.png` |
-| `places` | `folder-documents.png`, `folder-download.png`, `folder-open.png`, `folder.png`, `user-desktop.png`, `user-home.png`, `user-trash.png` |
-| `mimetypes` | `application-json.png`, `application-pdf.png`, `text-html.png`, `text-markdown.png`, `text-x-generic.png`, `text-x-script.png` |
+| `places` | `folder-documents.png`, `folder-download.png`, `folder-open.png`, `folder-pictures.png`, `folder.png`, `user-desktop.png`, `user-home.png`, `user-trash.png` |
+| `mimetypes` | `application-json.png`, `application-pdf.png`, `audio-x-generic.png`, `video-x-generic.png`, `text-html.png`, `text-markdown.png`, `text-x-generic.png`, `text-x-script.png` |
 | `actions` | `document-open-recent.png` |
+| `categories` → `devices` | `applications-games.png` (upstream alias of `devices/input-gaming.png`) |
 
 This desktop uses an original CSS/SVG wallpaper and generic application branding. It is not affiliated with Ubuntu, Canonical, Mozilla, or GitHub.
