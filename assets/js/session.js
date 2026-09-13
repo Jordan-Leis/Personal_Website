@@ -79,6 +79,9 @@ class DesktopState {
         return target.content;
     }
     opened(node) {
+        // Aliases (the home-folder copies of Documents) count as their target so
+        // Recent never lists one file twice.
+        node = this.target(node) || node;
         if (!node || node.type === 'folder') return;
         this.recent = [node.id, ...this.recent.filter(id => id !== node.id)].slice(0, 60);
         this.notify();
