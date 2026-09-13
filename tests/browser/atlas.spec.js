@@ -20,7 +20,7 @@ test('play, pause, scrubbing, alternate selection, and board sources',async({pag
  await page.locator('#timeline').evaluate(el=>{el.value=el.max;el.dispatchEvent(new Event('input',{bubbles:true}));});
  await expect(page.locator('#solution')).toBeVisible();
  await page.locator('[data-candidate="1"]').click();await expect(page.locator('.alternates .active')).toContainText('tracks');
- await page.getByRole('tab',{name:'Game board'}).click();await expect(page.locator('.board-world')).toBeVisible();
+ await page.getByRole('tab',{name:'Board'}).click();await expect(page.locator('.board-world')).toBeVisible();
  await page.getByRole('button',{name:'Local model'}).click();await expect(page.locator('.board-world')).toContainText('local scores');
  await page.getByRole('button',{name:'Game scores'}).click();await expect(page.locator('.board-world')).toContainText('game scores');
 });
@@ -73,4 +73,34 @@ test('solution link scores can be inspected entirely from the keyboard',async({p
  const link=page.getByRole('button',{name:'Inspect bridge to track'});await link.focus();await page.keyboard.press('Enter');
  await expect(page.locator('#inspector-content')).toContainText('Final local score');
  await expect(page.locator('#inspector-content')).toContainText('0.6000');
+});
+
+test('any pair solves in the browser and can be shown on the board',async({page})=>{
+ const errors=[];page.on('pageerror',e=>errors.push(e.message));
+ await open(page);await page.getByRole('tab',{name:'Any pair'}).click();
+ await expect(page.locator('#solve-panel')).toBeVisible();await expect(page.locator('#map')).toBeHidden();
+ await page.getByRole('textbox',{name:'From'}).fill('Chest');await page.getByRole('textbox',{name:'To'}).fill('setting');await page.getByRole('button',{name:'Solve'}).click();
+ await expect(page.locator('#solve-results .route')).toContainText('scope',{timeout:60000});
+ await expect(page.locator('#solve-results .verdict')).toContainText('Wins under the game’s rules locally after adding 3 words');
+ await expect(page.locator('#solve-results .alternates li')).toHaveCount(5);
+ await expect(page.locator('#inspector-content')).toContainText('breast → reach');
+ await page.locator('[data-custom-candidate="1"]').click();await expect(page.locator('#solve-results .route')).toContainText('reaches');
+ await page.getByRole('button',{name:'Show on the game board'}).click();
+ await expect(page.locator('.board-world')).toContainText('Connected with 3 words added, using local scores');
+ await page.getByRole('button',{name:'Back to today’s puzzle'}).click();await expect(page.locator('.board-world')).toContainText('Watch the search or reveal');
+ await page.getByRole('tab',{name:'Any pair'}).click();
+ await page.getByRole('textbox',{name:'From'}).fill('quazzle');await page.getByRole('button',{name:'Solve'}).click();
+ await expect(page.locator('#solve-status')).toContainText('isn’t in the solver’s vocabulary');
+ await page.getByRole('textbox',{name:'From'}).fill('aff');await page.getByRole('textbox',{name:'To'}).fill('bridge');await page.getByRole('button',{name:'Solve'}).click();
+ await expect(page.locator('#solve-status')).toContainText('No chain connects aff and bridge');
+ await page.getByRole('textbox',{name:'From'}).fill('apple');await page.getByRole('textbox',{name:'To'}).fill('apple');await page.getByRole('button',{name:'Solve'}).click();
+ await expect(page.locator('#solve-status')).toContainText('Pick two different words');
+ expect(errors).toEqual([]);
+});
+test('any pair works on a phone without overflow',async({page})=>{
+ await page.setViewportSize({width:390,height:844});await open(page);await page.getByRole('tab',{name:'Any pair'}).click();
+ await page.getByRole('textbox',{name:'From'}).fill('bridge');await page.getByRole('textbox',{name:'To'}).fill('running');await page.getByRole('button',{name:'Solve'}).click();
+ await expect(page.locator('#solve-results .route')).toContainText('track',{timeout:60000});
+ expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+ await page.screenshot({path:'/tmp/atlas-any-pair-mobile.png',fullPage:true});
 });

@@ -3,6 +3,8 @@ import gzip
 import hashlib
 import json
 from pathlib import Path
+import re
+import struct
 import sys
 
 root=Path(sys.argv[1] if len(sys.argv)>1 else '.')
@@ -23,9 +25,18 @@ assert all(e['a'] in words and e['b'] in words for e in data['edges'])
 for candidate in data['candidates']:
     assert set(candidate['words'])<=words
     if candidate['status']=='verified':assert candidate['server_frames'][-1]['path']
+graph=json.loads((root/'linxicon-solver/data/graph.json').read_text())
+assert graph['schema_version']==1 and re.fullmatch(r'graph-[a-f0-9]{16}\.bin',graph['file']),'Invalid graph manifest'
+graph_raw=(root/'linxicon-solver/data'/graph['file']).read_bytes()
+assert hashlib.sha256(graph_raw).hexdigest()==graph['sha256'],'Graph bundle checksum mismatch'
+assert len(graph_raw)<=8_000_000,f'Graph bundle too large: {len(graph_raw)}'
+unpacked=gzip.decompress(graph_raw)
+assert unpacked[:4]==b'LXG1','Graph bundle is not LXG1'
+words_count,edges_count=struct.unpack_from('<II',unpacked,4)
+assert (words_count,edges_count)==(graph['words'],graph['edges']),'Graph header disagrees with manifest'
 assets=[p for p in (root/'assets/atlas').rglob('*') if p.suffix in ['.css','.js','.woff2']]
 compressed=sum(len(gzip.compress(p.read_bytes())) for p in [page,*assets])+len(gzip.compress(raw))
 assert compressed<=1_000_000,f'Initial asset budget exceeded: {compressed}'
 for name in ['WordNet-LICENSE.txt','NOTICES.txt','vendor/d3-LICENSE.txt','vendor/gsap-LICENSE.txt','fonts/BricolageGrotesque-LICENSE.txt']:
     assert (root/'assets/atlas'/name).is_file(),f'Missing notice: {name}'
-print(f'Atlas valid: game {data["game"]["id"]}, {len(words)} nodes, {compressed:,} gzip bytes including all bundled fonts.')
+print(f'Atlas valid: game {data["game"]["id"]}, {len(words)} nodes, {compressed:,} gzip bytes including all bundled fonts; graph bundle {words_count:,} words, {edges_count:,} links, {len(graph_raw):,} bytes (lazy).')

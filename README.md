@@ -32,6 +32,15 @@ Grotesque), D3 for the map, and GSAP with DrawSVG for the single reveal
 animation. The page is laid out mobile-first (no text under 14 px, controls at
 least 44 px tall) and does not depend on the desktop redesign branch.
 
+The **Any pair** tab solves arbitrary word pairs in the browser. It downloads
+`linxicon-solver/data/graph-<hash>.bin` once (about 5 MB: the solver's
+51,029-word, 1,679,661-link graph with 16-bit scores, gzip inside an `LXG1`
+binary), checks it against `graph.json`, and runs the same shortest-chain search
+and board replay as the Python solver (`assets/atlas/solver.js`; the node tests
+compare it with fixtures produced by the CLI). The bundle is committed, not
+rebuilt in CI; regenerate it with the solver's `export_graph` module only when
+its scoring version changes. Results use the local model only and say so.
+
 Run a local preview and checks:
 
 ```sh
