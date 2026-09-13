@@ -63,3 +63,10 @@ test('playback remains responsive under mobile CPU throttling',async({page})=>{
  const p95=times[Math.floor(times.length*.95)];console.log('Mobile CPU 4x frame p95:',p95.toFixed(1),'ms');
  expect(p95).toBeLessThan(100);
 });
+
+test('solution link scores can be inspected entirely from the keyboard',async({page})=>{
+ await open(page);await page.getByRole('button',{name:'Show solution'}).click();
+ const link=page.getByRole('button',{name:'Inspect bridge to track'});await link.focus();await page.keyboard.press('Enter');
+ await expect(page.locator('#inspector-content')).toContainText('Final local score');
+ await expect(page.locator('#inspector-content')).toContainText('0.6000');
+});

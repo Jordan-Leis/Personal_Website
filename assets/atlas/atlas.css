@@ -3,3 +3,6 @@
 @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
 
 @media(max-width:760px){.atlas{display:flex;flex-direction:column}.atlas-toolbar{order:0}.atlas-body{display:contents}.map-panel{order:1}.playback{order:2}.map-stats{order:3}.inspector{order:4}}
+
+.solution-links{display:flex;flex-wrap:wrap;gap:8px}.solution-links button{font:10px var(--mono);padding:9px 11px;border:1px solid var(--line)}.solution-links button:hover{border-color:var(--red);color:var(--red)}
+@media(max-width:760px){.solution-links button{min-height:44px}.neighbor-list button{min-height:32px}.zoom-controls button{width:36px;height:44px}.step-controls button{min-height:44px}}
