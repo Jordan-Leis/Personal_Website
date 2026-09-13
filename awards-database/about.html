@@ -4,6 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>About &amp; disclaimer — Waterloo Awards Finder</title>
+  <link rel="canonical" href="https://jordanleis.com/awards-database/about.html">
   <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
@@ -66,6 +67,23 @@
         </li>
       </ul>
       <p>Check the official directory directly if either of these matters for your search.</p>
+
+      <h2>Data access</h2>
+      <p>
+        The mirrored data is published as plain JSON if you want to build something with it:
+      </p>
+      <ul>
+        <li><code>data/index.json</code> — manifest: freshness, counts, and every filter value in use (~6 KB)</li>
+        <li><code>data/awards.slim.json</code> — all awards without the long description text (~455 KB)</li>
+        <li><code>data/awards.json</code> — everything, all fields (~2.6 MB)</li>
+      </ul>
+      <p>
+        <strong>This is an unofficial mirror, not a University of Waterloo API.</strong> There is no
+        stability or availability guarantee, the data is only as fresh as the last refresh shown in the
+        footer, and anything time-sensitive should be verified against the
+        <a href="https://uwaterloo.ca/awards-directory/" target="_blank" rel="noopener">official directory</a>.
+        It updates about three times a year, so please cache it rather than polling.
+      </p>
 
       <h2>Your data / privacy</h2>
       <p>
