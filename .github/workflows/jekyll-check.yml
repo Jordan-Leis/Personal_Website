@@ -36,6 +36,14 @@ jobs:
           test -f _site/cracked-profiles/privacy/index.html
           test -f _site/blog/index.html
           if grep -q '{{\|{%' _site/index.html; then echo "Liquid leaked into index.html"; exit 1; fi
+          # The mirrored awards site (synced by sync-awards-database.yml). Only
+          # assert once it exists, so this check still passes on branches cut
+          # before the first sync. Catches a _config.yml exclude/include change
+          # dropping it — which would 404 in production rather than fail here.
+          if [ -d awards-database ]; then
+            test -f _site/awards-database/index.html
+            test -f _site/awards-database/data/awards.json
+          fi
           if [ "${{ matrix.posts }}" = "seeded" ]; then
             test -f _site/blog/hello-world/index.html
             grep -q 'class="post-entry"' _site/index.html

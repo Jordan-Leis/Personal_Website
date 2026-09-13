@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>About &amp; disclaimer — Waterloo Awards Finder</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-inner">
+      <p class="site-title"><span class="accent-dot">●</span> Waterloo Awards Finder</p>
+      <nav class="site-nav">
+        <a href="index.html">Search</a>
+        <a href="about.html" class="active">About &amp; disclaimer</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <div class="about-content">
+      <h2>What this is</h2>
+      <p>
+        Waterloo Awards Finder is an independent, unofficial project that mirrors the University of
+        Waterloo's public <a href="https://uwaterloo.ca/awards-directory/" target="_blank" rel="noopener">Awards Directory</a>
+        into a fast, instantly-searchable page. The official directory is a real-time, one-award-at-a-time
+        search tool built on the university's student records system; this site periodically copies its
+        publicly-visible listings so students can search and filter all of them at once, client-side, with
+        no page reloads.
+      </p>
+
+      <h2>What this is <em>not</em></h2>
+      <p>
+        This site is <strong>not affiliated with, endorsed by, or operated by the University of Waterloo</strong>.
+        It is not an application system — you cannot apply for awards here. For anything time-sensitive
+        (deadlines, eligibility rules, required documents, how to actually apply), always confirm against
+        the <a href="https://uwaterloo.ca/awards-directory/" target="_blank" rel="noopener">official Awards Directory</a>,
+        which is the authoritative source. Data here can be out of date between refreshes.
+      </p>
+
+      <h2>How the data is kept up to date</h2>
+      <p>
+        A scheduled, automated job re-scrapes the official directory three times a year (around January,
+        May, and September) and republishes the results here. The refresh date and award count for the
+        current dataset are shown in the footer of the search page. If a scheduled refresh produces a
+        clearly broken or suspiciously incomplete dataset, it's designed to fail and leave the
+        previous, known-good data in place rather than publish something wrong.
+      </p>
+
+      <h2>Known data gaps</h2>
+      <p>
+        Two filters shown on the official site's search form are <strong>not</strong> available here,
+        on purpose, rather than being faked:
+      </p>
+      <ul>
+        <li>
+          <strong>Citizenship status</strong> (Canadian/Permanent Resident vs. International) — this isn't
+          captured per award. Testing showed that filtering by a single citizenship value on the official
+          site silently excludes a large share of awards that have no citizenship restriction at all, so
+          this data can't be reliably reconstructed per award.
+        </li>
+        <li>
+          <strong>Selection process</strong> (application required vs. automatically considered) — this is
+          used internally by the official search tool but isn't exposed as a stored field per award, so it
+          isn't available to mirror here either.
+        </li>
+      </ul>
+      <p>Check the official directory directly if either of these matters for your search.</p>
+
+      <h2>Your data / privacy</h2>
+      <p>
+        The "Match my profile" feature stores your selected program/level/area of study only in your own
+        browser's local storage. Nothing you enter here is sent anywhere or seen by anyone else.
+      </p>
+
+      <h2>Questions or issues</h2>
+      <p>
+        This is a small independent student project. If something looks wrong or broken, the source code
+        for both the scraper and this site is public — see the project's GitHub repository.
+      </p>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <p>This is an unofficial mirror maintained independently of the University of Waterloo.</p>
+  </footer>
+</body>
+</html>

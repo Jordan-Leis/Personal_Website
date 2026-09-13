@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Waterloo Awards Finder — unofficial awards search</title>
+  <meta name="description" content="An unofficial, independently-maintained, instantly-searchable mirror of the University of Waterloo's Awards Directory.">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-inner">
+      <p class="site-title"><span class="accent-dot">●</span> Waterloo Awards Finder</p>
+      <nav class="site-nav">
+        <a href="index.html" class="active">Search</a>
+        <a href="about.html">About &amp; disclaimer</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <div class="disclaimer">
+      <strong>Unofficial, independent project.</strong>
+      Not affiliated with or endorsed by the University of Waterloo. Data is mirrored periodically from the
+      <a href="https://uwaterloo.ca/awards-directory/" target="_blank" rel="noopener">official Awards Directory</a>,
+      which is always the authoritative source for deadlines, eligibility, and how to apply.
+      See the <a href="about.html">About page</a> for details and known data gaps.
+    </div>
+
+    <section class="controls">
+      <div class="search-row">
+        <input type="search" id="search-input" placeholder="Search award name, description, eligibility…" aria-label="Search awards">
+      </div>
+
+      <!-- Multi-select filter controls are built by js/multiselect.js -->
+      <div class="filter-grid" id="filter-bar"></div>
+
+      <div class="filter-actions">
+        <button class="btn" id="clear-filters" type="button">Clear filters</button>
+      </div>
+
+      <div class="profile-row">
+        <label class="switch-label">
+          <input type="checkbox" id="match-mode-toggle">
+          Match my profile
+        </label>
+        <button class="btn" id="edit-profile-btn" type="button">Edit my profile</button>
+      </div>
+
+      <div class="profile-editor" id="profile-editor">
+        <select id="profile-career" aria-label="Your career"></select>
+        <select id="profile-level" aria-label="Your level"></select>
+        <select id="profile-area" aria-label="Your area of study"></select>
+        <button class="btn btn-primary" id="save-profile-btn" type="button">Save profile</button>
+      </div>
+    </section>
+
+    <p class="result-summary" id="result-summary">Loading awards…</p>
+    <div class="card-grid" id="card-grid"></div>
+    <div class="load-more-row" id="load-more-row" hidden>
+      <button class="btn" id="load-more-btn" type="button">Load more</button>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <p id="freshness-note">Loading data freshness info…</p>
+    <p>This is an unofficial mirror maintained independently of the University of Waterloo. See the
+      <a href="about.html">About page</a> for the full disclaimer.</p>
+  </footer>
+
+  <div class="modal-backdrop" id="modal-backdrop" hidden>
+    <div class="modal" role="dialog" aria-modal="true" id="modal-body"></div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/fuse.js@7.0.0/dist/fuse.min.js"></script>
+  <script src="js/multiselect.js"></script>
+  <script src="js/profile.js"></script>
+  <script src="js/search.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,105 @@
+# Mirrors the UWaterloo awards site into /awards-database so it serves at
+# https://jordanleis.com/awards-database/.
+#
+# The awards site is developed and scraped in its own repo
+# (Jordan-Leis/uw-awards-search); this only copies its built static output.
+# Both repos are public, so checking out the source needs no PAT — the
+# default GITHUB_TOKEN is enough.
+name: sync-awards-database
+
+on:
+  schedule:
+    # Daily at 08:37 UTC. The award data itself only changes 3x/year, but a
+    # daily poll bounds the staleness window at 24h for the cost of a ~40s
+    # job. Offset from :00 to avoid GitHub's on-the-hour cron congestion.
+    - cron: '37 8 * * *'
+  workflow_dispatch: {}
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/sync-awards-database.yml'
+
+concurrency:
+  group: sync-awards-database
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # The awards repo's history holds a 2.6MB data blob per refresh, so
+      # take a shallow clone. The '_src' name is deliberate: Jekyll ignores
+      # underscore-prefixed paths, so even a run interrupted before cleanup
+      # can't leak the checkout into a build.
+      - name: Check out the awards site source
+        uses: actions/checkout@v4
+        with:
+          repository: Jordan-Leis/uw-awards-search
+          ref: main
+          path: _src
+          fetch-depth: 1
+
+      - name: Record source revision
+        id: src
+        run: echo "sha=$(git -C _src rev-parse --short HEAD)" >> "$GITHUB_OUTPUT"
+
+      # Trailing slash on the source copies its *contents*. --delete prunes
+      # files removed upstream. Both sides are scoped to awards-database/, so
+      # this cannot touch index.html, CNAME, _posts/, blog/ or cracked-profiles/.
+      - name: Mirror the built site into awards-database/
+        run: |
+          set -euo pipefail
+          mkdir -p awards-database
+          rsync -a --delete _src/site/ awards-database/
+
+      - name: Remove the source checkout before building
+        run: rm -rf _src
+
+      # Build BEFORE committing. This repo serves a Jekyll blog from the same
+      # branch, so a bad sync could otherwise take the whole site down. If the
+      # build or the assertions below fail, the job fails having committed
+      # nothing.
+      - uses: actions/jekyll-build-pages@v1
+        with:
+          source: ./
+          destination: ./_site
+
+      - name: Verify both the blog and the awards site survived the build
+        run: |
+          set -e
+          test -f _site/index.html
+          test -f _site/CNAME
+          test -f _site/blog/index.html
+          test -f _site/cracked-profiles/privacy/index.html
+          test -f _site/awards-database/index.html
+          test -f _site/awards-database/about.html
+          test -f _site/awards-database/css/styles.css
+          test -f _site/awards-database/js/app.js
+          test -f _site/awards-database/data/awards.json
+          test -f _site/awards-database/data/meta.json
+          echo "Build OK: blog and awards-database both present."
+
+      - name: Discard the build output
+        run: rm -rf _site
+
+      - name: Commit if the mirrored content actually changed
+        run: |
+          set -euo pipefail
+          # 'git add' first, then check the *index*: a bare `git diff --quiet`
+          # ignores untracked files, so the first run (when every mirrored file
+          # is new) would report "clean" and commit nothing.
+          git add -A awards-database
+          if git diff --cached --quiet; then
+            echo "awards-database is already up to date; nothing to commit."
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "Sync awards-database from uw-awards-search@${{ steps.src.outputs.sha }}"
+          git push
