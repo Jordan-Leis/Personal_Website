@@ -30,6 +30,16 @@ python3 -m http.server 8765 --bind 127.0.0.1 --directory /tmp/jordanleis-preview
 
 Serve `site-empty` on port 8766 in a second terminal to check the empty post list. Stop each server with Ctrl+C. Use artifacts from the commit under review so that the desktop and blog layouts come from the same build. The check workflow verifies branches; production publishes from `main` through the `pages.yml` workflow described below.
 
+The same workflow runs the browser suites in `tests/browser/` against the seeded build: `desktop.spec.js` covers the window manager, browser routing, Files, terminal, Trash/Recent/Starred, pointer drags, Solitaire, media controls, boot/introduction timing, the nested-desktop crash, and a banned-phrase check; `atlas.spec.js` covers the Linxicon page. `npm test` runs the Solitaire rule and atlas unit tests. To run the browser suite locally, point it at a build directory:
+
+```sh
+npm ci
+npx playwright install chromium
+SITE_DIR=/tmp/jordanleis-preview/site-seeded npm run test:browser
+```
+
+`index.html` contains Liquid, so the suite cannot run against the source tree. External destinations and the YouTube player are stubbed in the tests; live playback and public-URL checks are manual.
+
 ## How it is put together
 
 The desktop uses vanilla HTML, CSS, and JavaScript. There is no application build step; GitHub Pages runs Jekyll to render the blog and its post list.
@@ -102,12 +112,12 @@ python3 -m http.server 18764 --bind 127.0.0.1
 npm ci
 npm test
 npx playwright install chromium
-npm run test:browser
+SITE_DIR=<jekyll build directory> npm run test:browser
 python3 scripts/check_atlas.py
 ```
 
-Playwright starts its own preview on port 18764; stop a manual preview before
-running it. Browser fixtures use the checked-in game #944 snapshot. The checks
+Playwright starts its own preview of the build directory on port 18764; stop a
+manual preview before running it. Browser fixtures use the checked-in game #944 snapshot. The checks
 cover hidden answers, reveal, replay state, scrubbing, alternatives, board score
 sources, keyboard navigation, mobile overflow, reduced motion, stale/error
 states, and throttled playback. All bundled initial assets and data are checked
