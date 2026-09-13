@@ -84,8 +84,14 @@ jobs:
           test -f _site/awards-database/data/meta.json
           echo "Build OK: blog and awards-database both present."
 
-      - name: Discard the build output
-        run: rm -rf _site
+      # No cleanup step here on purpose. jekyll-build-pages is a Docker action
+      # that runs as root, so _site ends up root-owned and `rm -rf _site` fails
+      # with "Permission denied" for the runner user — which is exactly how this
+      # job broke: it built and verified fine, then died on the cleanup and
+      # never reached the commit below. Nothing needs deleting anyway: the
+      # commit is path-scoped to awards-database/, _site is untracked, and the
+      # whole workspace is thrown away when the job ends. pages.yml builds to
+      # ./_site and leaves it alone for the same reason.
 
       - name: Commit if the mirrored content actually changed
         run: |
@@ -93,11 +99,28 @@ jobs:
           # 'git add' first, then check the *index*: a bare `git diff --quiet`
           # ignores untracked files, so the first run (when every mirrored file
           # is new) would report "clean" and commit nothing.
-          git add -A awards-database
+          #
+          # The '--' pathspec is load-bearing, not style: it is what keeps the
+          # root-owned _site build output above out of this commit. Do not
+          # widen this to a bare `git add -A`.
+          git add -A -- awards-database
           if git diff --cached --quiet; then
             echo "awards-database is already up to date; nothing to commit."
             exit 0
           fi
+
+          # This repo has no .gitignore, so the pathspec above is the only thing
+          # keeping the build output out of the tree. Verify rather than assume:
+          # a commit containing _site/ would publish the built site back into
+          # its own source and corrupt the next build.
+          stray=$(git diff --cached --name-only | grep -v '^awards-database/' || true)
+          if [ -n "$stray" ]; then
+            echo "Refusing to commit: files staged outside awards-database/:" >&2
+            echo "$stray" >&2
+            exit 1
+          fi
+
+          echo "Staging $(git diff --cached --name-only | wc -l) file(s) under awards-database/."
 
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
