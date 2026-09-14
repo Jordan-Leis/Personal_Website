@@ -46,6 +46,11 @@ test('shortestChains finds the fewest words, ranks by total, and breaks ties alp
   assert.deepEqual(shortestChains(g,'apple','banana',5).chains.map(c=>c.words),[['apple','banana']]);
   assert.deepEqual(shortestChains(g,'apple','apple',5).chains,[{words:['apple'],scores:[],total:0,added:-1}]);
 });
+test('shortestChains never enters blocked words, except the starters themselves',()=>{
+  const g=tiny();
+  assert.deepEqual(shortestChains(g,'apple','fig',5,new Set(['cherry'])).chains.map(c=>c.words),[['apple','date','fig']]);
+  assert.deepEqual(shortestChains(g,'apple','fig',5,new Set(['cherry','date','apple','fig'])).chains,[]);
+});
 test('shortestChains reports no chain for unreachable or unknown words',()=>{
   const g=parseGraph(packGraph(['ant','bee','cat'],[[0,1,.5]]));
   assert.deepEqual(shortestChains(g,'ant','cat',5).chains,[]);
@@ -98,4 +103,7 @@ test('the committed bundle reproduces the Python solver',()=>{
       assert.equal(sim.wordsAdded,pair.board.words_added);assert.equal(sim.frames.length,pair.board.frames);
     }
   }
+  // The game rejects "fete"; with the rejected list the CLI's verified chain comes first.
+  assert.deepEqual(shortestChains(g,'holiday','satisfy',5).chains[0].words,['holiday','fete','meet','satisfy']);
+  assert.deepEqual(shortestChains(g,'holiday','satisfy',5,new Set(['fete','fetes'])).chains[0].words,['holiday','celebrating','meet','satisfy']);
 });

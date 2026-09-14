@@ -41,6 +41,12 @@ compare it with fixtures produced by the CLI). The bundle is committed, not
 rebuilt in CI; regenerate it with the solver's `export_graph` module only when
 its scoring version changes. Results use the local model only and say so.
 
+`linxicon-solver/data/rejected.json` lists words the game's dictionary has
+rejected (seeded from the solver's `data/rejected_words.txt`). The hourly
+publisher fetches the published list, adds any rejection it sees while
+verifying the day's candidates, and writes the merged list; both the daily
+solve and the Any pair tab skip those words.
+
 Run a local preview and checks:
 
 ```sh
