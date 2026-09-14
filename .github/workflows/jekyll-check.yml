@@ -45,9 +45,9 @@ jobs:
             test -f _site/awards-database/data/awards.json
           fi
           if [ "${{ matrix.posts }}" = "seeded" ]; then
-            test -f _site/blog/hello-world/index.html
+            test -n "$(find _site/blog -mindepth 2 -name index.html)"
             grep -q 'class="post-entry"' _site/index.html
-            grep -q 'class="highlight"' _site/blog/hello-world/index.html
+            ! grep -lE 'src="[A-Za-z][^:"]*"' _site/blog/*/index.html   # relative image paths inside posts never resolve
           else
             grep -q 'posts-empty' _site/index.html
             ! grep -q 'class="post-entry"' _site/index.html

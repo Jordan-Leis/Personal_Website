@@ -131,6 +131,48 @@ layout: terminal
         margin-left: 1rem;
     }
 
+    /* Optional theme song: `theme: <YouTube id>` in a post's front matter */
+    .post-theme {
+        max-width: 72ch;
+        margin: -0.5rem 0 1.5rem;
+        color: var(--term-muted);
+        font-size: 0.85rem;
+    }
+
+    .post-theme .theme-row {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.6rem;
+    }
+
+    .post-theme button {
+        font: inherit;
+        color: var(--term-fg);
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 4px;
+        padding: 0.15em 0.7em;
+        cursor: pointer;
+    }
+
+    .post-theme button:hover:not(:disabled) { border-color: var(--term-green); color: var(--term-green); }
+    .post-theme button:disabled { opacity: 0.5; cursor: default; }
+    .post-theme .theme-title { color: var(--term-fg); }
+    .post-theme a { color: var(--term-cyan); text-decoration: none; }
+    .post-theme a:hover { color: var(--term-green); }
+
+    .theme-stage {
+        margin-top: 0.75rem;
+        width: min(480px, 100%);
+        aspect-ratio: 16 / 9;
+        background: #000;
+        border-radius: 6px;
+        overflow: hidden;
+    }
+
+    .theme-stage iframe { width: 100%; height: 100%; border: 0; display: block; }
+
     @media (max-width: 768px) {
         .post-body,
         .post-meta {
@@ -147,6 +189,67 @@ layout: terminal
     <span class="highlight">{{ page.date | date: "%Y-%m-%d" }}</span>
     <span class="post-tags">{% for tag in page.tags %}#{{ tag }} {% endfor %}</span>
 </div>
+
+{% if page.theme %}
+<div class="post-theme" id="post-theme" data-video="{{ page.theme }}">
+    <div class="theme-row">
+        <span>♪ theme:</span>
+        <span class="theme-title">{{ page.theme_title | default: "theme song" }}</span>
+        <button type="button" id="theme-play">Play</button>
+        <span id="theme-note"></span>
+        <a id="theme-external" href="https://www.youtube.com/watch?v={{ page.theme }}" target="_blank" rel="noopener">Open on YouTube ↗</a>
+    </div>
+    <div class="theme-stage" id="theme-stage" hidden></div>
+</div>
+<script>
+    // Plays the post's theme through the official YouTube IFrame API. Inside the
+    // desktop browser the player follows the desktop's volume slider.
+    (function () {
+        var box = document.getElementById('post-theme'), button = document.getElementById('theme-play');
+        var stage = document.getElementById('theme-stage'), note = document.getElementById('theme-note');
+        var player = null, api = null, unsubscribe = null, session = null;
+        try { if (window.top !== window && window.top.DesktopHost) session = window.top.DesktopHost.session; } catch (e) {}
+        function loadAPI() {
+            if (window.YT && window.YT.Player) return Promise.resolve();
+            if (api) return api;
+            api = new Promise(function (resolve, reject) {
+                var script = document.createElement('script'); script.src = 'https://www.youtube.com/iframe_api';
+                var timer = setTimeout(function () { reject(new Error('timeout')); }, 12000);
+                window.onYouTubeIframeAPIReady = function () { clearTimeout(timer); resolve(); };
+                script.onerror = function () { clearTimeout(timer); reject(new Error('unavailable')); };
+                document.head.appendChild(script);
+            });
+            return api;
+        }
+        function stop() {
+            if (unsubscribe) unsubscribe(); unsubscribe = null;
+            if (player) { try { player.destroy(); } catch (e) {} } player = null;
+            stage.replaceChildren(); stage.hidden = true; button.textContent = 'Play'; button.disabled = false;
+        }
+        function fail() { stop(); note.textContent = 'Playback is unavailable here.'; }
+        function applyVolume() { if (player && session) player.setVolume(session.volume * 100); }
+        button.addEventListener('click', function () {
+            if (player) { stop(); return; }
+            button.disabled = true; button.textContent = 'Loading…'; note.textContent = '';
+            loadAPI().then(function () {
+                stage.hidden = false;
+                var frame = document.createElement('iframe'); frame.title = 'Theme song';
+                frame.src = 'https://www.youtube.com/embed/' + box.dataset.video + '?enablejsapi=1&playsinline=1&origin=' + encodeURIComponent(location.origin);
+                frame.allow = 'autoplay; encrypted-media; picture-in-picture'; frame.referrerPolicy = 'strict-origin-when-cross-origin';
+                stage.appendChild(frame);
+                player = new YT.Player(frame, { events: {
+                    onReady: function () {
+                        applyVolume(); if (session) unsubscribe = session.subscribe(function (kind) { if (kind === 'volume') applyVolume(); });
+                        player.playVideo(); button.textContent = 'Stop'; button.disabled = false;
+                    },
+                    onError: fail
+                } });
+            }).catch(fail);
+        });
+        window.addEventListener('pagehide', stop);
+    })();
+</script>
+{% endif %}
 
 <article class="post-body">
     <h1>{{ page.title }}</h1>

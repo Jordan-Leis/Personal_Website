@@ -45,6 +45,8 @@ const launch = async (p, id) => { await p.locator('#show-apps').click(); await p
 const openPath = async (p, path) => { await p.locator('#show-apps').click(); await p.locator(`.app-launcher[data-path="${path}"]`).click(); };
 const cmd = async (p, text) => { await p.locator('#terminal-input').fill(text); await p.locator('#terminal-input').press('Enter'); return p.locator('.terminal-response').last().textContent(); };
 const noIssues = p => assert.deepEqual(p.issues, [], 'no page errors or first-party resource failures');
+// The newest post's URL, from the Liquid-rendered list inside the Files window.
+const firstPost = p => p.evaluate(() => document.getElementById('posts-data').content.querySelector('.post-entry').getAttribute('href'));
 
 test.describe('window manager and browser', () => {
   test('dock, app grid, desktop icons, keyboard, and drag limits', async ({browser, baseURL}) => {
@@ -103,10 +105,11 @@ test.describe('window manager and browser', () => {
     assert.equal(await p.locator('#browser-frame').getAttribute('src'), 'https://cucai.ca/papers/48');
     await control(p, 'browser-window', 'close');
     await p.locator('.dock-item[data-action="blog"]').click();
-    await p.frameLocator('#browser-frame').locator('a[href="/blog/hello-world/"]').click();
-    await p.waitForFunction(() => document.querySelector('#browser-address').value.endsWith('/blog/hello-world/'));
+    const post = await firstPost(p);
+    await p.frameLocator('#browser-frame').locator(`a[href="${post}"]`).click();
+    await p.waitForFunction(post => document.querySelector('#browser-address').value.endsWith(post), post);
     await p.locator('#browser-back').click(); await p.waitForFunction(() => document.querySelector('#browser-frame').contentWindow.location.pathname === '/blog/');
-    await p.locator('#browser-forward').click(); await p.waitForFunction(() => document.querySelector('#browser-frame').contentWindow.location.pathname === '/blog/hello-world/');
+    await p.locator('#browser-forward').click(); await p.waitForFunction(post => document.querySelector('#browser-frame').contentWindow.location.pathname === post, post);
     await p.locator('#browser-reload').click(); await p.waitForFunction(() => !document.querySelector('#browser-loading').classList.contains('on'));
     await control(p, 'browser-window', 'close');
     await p.locator('#show-apps').click(); await p.locator('.app-launcher[data-action="resume"]').click();
@@ -132,8 +135,9 @@ test.describe('window manager and browser', () => {
   });
 
   test('deep links open only same-origin paths', async ({browser, baseURL}) => {
-    const deep = await desktop(browser, baseURL, {path: '/?open=/blog/hello-world/'});
-    await deep.waitForFunction(() => document.querySelector('#browser-address').value.endsWith('/blog/hello-world/'));
+    const probe = await desktop(browser, baseURL); const post = await firstPost(probe); await probe.close();
+    const deep = await desktop(browser, baseURL, {path: '/?open=' + post});
+    await deep.waitForFunction(post => document.querySelector('#browser-address').value.endsWith(post), post);
     assert.ok(await visible(deep, 'browser-window')); await deep.close();
     for (const path of ['//example.com', 'https://example.com', '/\\example.com']) {
       const page = await desktop(browser, baseURL, {path: '/?open=' + encodeURIComponent(path)});
@@ -235,14 +239,15 @@ test.describe('system menu, terminal, filesystem, and Easter eggs', () => {
     await launch(p, 'browser-window');
     // The site's own displayed address (no scheme) stays on this origin.
     const host = new URL(baseURL).host;
-    await p.locator('#browser-address').fill(host + '/blog/hello-world/'); await p.locator('#browser-address').press('Enter');
-    await p.waitForFunction(() => document.querySelector('#browser-frame').contentWindow.location.pathname === '/blog/hello-world/');
-    ok(await p.locator('#browser-address').inputValue(), host + '/blog/hello-world/');
+    const post = await firstPost(p);
+    await p.locator('#browser-address').fill(host + post); await p.locator('#browser-address').press('Enter');
+    await p.waitForFunction(post => document.querySelector('#browser-frame').contentWindow.location.pathname === post, post);
+    ok(await p.locator('#browser-address').inputValue(), host + post);
     await p.locator('#browser-back').click(); await p.waitForFunction(() => document.querySelector('#browser-address').value.endsWith('/blog/'));
-    await p.locator('#browser-frame').contentFrame().locator('a[href="/blog/hello-world/"]').click();
-    await p.waitForFunction(() => document.querySelector('#browser-address').value.includes('/blog/hello-world/'));
+    await p.locator('#browser-frame').contentFrame().locator(`a[href="${post}"]`).click();
+    await p.waitForFunction(post => document.querySelector('#browser-address').value.includes(post), post);
     await p.locator('#browser-back').click(); await p.waitForFunction(() => document.querySelector('#browser-address').value.endsWith('/blog/'));
-    await p.locator('#browser-forward').click(); await p.waitForFunction(() => document.querySelector('#browser-address').value.includes('/blog/hello-world/'));
+    await p.locator('#browser-forward').click(); await p.waitForFunction(post => document.querySelector('#browser-address').value.includes(post), post);
     ok(await p.locator('#browser-forward').isDisabled()); await p.waitForFunction(() => !document.querySelector('#browser-loading').classList.contains('on'));
     await p.locator('#browser-frame').dispatchEvent('error'); ok(await p.locator('#browser-fallback').evaluate(e => e.classList.contains('on')));
     await p.locator('#browser-reload').dispatchEvent('click'); await p.waitForFunction(() => !document.querySelector('#browser-loading').classList.contains('on'));

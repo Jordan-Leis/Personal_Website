@@ -16,7 +16,7 @@ Static site on GitHub Pages. `index.html` is the desktop; Jekyll (run by GitHub 
 3. Write Markdown below it. Fence code as ```` ```verilog ```` for SystemVerilog.
 4. Commit and push. The post appears at `/blog/slug/` and in Files → posts and the browser at `/blog/`.
 
-`_posts/2026-09-10-hello-world.md` is a placeholder showing the format.
+Images go in `assets/posts/<slug>/` with web-safe names and are referenced by absolute path, e.g. `![alt](/assets/posts/my-post/figure.png)` — files placed inside `_posts/` are never published. A post can carry a theme song: add `theme: <YouTube video id>` and `theme_title: "Title — Artist"` to its front matter and the post shows a Play/Stop row that embeds the official player on demand; inside the desktop browser it follows the desktop volume slider.
 
 ## Previewing a branch
 
@@ -70,7 +70,7 @@ Use the details buttons to star items, move them to Trash, or restore their orig
 
 Terminal input supports `help`, `ls [-a] [path]`, `pwd`, `cd`, `clear`, `whoami`, `date`, `cat`, and `echo`, plus safe simulations of the existing introduction commands. Paths use `/home/jordan` or `~`, relative paths, `.`/`..`, and quoted filenames. Up/Down browses command history. Input is rendered as text and never passed to a shell or evaluated as JavaScript; arbitrary pipelines are not implemented. `clear` clears the transcript without replaying the introduction. Easter egg commands are intentionally omitted from `help`.
 
-The Blog launcher opens `/blog/` in the desktop browser. Files → Home → posts provides another way to open posts. A URL such as `/?open=/blog/hello-world/` opens a same-origin page after boot. The standalone blog pages include an “open on desktop” link.
+The Blog launcher opens `/blog/` in the desktop browser. Files → Home → posts provides another way to open posts. A URL such as `/?open=/blog/<slug>/` opens a same-origin page after boot. The standalone blog pages include an “open on desktop” link.
 
 The dock opens or raises applications; clicking the focused application minimizes it. Orange dots remain for minimized applications. Alt+Tab cycles through open applications, including minimized ones. Escape dismisses the app grid or closes the focused window when keyboard focus is on the desktop. Window headers, desktop shortcuts, Files items, and cards share a Pointer Events lifecycle that ends on release, cancellation, lost capture, blur, or page hiding. Files keeps vertical touch scrolling; touch users can use its accessible Trash/Restore actions.
 
