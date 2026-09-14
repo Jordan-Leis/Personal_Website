@@ -1580,6 +1580,7 @@ button:focus-visible, input:focus-visible, [tabindex]:focus-visible { outline: 2
 .boot-ok { color: var(--term-green); }
 .boot-skip { color: #ddd; border: 1px solid #555; padding: 8px 14px; border-radius: 5px; background: #222; }
 .window-header, .desktop-icon { touch-action: none; }
+.window-header, .desktop-icon, .desktop-icon img, .fs-item, .fs-item img, .playing-card, .dock-item img, .icon-image { -webkit-user-drag: none; user-select: none; }
 .pointer-dragging { cursor: grabbing !important; user-select: none; }
 .pointer-dragging iframe { pointer-events: none !important; }
 .drag-source { opacity: 0.6; pointer-events: none !important; }

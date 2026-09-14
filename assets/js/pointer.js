@@ -2,6 +2,10 @@
 const PointerDrag = {
     active: null,
     bind(element, options) {
+        // Chrome starts a native image/link drag from <img> and <a> on mousedown,
+        // which steals the pointer sequence and shows a ghost. Keep it off.
+        element.draggable = false; element.querySelectorAll('img, a').forEach(e => { e.draggable = false; });
+        element.addEventListener('dragstart', e => e.preventDefault());
         element.addEventListener('pointerdown', event => {
             if (event.button !== 0 || !event.isPrimary || options.ignore?.(event)) return;
             this.stop();
