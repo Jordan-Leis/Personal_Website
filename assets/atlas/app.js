@@ -12,7 +12,7 @@ let data,state,timeline,nodes,edges,svg,world,nodeElements,edgeElements,contours
 const reduced=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 const narrow=()=>window.innerWidth<600;
 let speed=1,lastNarration='',heroKey='',labelUnit=16,flipped=null,viewBounds=null;
-let graph=null,graphLoading=null,custom=null,solveKey='';// the in-browser solver's graph and the last solved pair
+let graph=null,graphLoading=null,custom=null,solveKey='',blocked=new Set();// words the game's dictionary has rejected// the in-browser solver's graph and the last solved pair
 const ICON={play:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5v15l12-7.5z"/></svg>',pause:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 4h4.5v16H6zM13.5 4H18v16h-4.5z"/></svg>'};
 const position=n=>[80+(n.x+1)*420,65+(n.y+1)*235];
 
@@ -234,6 +234,8 @@ async function loadGraph(){
     }
     status.textContent='Unpacking '+number(manifest.words)+' words and '+number(manifest.edges)+' links.';
     const raw=await new Response(new Blob([compressed]).stream().pipeThrough(new DecompressionStream('gzip'))).arrayBuffer();
+    // Words the game rejected in past verifications are skipped; the list is optional.
+    try{const rejected=await (await fetch('./data/rejected.json',{cache:'no-cache'})).json();if(rejected.schema_version===1&&Array.isArray(rejected.words))blocked=new Set(rejected.words.filter(w=>typeof w==='string'));}catch{blocked=new Set();}
     graph=parseGraph(raw);
     return graph;
   })().catch(error=>{graphLoading=null;throw error;});
@@ -251,7 +253,7 @@ async function solvePair(fromValue,toValue){
     const g=await loadGraph();
     const missing=[tl,br].filter(w=>!g.index.has(w));
     if(missing.length){status.className='solve-status error';status.textContent=missing.map(w=>'“'+w+'”').join(' and ')+(missing.length===1?' isn’t':' aren’t')+' in the solver’s vocabulary of '+number(g.words.length)+' common words.';custom=null;renderSolve();return;}
-    const started=performance.now(),result=shortestChains(g,tl,br,5),elapsed=performance.now()-started;
+    const started=performance.now(),result=shortestChains(g,tl,br,5,blocked),elapsed=performance.now()-started;
     if(!result.chains.length){status.textContent='No chain connects '+tl+' and '+br+' in this vocabulary after exploring '+number(result.visited)+' words. The game’s wider dictionary may still allow one.';custom=null;renderSolve();return;}
     custom={tl,br,chains:result.chains,selected:0,visited:result.visited,layers:result.layers,elapsed,onBoard:false};
     custom.sim=simulate(g,tl,br,result.chains[0].words.slice(1,-1));
@@ -269,7 +271,7 @@ function renderSolve(){
   const verdict=sim.won?`<p class="verdict verified">Wins under the game’s rules locally after adding ${n===0?'no words':n===1?'one word':n+' words'}</p>`:'<p class="verdict unverified">Not connected under the game’s top-five link rule</p>';
   const alternates=custom.chains.length>1?`<h3>Shortest chains found</h3><ol class="alternates">${custom.chains.map((c,i)=>`<li><button data-custom-candidate="${i}" class="${custom.selected===i?'active':''}" aria-pressed="${custom.selected===i}"><span class="chain">${c.words.map(escape).join(' → ')}</span><span class="status">${c.total.toFixed(2)} total</span></button></li>`).join('')}</ol>`:'';
   const letters=chain.words.join('').length+chain.words.length*2,scale=Math.min(1,40/letters).toFixed(2);// long chains shrink to stay on one line
-  box.innerHTML=`<div class="solve-result"><div class="route compact" style="--route-scale:${scale}" aria-label="Chain from ${escape(custom.tl)} to ${escape(custom.br)}">${routeHTML(chain.words,chain.scores)}</div>${verdict}<p class="note">Local model only, not checked against the game: the game’s dictionary and scores can differ. <a href="https://linxicon.com/practice">Try it in practice mode</a>.</p><div class="solve-actions"><button class="button-secondary" data-show-board>Show on the game board</button></div>${alternates}</div>`;
+  box.innerHTML=`<div class="solve-result"><div class="route compact" style="--route-scale:${scale}" aria-label="Chain from ${escape(custom.tl)} to ${escape(custom.br)}">${routeHTML(chain.words,chain.scores)}</div>${verdict}<p class="note">Local model only, not checked against the game. The game’s dictionary sometimes rejects a word${blocked.size?' (it has rejected '+number(blocked.size)+' of ours so far, and those are skipped)':''}; if it rejects one of these, play the next chain. <a href="https://linxicon.com/practice">Try it in practice mode</a>.</p><div class="solve-actions"><button class="button-secondary" data-show-board>Show on the game board</button></div>${alternates}</div>`;
   if(state.view==='solve')renderInspector();
 }
 /** One orchestrated moment: the route grows stop by stop, on the hero and on the map. */

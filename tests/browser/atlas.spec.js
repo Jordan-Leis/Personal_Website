@@ -104,3 +104,10 @@ test('any pair works on a phone without overflow',async({page})=>{
  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
  await page.screenshot({path:'/tmp/atlas-any-pair-mobile.png',fullPage:true});
 });
+test('any pair skips words the game has rejected',async({page})=>{
+ await open(page);await page.getByRole('tab',{name:'Any pair'}).click();
+ await page.getByRole('textbox',{name:'From'}).fill('holiday');await page.getByRole('textbox',{name:'To'}).fill('satisfy');await page.getByRole('button',{name:'Solve'}).click();
+ await expect(page.locator('#solve-results .route')).toContainText('celebrating',{timeout:60000});
+ await expect(page.locator('#solve-results')).not.toContainText('fete');
+ await expect(page.locator('#solve-results .note')).toContainText('rejected 4 of ours so far');
+});

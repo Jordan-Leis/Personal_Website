@@ -35,6 +35,9 @@ unpacked=gzip.decompress(graph_raw)
 assert unpacked[:4]==b'LXG1','Graph bundle is not LXG1'
 words_count,edges_count=struct.unpack_from('<II',unpacked,4)
 assert (words_count,edges_count)==(graph['words'],graph['edges']),'Graph header disagrees with manifest'
+rejected=json.loads((root/'linxicon-solver/data/rejected.json').read_text())
+assert rejected['schema_version']==1 and all(isinstance(w,str) and w.isalpha() and w.islower() for w in rejected['words']),'Invalid rejected list'
+assert rejected['words']==sorted(set(rejected['words'])),'Rejected list must be sorted and unique'
 assets=[p for p in (root/'assets/atlas').rglob('*') if p.suffix in ['.css','.js','.woff2']]
 compressed=sum(len(gzip.compress(p.read_bytes())) for p in [page,*assets])+len(gzip.compress(raw))
 assert compressed<=1_000_000,f'Initial asset budget exceeded: {compressed}'
