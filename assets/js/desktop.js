@@ -554,10 +554,11 @@ function renderWorkTree() {
     const lines = [];
     PROJECT_FOLDERS.forEach((f, i) => {
         if (i > 0) lines.push('');
-        lines.push('<span class="success">' + pad('~/' + f.id + '/', 21) + '</span><span class="dir-comment"># ' + esc(f.comment) + '</span>');
-        PROJECTS.filter(p => p.folder === f.id).forEach(p => {
+        lines.push('<span class="success">' + pad('~/' + f.id + '/', 22) + '</span><span class="dir-comment"># ' + esc(f.comment) + '</span>');
+        // `tree: false` keeps an entry in Files but out of this listing.
+        PROJECTS.filter(p => p.folder === f.id && p.tree !== false).forEach(p => {
             const name = '<span class="success">' + p.slug + '/</span>';
-            lines.push('  ' + (p.note ? name + ' '.repeat(Math.max(1, 21 - p.slug.length - 1)) + esc(p.note) : name));
+            lines.push('  ' + (p.note ? name + ' '.repeat(Math.max(1, 22 - p.slug.length - 1)) + esc(p.note) : name));
         });
     });
     pre.innerHTML = lines.join('\n');

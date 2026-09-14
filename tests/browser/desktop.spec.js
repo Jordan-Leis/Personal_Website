@@ -219,22 +219,22 @@ test.describe('system menu, terminal, filesystem, and Easter eggs', () => {
 
     await launch(p, 'projects-window'); await p.locator('#files-path').getByRole('button', {name: 'Home', exact: true}).click();
     await p.locator('#files-grid').getByRole('button', {name: 'Projects', exact: true}).dblclick();
-    ok(await p.locator('.fs-count').allTextContents(), ['3 items', '2 items', '8 items']);
+    ok(await p.locator('.fs-count').allTextContents(), ['6 items', '10 items', '2 items']);
     await p.getByRole('button', {name: 'software', exact: true}).dblclick(); ok(await p.locator('.fs-label').first().innerText(), 'AI Document Summarization Tool');
     await p.locator('.fs-item').first().click(); await p.getByRole('button', {name: 'Open on GitHub', exact: true}).click();
     ok((await p.locator('#browser-frame').getAttribute('src')).startsWith('https://github1s.com/ScienceGPTstream2/SummarizationTool')); ok(await p.locator('#browser-back').isDisabled());
     await control(p, 'browser-window', 'close'); await p.locator('.dt-close').click();
     await p.getByRole('button', {name: 'Linxicon Optimal Solver', exact: true}).click(); await p.getByRole('button', {name: 'Open on GitHub', exact: true}).click();
-    ok((await p.locator('#browser-frame').getAttribute('src')).startsWith('https://github1s.com/Jordan-Leis/linxicon-optimal-solver')); await control(p, 'browser-window', 'close'); await p.locator('.dt-close').click();
-    await p.getByRole('button', {name: 'Linxicon Semantic Atlas', exact: true}).click(); await p.getByRole('button', {name: 'Open site', exact: true}).click();
+    ok((await p.locator('#browser-frame').getAttribute('src')).startsWith('https://github1s.com/Jordan-Leis/linxicon-optimal-solver')); await control(p, 'browser-window', 'close');
+    await p.getByRole('button', {name: 'Open site', exact: true}).click();
     await p.waitForFunction(() => document.querySelector('#browser-address').value.endsWith('/linxicon-solver/'));
     await p.waitForFunction(() => document.querySelector('#browser-frame').contentDocument?.querySelector('#title'));
     await control(p, 'browser-window', 'close'); await p.locator('.dt-close').click();
     // An entry without links shows the note and opens nothing.
-    await p.evaluate(() => { Session.node('/Projects/software/linxicon_atlas').project = {...PROJECTS.find(x => x.id === 'linxicon-atlas'), site: null, repo: null}; });
-    await p.getByRole('button', {name: 'Linxicon Semantic Atlas', exact: true}).dblclick();
+    await p.evaluate(() => { Session.node('/Projects/software/linxicon_solver').project = {...PROJECTS.find(x => x.id === 'linxicon'), site: null, repo: null}; });
+    await p.getByRole('button', {name: 'Linxicon Optimal Solver', exact: true}).dblclick();
     ok((await p.locator('#files-details').innerText()).includes('Repository not public yet.')); ok(await p.locator('#browser-window').isVisible(), false);
-    await p.evaluate(() => { Session.node('/Projects/software/linxicon_atlas').project = PROJECTS.find(x => x.id === 'linxicon-atlas'); });
+    await p.evaluate(() => { Session.node('/Projects/software/linxicon_solver').project = PROJECTS.find(x => x.id === 'linxicon'); });
 
     await launch(p, 'browser-window');
     // The site's own displayed address (no scheme) stays on this origin.
@@ -253,7 +253,10 @@ test.describe('system menu, terminal, filesystem, and Easter eggs', () => {
     await p.locator('#browser-reload').dispatchEvent('click'); await p.waitForFunction(() => !document.querySelector('#browser-loading').classList.contains('on'));
     ok(await p.locator('#browser-fallback').evaluate(e => e.classList.contains('on')), false); await control(p, 'browser-window', 'close');
 
-    await launch(p, 'hero-window'); await cmd(p, '1 million bit register');
+    await launch(p, 'hero-window');
+    const tree = (await cmd(p, 'tree')).split('\n').filter(l => /^  \S+\//.test(l)).map(l => l.trim().split('/')[0]);
+    ok(tree, ['mvm_accelerator', 'tanh_pipeline', 'wordle_on_kria', 'morse_code_riscv', 'reflex_meter_riscv', 'summarization_tool', 'uw_awards_search', 'sred_copilot', 'linxicon_solver', 'microgrid_rl', 'rag_agents']);
+    await cmd(p, '1 million bit register');
     await openPath(p, '/Downloads'); await p.locator('#files-grid').getByRole('button', {name: 'secret.mp4', exact: true}).dblclick();
     ok(await p.locator('#video-window').isVisible()); await p.waitForFunction(() => Media.records.video.ready);
     ok((await p.evaluate(() => document.getElementById('video-embed').src)).includes('/embed/dQw4w9WgXcQ?')); await control(p, 'video-window', 'close');
@@ -275,7 +278,7 @@ test.describe('system menu, terminal, filesystem, and Easter eggs', () => {
     assert.equal(await p.evaluate(() => Session.list('/Recent').some(n => n.project?.id === 'linxicon')), false);
     assert.equal(await p.evaluate(() => Session.list('/Starred').length), 0);
     await p.locator('#files-trash').click(); await p.getByRole('button', {name: 'software', exact: true}).click(); await p.getByRole('button', {name: 'Restore'}).click();
-    assert.equal(await p.evaluate(() => Session.list('/Projects/software').length), 8);
+    assert.equal(await p.evaluate(() => Session.list('/Projects/software').length), 10);
     assert.equal(await p.evaluate(() => Session.list('/Starred').length), 1);
     assert.equal(await p.evaluate(() => Session.list('/Recent').filter(n => n.project?.id === 'linxicon').length), 1);
     assert.equal(await p.evaluate(() => Session.trash('/Downloads')), false); assert.equal(await p.evaluate(() => Session.trash('/Trash')), false);

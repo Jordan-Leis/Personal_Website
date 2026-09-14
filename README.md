@@ -62,7 +62,7 @@ The desktop uses vanilla HTML, CSS, and JavaScript. There is no application buil
 | `assets/css/syntax.css` | Blog code highlighting. |
 | `assets/icons/yaru/` | Bundled desktop icons; attribution below. |
 
-Edit `PROJECTS` to update a project. Entries retain their array order within each folder; `PROJECT_FOLDERS` controls folder order. `slug` and optional `note` provide the terminal tree text. Keep links null when unavailable: an entry with no `paper`, `repo`, or `site` displays “Repository not public yet.” without an outgoing link. A same-origin `site` such as `/linxicon-solver/` opens inside the desktop browser.
+Edit `PROJECTS` to update a project. Entries retain their array order within each folder; `PROJECT_FOLDERS` controls folder order. `slug` and optional `note` provide the terminal tree text; `tree: false` keeps an entry in Files but out of the terminal's `tree` listing. Keep links null when unavailable: an entry with no `paper`, `repo`, or `site` displays “Repository not public yet.” without an outgoing link. A same-origin `site` such as `/linxicon-solver/` opens inside the desktop browser.
 
 Files opens at Projects, with hardware, papers, and software folders. Select an item for details; double-click or press Enter for its primary action. On touch screens, select an item and use its Open action. Home provides Desktop, Documents, Downloads, Photos, Projects, posts, and Trash. Documents uses the existing portfolio text and Resume link. Desktop mirrors active shortcuts; deleting a shortcut leaves its application available in the app grid.
 
