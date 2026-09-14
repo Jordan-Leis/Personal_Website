@@ -478,6 +478,9 @@ test.describe('boot, introduction, and reboot lifecycle', () => {
     await p.addInitScript(() => { Math.random = () => 0; });
     await p.goto('/');
     assert.equal(await p.locator('#boot-screen').isVisible(), true);
+    assert.equal((await p.locator('#terminal-intro').innerText()).trim(), '', 'introduction is blank under the boot screen');
+    await p.waitForFunction(() => document.querySelector('#boot-screen').classList.contains('off'), {}, {timeout: 12000});
+    assert.equal((await p.locator('#terminal-intro').innerText()).trim(), '', 'introduction is blank while the boot screen fades');
     await p.waitForFunction(() => document.querySelector('#boot-screen').hidden, {}, {timeout: 12000});
     assert.equal(await p.evaluate(() => Boot.duration), 6000);
     assert.equal(await p.evaluate(() => Terminal.running), true);
@@ -485,6 +488,8 @@ test.describe('boot, introduction, and reboot lifecycle', () => {
     assert.ok((await p.locator('#terminal-intro').innerText()).length > text.length, 'introduction is typed progressively');
     await p.waitForFunction(() => !Terminal.running, {}, {timeout: 30000});
     assert.equal(await p.locator('#hello-text').innerText(), "Hi, I'm Jordan. I like to build.");
+    assert.ok(await p.evaluate(() => { const s = document.querySelector('#hero-window .window-content').getBoundingClientRect(), h = document.getElementById('hello-text').getBoundingClientRect(); return h.top >= s.top && h.bottom <= s.bottom; }), 'the hello line is in view when the cycle ends');
+    assert.ok(await p.evaluate(() => document.getElementById('hero-window').getBoundingClientRect().bottom <= document.getElementById('desktop').getBoundingClientRect().bottom), 'terminal window stays inside the work area');
     assert.equal(await p.evaluate(() => Terminal.duration), 12000);
     await p.locator('.dock-item[data-window="hero-window"]').click(); await p.locator('.dock-item[data-window="hero-window"]').click();
     assert.equal(await p.evaluate(() => Terminal.running), false, 'refocusing never replays the introduction');

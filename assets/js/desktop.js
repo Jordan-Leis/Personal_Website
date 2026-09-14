@@ -635,6 +635,7 @@ document.addEventListener('DOMContentLoaded', () => {
         closeWindow(window.id);
     });
 
+    Terminal.prepare();
     Boot.run().then(() => {
         Terminal.introduce();
         const target = deepLinkTarget();

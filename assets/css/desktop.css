@@ -432,7 +432,8 @@ img {
 /* Default window positions (relative to the work area) */
 .hero-window {
     width: 820px;
-    height: 620px;
+    height: auto;
+    max-height: calc(96% - 16px);
     top: 4%;
     left: 50%;
     transform: translateX(-50%);

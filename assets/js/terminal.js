@@ -66,7 +66,7 @@ const Boot = {
         document.getElementById('notes-content').textContent = '';
         document.querySelector('#notes-window .window-title').textContent = 'Text Editor';
         document.querySelectorAll('.window-content').forEach(el => { el.scrollTop = 0; });
-        openWindow('hero-window'); screen.hidden = true; this.crashing = false;
+        openWindow('hero-window'); Terminal.prepare(); screen.hidden = true; this.crashing = false;
         await this.run(); Terminal.introduce();
     }
 };
@@ -104,26 +104,36 @@ const Terminal = {
     prompt() { document.getElementById('terminal-path').textContent = this.cwd === '/' ? '~' : '~' + this.cwd; },
     finish() {
         if (!this.template) return;
-        cancelAnimationFrame(this.frame); this.frame = null; this.running = false;
+        cancelAnimationFrame(this.frame); this.frame = null; this.running = false; this.prepared = null;
         document.getElementById('terminal-intro').innerHTML = this.template;
         document.getElementById('intro-skip').hidden = true;
         const text = document.getElementById('hello-text'); if (text) text.textContent = HELLO_PREFIX + HELLO_FINAL;
         document.getElementById('hello-cursor')?.classList.add('done');
     },
+    animates() { return !DesktopHost.depth && !reducedMotion(); },
+    // Blank the introduction before the boot screen can fade out over it; the
+    // typed text is restored by introduce() or, on skip, by finish().
+    prepare() {
+        this.prepared = null;
+        if (!this.animates()) return;
+        const walker = document.createTreeWalker(document.getElementById('terminal-intro'), NodeFilter.SHOW_TEXT); const texts = []; let node;
+        while ((node = walker.nextNode())) if (node.textContent.trim()) texts.push({ node, text: node.textContent });
+        texts.forEach(t => { t.node.textContent = ''; });
+        this.prepared = { texts, length: texts.reduce((n, t) => n + t.text.length, 0) };
+    },
     introduce() {
         if (this.introduced) return; this.introduced = true;
-        if (DesktopHost.depth || reducedMotion() || document.activeElement === document.getElementById('terminal-input')) { this.finish(); return; }
-        this.running = true; const container = document.getElementById('terminal-intro');
-        const walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT); const texts = []; let node;
-        while ((node = walker.nextNode())) if (node.textContent.trim()) texts.push({ node, text: node.textContent });
-        const length = texts.reduce((n, t) => n + t.text.length, 0); texts.forEach(t => { t.node.textContent = ''; });
+        if (!this.prepared || !this.animates() || document.activeElement === document.getElementById('terminal-input')) { this.finish(); return; }
+        this.running = true; const { texts, length } = this.prepared; this.prepared = null;
+        const scroller = document.querySelector('#hero-window .window-content');
         document.getElementById('intro-skip').hidden = false;
         const duration = 12000 + Math.random() * 3000; this.duration = duration; const start = performance.now();
         const tick = now => {
             let remaining = Math.floor(length * Math.min(1, (now - start) / duration));
             texts.forEach(t => { t.node.textContent = t.text.slice(0, remaining); remaining = Math.max(0, remaining - t.text.length); });
+            scroller.scrollTop = scroller.scrollHeight;
             if (now - start < duration) this.frame = requestAnimationFrame(tick);
-            else this.cycle();
+            else { scroller.scrollTop = 0; this.cycle(); }
         };
         this.frame = requestAnimationFrame(tick);
     },
