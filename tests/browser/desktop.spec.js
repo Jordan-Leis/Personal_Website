@@ -100,7 +100,11 @@ test.describe('window manager and browser', () => {
     await control(p, 'browser-window', 'close');
     assert.ok(await p.evaluate(() => Browser.history.length === 0 && !document.querySelector('#browser-frame').hasAttribute('src')), 'closing clears history and frame');
     await p.locator('#files-back').click(); await p.getByRole('button', {name: 'papers', exact: true}).dblclick();
-    assert.ok(await p.locator('.fs-project .fs-icon img').evaluateAll(es => es.length === 2 && es.every(e => e.src.endsWith('/application-pdf.png'))), 'papers use PDF icons');
+    assert.deepEqual(await p.locator('.fs-project .fs-icon img').evaluateAll(es => es.map(e => e.src.split('/').pop())), ['text-html.png', 'application-pdf.png'], 'papers show as a page and a PDF');
+    assert.equal(await p.locator('.fs-project .fs-repo-emblem').count(), 0, 'papers carry no git badge');
+    await p.locator('#files-back').click(); await p.getByRole('button', {name: 'hardware', exact: true}).dblclick();
+    assert.equal(await p.locator('.fs-project .fs-repo-emblem').count(), await p.locator('.fs-project').count(), 'repo-first items carry the git badge');
+    await p.locator('#files-back').click(); await p.getByRole('button', {name: 'papers', exact: true}).dblclick();
     await p.locator('[data-project="microgrid"]').dblclick();
     assert.equal(await p.locator('#browser-frame').getAttribute('src'), 'https://cucai.ca/papers/48');
     await control(p, 'browser-window', 'close');
@@ -324,8 +328,15 @@ test.describe('pointer lifecycle', () => {
     await control(p, 'browser-window', 'close');
     const icon = p.locator('.desktop-icon[data-window="about-window"]'), trash = p.locator('.desktop-icon[data-action="trash"]');
     let a = await icon.boundingBox(), t = await trash.boundingBox();
+    assert.equal(await icon.locator('img').evaluate(e => !e.dispatchEvent(new DragEvent('dragstart', {cancelable: true, bubbles: true}))), true, 'native drag is prevented');
+    assert.equal(await icon.locator('img').evaluate(e => e.draggable), false);
     await p.mouse.move(a.x + 30, a.y + 30); await p.mouse.down(); await p.mouse.move(t.x + 30, t.y + 30, {steps: 10}); await p.mouse.up(); await idle();
     assert.equal(await icon.isVisible(), false); assert.equal(await p.evaluate(() => Session.trashed.has('/Desktop/about.md')), true);
+    // Restoring puts the icon back on a free grid slot, never on the Trash it was dropped on.
+    await p.evaluate(() => Session.restore('/Desktop/about.md'));
+    const restored = await icon.boundingBox(); t = await trash.boundingBox();
+    assert.ok(restored.x + restored.width <= t.x || restored.x >= t.x + t.width || restored.y + restored.height <= t.y || restored.y >= t.y + t.height, 'restored icon does not overlap Trash');
+    assert.deepEqual(await icon.evaluate(e => [(parseFloat(e.style.left) - 16) % 96, (parseFloat(e.style.top) - 16) % 100]), [0, 0], 'restored icon sits on the grid');
     await dock(p, 'projects-window').click(); await p.locator('.fs-folder').first().click();
     const initial = await p.locator('#projects-window').boundingBox();
     await p.locator('#files-path').getByRole('button', {name: 'Home', exact: true}).dblclick();

@@ -61,10 +61,17 @@ const Files = {
     },
     back() { if (this.index > 0) { this.selected = null; this.render(this.history[--this.index]); } },
     forward() { if (this.index < this.history.length - 1) { this.selected = null; this.render(this.history[++this.index]); } },
+    // A project's primary action (paper, then repo, then site) decides how it opens.
+    primary(project) { return project.paper ? 'paper' : project.repo ? 'repo' : project.site ? 'site' : null; },
     icon(node) {
         const n = Session.target(node);
+        if (n.project) {
+            const primary = this.primary(n.project);
+            if (primary === 'paper') return ICON(/\.pdf(#|$)/.test(n.project.paper) ? 'application-pdf' : 'text-html');
+            return ICON(primary === 'site' ? 'text-html' : 'folder');
+        }
         return n.icon || ICON(({ folder: 'folder', text: 'text-markdown', pdf: 'application-pdf', post: 'text-markdown',
-            video: 'video-x-generic', photo: 'folder-pictures' })[n.type] || (n.project?.folder === 'papers' ? 'application-pdf' : 'folder'));
+            video: 'video-x-generic', photo: 'folder-pictures' })[n.type] || 'folder');
     },
     render(path = this.path) {
         if (Session.unavailable(path)) path = '/';
@@ -97,7 +104,7 @@ const Files = {
         if (node.id === this.selected) div.classList.add('selected');
         const wrap = document.createElement('div'); wrap.className = 'fs-icon';
         const img = document.createElement('img'); img.alt = ''; img.src = node.type === 'photo' ? node.thumbnail : this.icon(node); img.loading = 'lazy'; wrap.append(img);
-        if (node.project?.repo) {
+        if (node.project && this.primary(node.project) === 'repo') {
             const emblem = document.createElement('span'); emblem.className = 'fs-repo-emblem'; emblem.textContent = 'git'; wrap.append(emblem);
         }
         const label = document.createElement('div'); label.className = 'fs-label'; label.textContent = node.name; div.append(wrap, label);
@@ -167,10 +174,27 @@ const Files = {
         } else if (n.url) openUrl(new URL(n.url, location.origin).href);
         Session.opened(node);
     },
+    // Desktop icons sit on a 96x100 grid from (16,16), filled column by column.
+    slotStyle(index) {
+        const rows = Math.max(1, Math.floor((workArea().height - 16) / 100));
+        return 'top: ' + (16 + (index % rows) * 100) + 'px; left: ' + (16 + Math.floor(index / rows) * 96) + 'px;';
+    },
     syncDesktop(kind) {
-        document.querySelectorAll('.desktop-icon').forEach(icon => {
-            icon.hidden = Session.unavailable(icon.dataset.entryId);
+        const icons = [...document.querySelectorAll('.desktop-icon')];
+        const occupied = () => icons.filter(i => !i.hidden).map(i => Math.round(parseFloat(i.style.left)) + ',' + Math.round(parseFloat(i.style.top)));
+        const key = style => { const m = /left:\s*([\d.]+)px.*?top:\s*([\d.]+)px|top:\s*([\d.]+)px.*?left:\s*([\d.]+)px/.exec(style); return m ? Math.round(m[1] ?? m[4]) + ',' + Math.round(m[2] ?? m[3]) : ''; };
+        icons.forEach(icon => {
+            const gone = Session.unavailable(icon.dataset.entryId);
             if (kind === 'reset') icon.setAttribute('style', icon.dataset.initialStyle);
+            else if (gone && !icon.hidden) icon.setAttribute('style', icon.dataset.initialStyle);
+            else if (!gone && icon.hidden) {
+                // Restored: the original slot if free, else the first empty one.
+                const taken = occupied();
+                let style = icon.dataset.initialStyle;
+                for (let i = 0; taken.includes(key(style)) && i < 200; i++) style = this.slotStyle(i);
+                icon.setAttribute('style', style);
+            }
+            icon.hidden = gone;
         });
     },
     init() {
