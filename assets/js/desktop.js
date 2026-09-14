@@ -611,7 +611,23 @@ function initializeAppGrid() {
 }
 
 // Initialize everything
+// Phones get a static page: no boot, audio, clock, or window manager.
+function mobileGate() {
+    let anyway = false;
+    try { anyway = sessionStorage.getItem('desktop-anyway') === '1'; } catch (e) {}
+    if (DesktopHost.depth || anyway || !window.matchMedia('(max-width: 768px)').matches) return false;
+    const gate = document.getElementById('mobile-gate');
+    gate.hidden = false; document.body.classList.add('gated');
+    document.getElementById('gate-anyway').addEventListener('click', e => {
+        e.preventDefault();
+        try { sessionStorage.setItem('desktop-anyway', '1'); } catch (err) {}
+        location.reload();
+    });
+    return true;
+}
+
 document.addEventListener('DOMContentLoaded', () => {
+    if (mobileGate()) return;
     Apps.init();
     Files.init();
     PointerDrag.init();

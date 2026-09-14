@@ -149,7 +149,7 @@ test.describe('window manager and browser', () => {
     }
   });
 
-  for (const width of [1440, 390]) test(`windows fit the viewport at ${width}`, async ({browser, baseURL}) => {
+  for (const width of [1440]) test(`windows fit the viewport at ${width}`, async ({browser, baseURL}) => {
     const page = await desktop(browser, baseURL, {width});
     for (const id of ['hero-window', 'projects-window', 'browser-window', 'about-window', 'contact-window', 'music-window', 'solitaire-window']) {
       if (id !== 'hero-window') await launch(page, id);
@@ -157,22 +157,12 @@ test.describe('window manager and browser', () => {
       assert.ok(await page.locator('#' + id).evaluate(e => { const r = e.getBoundingClientRect(); return r.left >= 0 && r.right <= innerWidth + 1 && r.bottom <= innerHeight - (innerWidth <= 768 ? 64 : 0) + 1; }), id + ' inside viewport');
     }
     assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), 'document fits');
-    if (width === 390) {
-      await dock(page, 'projects-window').tap(); await page.getByRole('button', {name: 'software', exact: true}).tap(); await page.getByRole('button', {name: 'Open', exact: true}).tap();
-      await page.locator('[data-project="summarization"]').tap();
-      assert.ok(!await page.locator('.files-sidebar').isVisible(), 'mobile sidebar hidden');
-      assert.ok(await page.locator('#files-details').evaluate(e => getComputedStyle(e).position === 'absolute' && e.getBoundingClientRect().bottom <= innerHeight - 64), 'details are a bottom sheet');
-      assert.ok(await page.locator('.crumb.current').evaluate(e => { const r = e.getBoundingClientRect(), q = e.parentElement.getBoundingClientRect(); return r.left >= q.left - 1 && r.right <= q.right + 1; }), 'current breadcrumb visible');
-      await page.getByRole('button', {name: 'Open on GitHub', exact: true}).tap(); assert.ok(await visible(page, 'browser-window'), 'details action reachable');
-      assert.ok(await page.locator('.browser-toolbar').evaluate(e => e.scrollWidth <= e.clientWidth + 1), 'toolbar fits');
-      await page.locator('#show-apps').tap(); assert.ok(await page.locator('#app-grid').evaluate(e => e.classList.contains('open')), 'bottom dock reachable');
-    }
     noIssues(page); await page.close();
   });
 });
 
 test.describe('system menu, terminal, filesystem, and Easter eggs', () => {
-  for (const width of [1440, 390]) test(`interactions at ${width}`, async ({browser, baseURL}) => {
+  for (const width of [1440]) test(`interactions at ${width}`, async ({browser, baseURL}) => {
     const p = await desktop(browser, baseURL, {width});
     const ok = (a, b = true) => assert.deepEqual(a, b);
     assert.equal(await p.title(), 'Jordan Leis');
@@ -297,7 +287,7 @@ test.describe('system menu, terminal, filesystem, and Easter eggs', () => {
   });
 
   test('Trash is empty by default', async ({browser, baseURL}) => {
-    const p = await desktop(browser, baseURL, {width: 390});
+    const p = await desktop(browser, baseURL);
     await control(p, 'hero-window', 'close'); await p.locator('.desktop-icon[data-action="trash"]').dblclick();
     assert.equal(await p.locator('#files-empty').isVisible(), true); assert.equal(await p.locator('#files-empty-sub').innerText(), ''); assert.equal(await p.locator('#files-status').innerText(), '0 items');
     noIssues(p); await p.close();
@@ -349,21 +339,10 @@ test.describe('pointer lifecycle', () => {
     noIssues(p); await p.close();
   });
 
-  test('touch: Solitaire controls, hidden files, and details actions', async ({browser, baseURL}) => {
-    const touch = await desktop(browser, baseURL, {width: 390});
-    await touch.locator('#show-apps').tap(); await touch.locator('.app-launcher[data-window="solitaire-window"]').tap();
-    await touch.locator('#game-stock').tap(); assert.equal(await touch.locator('.waste-pile .playing-card').count(), 1);
-    await touch.locator('#game-undo').tap(); assert.equal(await touch.locator('.waste-pile .playing-card').count(), 0);
-    await touch.locator('#show-apps').tap(); await touch.locator('.app-launcher[data-path="/Downloads"]').tap(); await touch.locator('#files-hidden').tap();
-    await touch.getByRole('button', {name: '.notes.txt', exact: true}).tap(); await touch.getByRole('button', {name: 'Open', exact: true}).tap();
-    assert.match(await touch.locator('#notes-content').innerText(), /Vivado/);
-    assert.equal(await touch.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
-    noIssues(touch); await touch.close();
-  });
 });
 
 test.describe('Solitaire', () => {
-  for (const width of [1440, 390]) test(`selection, legal stack drag, flip, undo, and New Game at ${width}`, async ({browser, baseURL}) => {
+  for (const width of [1440]) test(`selection, legal stack drag, flip, undo, and New Game at ${width}`, async ({browser, baseURL}) => {
     const p = await desktop(browser, baseURL, {width});
     await p.locator('#show-apps').click(); await p.locator('.app-launcher[data-window="solitaire-window"]').click();
     const deal = () => p.evaluate(() => { const card = (id, rank, suit, up = true) => ({id, rank, suit, up}); Object.assign(Solitaire.game, {stock: [], waste: [card(3, 1, '♥')], foundations: [[], [], [], []], tableau: [[card(4, 5, '♦', false), card(0, 12, '♥'), card(1, 11, '♣')], [card(2, 13, '♠')], [], [], [], [], []], history: []}); Solitaire.selected = null; Solitaire.render(); });
@@ -512,8 +491,8 @@ test.describe('boot, introduction, and reboot lifecycle', () => {
     await p.close();
   });
 
-  for (const mode of ['key', 'pointer', 'button', 'reduce']) test(`boot skip by ${mode} on mobile`, async ({browser}) => {
-    const p = await browser.newPage({reducedMotion: mode === 'reduce' ? 'reduce' : 'no-preference', viewport: {width: 390, height: 844}});
+  for (const mode of ['key', 'pointer', 'button', 'reduce']) test(`boot skip by ${mode}`, async ({browser}) => {
+    const p = await browser.newPage({reducedMotion: mode === 'reduce' ? 'reduce' : 'no-preference', viewport: {width: 1440, height: 900}});
     await p.goto('/');
     if (mode === 'key') await p.keyboard.press('Space');
     if (mode === 'pointer') await p.locator('#boot-log').click();
@@ -523,6 +502,28 @@ test.describe('boot, introduction, and reboot lifecycle', () => {
     assert.equal(await p.evaluate(() => Terminal.running), false);
     assert.equal(await p.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
     await p.close();
+  });
+});
+
+test.describe('mobile gate', () => {
+  test('phones get the gate page, links, and a way through', async ({browser, baseURL}) => {
+    const p = await browser.newPage({viewport: {width: 390, height: 844}, hasTouch: true});
+    const errors = []; p.on('pageerror', e => errors.push(e.message));
+    await p.goto('/?open=/blog/'); await p.waitForTimeout(400);
+    assert.equal(await p.locator('#mobile-gate').isVisible(), true);
+    assert.equal(await p.locator('#boot-screen').isVisible(), false); assert.equal(await p.locator('#desktop').isVisible(), false);
+    assert.equal(await p.evaluate(() => Terminal.introduced || Boot.controller !== null), false, 'nothing boots behind the gate');
+    assert.deepEqual(await p.locator('.gate-links a').evaluateAll(as => as.map(a => [a.textContent, a.href])),
+      [['GitHub', 'https://github.com/Jordan-Leis'], ['Resume', 'https://drive.google.com/file/d/1jHbSPjZX3hLAVGLmC30Kj_MwDdtXkR9Z/view?usp=sharing'], ['LinkedIn', 'https://www.linkedin.com/in/jordan-leis/']]);
+    assert.equal(await p.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
+    await p.locator('#gate-anyway').tap(); await p.waitForFunction(() => document.querySelector('#boot-screen') && !document.querySelector('#mobile-gate').offsetParent && typeof Boot !== 'undefined' && Boot.controller !== null);
+    assert.equal(await p.locator('#mobile-gate').isVisible(), false, 'continue anyway loads the desktop');
+    assert.deepEqual(errors, []); await p.close();
+  });
+
+  test('a desktop-width window never sees the gate', async ({browser, baseURL}) => {
+    const p = await desktop(browser, baseURL);
+    assert.equal(await p.locator('#mobile-gate').isVisible(), false); await p.close();
   });
 });
 
