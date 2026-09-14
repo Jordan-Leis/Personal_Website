@@ -191,6 +191,8 @@ test.describe('system menu, terminal, filesystem, and Easter eggs', () => {
     await p.keyboard.press('ArrowDown'); ok(await p.locator('#terminal-input').inputValue(), 'draft');
     await p.locator('#terminal-input').fill('clear'); await p.keyboard.press('Enter'); ok(await p.locator('#terminal-output').innerText(), ''); ok(await p.locator('#terminal-intro').isVisible(), false);
     for (const c of ['whoami', 'cat about.md', 'cat mission.txt']) { const out = await cmd(p, c); ok(out.length > 10, true); ok(/ {3,}/.test(out), false); }
+    const contact = JSON.parse(await cmd(p, 'cat contact.json')); ok(contact.email, 'jordan.jay.leis@gmail.com'); ok(contact.looking_for[0], 'FPGA / RTL co-op, 2027.');
+    ok((await cmd(p, 'cat looking_for.txt | head -1')), 'FPGA / RTL co-op, 2027.');
     await cmd(p, 'cd Projects/software'); assert.match(await cmd(p, 'cat "AI Document Summarization Tool"'), /Health Canada/); await cmd(p, 'cd ~');
     assert.match(await cmd(p, 'cat Documents/experience.txt'), /Health Canada/);
 

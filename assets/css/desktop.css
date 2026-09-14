@@ -448,7 +448,7 @@ img {
 
 
 .contact-window {
-    width: 720px;
+    width: 800px;
     height: 600px;
     top: 12%;
     left: 14%;
@@ -532,11 +532,6 @@ img {
     font-family: inherit;
 }
 
-.output.ask {
-    white-space: pre-wrap;
-    font-family: inherit;
-}
-
 /* Hello line (typed on first visit) */
 .hello-line {
     color: var(--term-fg);
@@ -566,6 +561,10 @@ img {
 .editor-app .window-content {
     width: 100%;
     max-width: calc(72ch + 48px);
+}
+
+.contact-window .window-content {
+    max-width: none;
     margin: 0 auto;
     padding: 24px;
     font: 15px/1.7 var(--font-ui);
@@ -581,11 +580,18 @@ img {
 .editor-app .prompt .path { color: var(--term-blue); }
 .editor-app .command { color: var(--fg); }
 .editor-app .output.tree,
-.editor-app .output.ask,
+.editor-app .json-doc,
 .editor-app .prompt,
 .editor-app .command { font-family: var(--font-mono); }
 .editor-app .output.tree,
-.editor-app .output.ask { white-space: pre-wrap; overflow-wrap: anywhere; }
+.editor-app .json-doc { white-space: pre-wrap; overflow-wrap: anywhere; }
+
+/* contact.json: a plain document with JSON colouring */
+.json-doc { color: var(--fg-dim); margin-bottom: 20px; font-size: 14px; line-height: 1.6; }
+.json-doc .json-key { color: var(--term-blue); }
+.json-doc .json-str { color: #8ae234; }
+.json-doc a { color: inherit; text-decoration: underline; text-underline-offset: 2px; }
+.json-doc a:hover { color: var(--orange-hover); }
 
 .about-text h2 {
     color: var(--fg);

@@ -25,10 +25,12 @@ const Files = {
         const text = selector => lines(document.querySelector(selector)?.textContent);
         const about = [...document.querySelectorAll('.about-text h2, .about-text p')].map(e => e.textContent.replace(/\s+/g, ' ').trim()).join('\n\n');
         add('/Documents/about.md', 'text', { content: about, app: 'about-window' });
-        add('/Documents/contact.json', 'text', { content: JSON.stringify({ email: document.querySelector('#contact-window a[href^="mailto:"]').getAttribute('href').slice(7), ...LINKS }, null, 2), app: 'contact-window' });
+        // contact.json is the Contact window's document; looking_for.txt is its "looking_for" lines.
+        const contact = document.getElementById('contact-json').textContent.trim();
+        add('/Documents/contact.json', 'text', { content: contact, app: 'contact-window' });
         add('/Documents/experience.txt', 'text', { content: text('#about-window pre') });
         add('/Documents/mission.txt', 'text', { content: text('#mission-text') });
-        add('/Documents/looking_for.txt', 'text', { content: text('#contact-window .ask') });
+        add('/Documents/looking_for.txt', 'text', { content: JSON.parse(contact).looking_for.join('\n') });
         add('/Documents/Resume.pdf', 'pdf', { url: LINKS.resume });
         for (const name of ['about.md', 'contact.json', 'mission.txt', 'looking_for.txt', 'Resume.pdf']) add('/' + name, 'alias', { targetId: '/Documents/' + name });
         add('/Downloads/secret.mp4', 'video');
