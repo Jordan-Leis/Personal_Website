@@ -163,7 +163,14 @@ Manual workflow dispatch accepts `force` for a fresh solve, or
 previous successful run. Complete website artifacts are retained for 30 days.
 The Actions run summary reports generated, unchanged, stale, or retry-limit
 outcomes. Inspect failures there; update the pinned solver revision only after
-its exporter/tests pass. Schedules can be delayed, so the UI displays the
+its exporter/tests pass.
+
+Linxicon changes puzzle at 00:00 UTC. GitHub runs scheduled workflows late
+(often by 20 to 55 minutes) and drops some entirely, so the workflow checks
+every ten minutes during the two hours after the rollover and hourly
+otherwise; an unchanged check takes under a minute and publishes nothing. Each
+scheduled run also re-enables the workflow through the API so GitHub's 60-day
+inactivity rule cannot silently switch the schedule off. The UI displays the
 recorded puzzle date and flags snapshots older than 26 hours.
 
 The initial snapshot was generated from game #944 (2026-09-13):
