@@ -15,7 +15,7 @@ const PROJECTS = [
         repo: 'https://github.com/Jordan-Leis/mvm-in-system-verilog',
         tags: ['SystemVerilog', 'Vivado', 'DSP48E2', 'Timing Closure'],
         note: '128 lanes, 450 MHz, ~850 GOPS',
-        description: '128-lane fixed-point matrix-vector engine running 1024 MACs per cycle at 450 MHz, sustaining ~850 GOPS. Same architecture family Microsoft built BrainWave on. Timing closed entirely through RTL structure — register fanout trees, an address tree with fanout 1 — with no synthesis flags, XDC hacks, or phys_opt_design.'
+        description: '128-lane fixed-point matrix-vector engine: 1024 MACs per cycle at 450 MHz, ~850 GOPS sustained. Same architecture family Microsoft built BrainWave on. Timing closed through RTL structure alone (register fanout trees, an address tree with fanout 1): no synthesis flags, no XDC hacks, no phys_opt_design.'
     },
     {
         id: 'tanh', folder: 'hardware', slug: 'tanh_pipeline',
@@ -23,7 +23,7 @@ const PROJECTS = [
         repo: 'https://github.com/Jordan-Leis/tanh-in-system-verilog',
         tags: ['SystemVerilog', 'DSP48E2', 'Fixed-Point', 'Verification'],
         note: '280 -> 840 MHz over four rewrites',
-        description: 'Pipelined Q2.12 tanh core with a ready/valid streaming interface, driven from 280 MHz to 840 MHz across four rewrites. The last gain came from registering every inter-DSP link, moving the design from routing-bound to logic-bound. Verified against a golden model with randomized stimulus and mid-stream backpressure testing.'
+        description: 'Pipelined Q2.12 tanh core with a ready/valid streaming interface, taken from 280 MHz to 840 MHz over four rewrites. The last jump came from registering every inter-DSP link, which moved the design from routing-bound to logic-bound. Verified against a golden model with randomized stimulus and mid-stream backpressure.'
     },
     {
         id: 'wordle', folder: 'hardware', slug: 'wordle_on_kria',
@@ -31,7 +31,7 @@ const PROJECTS = [
         repo: 'https://github.com/Jordan-Leis/wordle-in-system-verilog',
         tags: ['SystemVerilog', 'AXI-GPIO', 'Vitis', 'Baremetal C', 'FSM'],
         note: 'FSM in fabric, baremetal C on the PS',
-        description: 'Wordle running in FPGA fabric on a Xilinx Kria board. Game logic is a 5-state FSM in programmable logic; a baremetal C application on the ARM processing system drives it over seven AXI-GPIO blocks and UART. Vivado block design generated from Tcl, exported to Vitis via XSA handoff.'
+        description: 'Wordle in FPGA fabric on a Xilinx Kria. A 5-state FSM in programmable logic holds the game; baremetal C on the ARM processing system drives it over seven AXI-GPIO blocks and UART. Block design generated from Tcl, exported to Vitis via XSA.'
     },
     {
         id: 'morse', folder: 'hardware', slug: 'morse_code_riscv',
@@ -64,7 +64,7 @@ const PROJECTS = [
         repo: 'https://github.com/ScienceGPTstream2/SummarizationTool',
         note: 'doc ingestion to LLM eval, in testing at Health Canada',
         tags: ['React', 'FastAPI', 'PostgreSQL', 'Better Auth', 'DeepEval', 'Azure'],
-        description: 'Full-stack platform for document ingestion, multimodal extraction, prompt-driven workflows, and in-app evaluation. React frontend, FastAPI backend, Better Auth sidecar (GitHub OAuth, Microsoft Entra), PostgreSQL. Parsers include Azure Document Intelligence and Docling; the model layer is pluggable across Azure OpenAI, Vertex AI / Gemini, Ollama, and vLLM endpoints. Template workspaces with versioning and sharing, user groups, batch and interactive extraction, DeepEval-powered evaluation with LLM-as-a-judge, and containerized deployment paths for Azure. Currently being tested by toxicologists at Health Canada.'
+        description: 'Document platform toxicologists at Health Canada are testing: ingestion, multimodal extraction (Azure Document Intelligence, Docling), prompt-driven workflows, and DeepEval LLM-as-a-judge evaluation in the app. React, FastAPI, PostgreSQL, Better Auth with GitHub OAuth and Microsoft Entra. Models swap between Azure OpenAI, Vertex AI / Gemini, Ollama, and vLLM. Ships as containers for Azure.'
     },
     {
         id: 'awards', folder: 'software', slug: 'uw_awards_search',
@@ -73,7 +73,7 @@ const PROJECTS = [
         site: 'https://jordan-leis.github.io/uw-awards-search/',
         tags: ['Python', 'Playwright', 'SQLite', 'Fuse.js', 'GitHub Actions'],
         note: 'searchable mirror of the UW Awards Directory',
-        description: 'Unofficial, searchable mirror of the University of Waterloo Awards Directory. A Python + Playwright scraper drives the official PeopleSoft search UI (there is no HTTP API), works around its ~300-row-per-search cap by recursively splitting searches, fetches every award by its deep link, and exports validated data to a no-framework static site with Fuse.js full-text search and a "match my profile" filter. A scheduled GitHub Actions workflow refreshes the data three times a year and deploys to GitHub Pages.'
+        description: 'Unofficial, searchable mirror of the University of Waterloo Awards Directory. There is no HTTP API, so a Python + Playwright scraper drives the PeopleSoft search UI, splits searches recursively to beat its ~300-row cap, and fetches every award by deep link. Output is a no-framework static site with Fuse.js full-text search and a "match my profile" filter. GitHub Actions refreshes the data three times a year.'
     },
     {
         id: 'coursify', folder: 'software', tree: false, slug: 'coursify',
@@ -81,7 +81,7 @@ const PROJECTS = [
         repo: 'https://github.com/Jordan-Leis/Course-Selector',
         site: 'https://coursify-iota.vercel.app',
         tags: ['LLMs', 'NLP', 'Python'],
-        description: 'Natural language course scheduling for Waterloo Engineering students, built on LLMs.'
+        description: 'Natural-language course scheduling for Waterloo Engineering students, built on LLMs. Work in progress.'
     },
     {
         id: 'sred', folder: 'software', slug: 'sred_copilot',
@@ -89,7 +89,7 @@ const PROJECTS = [
         repo: 'https://github.com/Jordan-Leis/SR-ED-Copilot',
         tags: ['FastAPI', 'SQLite', 'TF-IDF', 'HTMX'],
         note: 'T661 drafts from markdown evidence, with citations',
-        description: 'Self-contained FastAPI service that prepares SR&ED documentation from markdown evidence: ingests project files and commit history, tags snippets against an SR&ED facet ontology, TF-IDF search, patent lookup by cosine similarity with a claim skeleton, and generates a T661-style draft with inline citations or a DOCX export.'
+        description: 'FastAPI service that drafts SR&ED documentation from markdown evidence. Ingests project files and commit history, tags snippets against an SR&ED facet ontology, searches with TF-IDF, finds patents by cosine similarity with a claim skeleton, and writes a T661-style draft with inline citations or a DOCX export.'
     },
     {
         id: 'lasercal', folder: 'software', tree: false, slug: 'lasercal',
@@ -103,7 +103,7 @@ const PROJECTS = [
         name: 'RelayCalc', subtitle: 'Python • power systems',
         repo: 'https://github.com/Jordan-Leis/RelayCalc',
         tags: ['Python', 'Matplotlib', 'ReportLab', 'SQLite'],
-        description: 'Small Python utility for overcurrent relay settings: reads equipment data from CSV, computes pickups, simulates a 10× fault and I²t trip time, stores results in SQLite, plots current-vs-time with Matplotlib, and generates a PDF job-aid report with ReportLab.'
+        description: 'Overcurrent relay settings from a CSV of equipment data: computes pickups, simulates a 10× fault and I²t trip time, stores results in SQLite, plots current vs time with Matplotlib, and prints a PDF job aid with ReportLab.'
     },
     {
         id: 'linxicon', folder: 'software', slug: 'linxicon_solver',
@@ -112,7 +112,7 @@ const PROJECTS = [
         site: '/linxicon-solver/',
         tags: ['Python', 'NumPy', 'ConceptNet', 'wordfreq', 'pytest', 'D3'],
         note: 'optimal word chains, daily replay at /linxicon-solver/',
-        description: 'Solver for Linxicon, the daily word-chain game. The rules were reverse-engineered from the game\'s client bundles rather than guessed: ConceptNet Numberbatch cosine similarity (800/813 sampled pairs match exactly, with a second lexical measure still being pinned down), a 0.3995 link threshold, top-5 link pruning, and a 50-word board cap. Builds the threshold graph, runs bidirectional BFS for all shortest chains ranked by average link score, and verifies each chain against a faithful port of the board simulator before you type it in. Fully offline after the first run. The atlas at /linxicon-solver/ replays each day\'s search: breadth-first search, vector neighborhoods, and server-verified routes through meaning.'
+        description: 'Solver for Linxicon, the daily word-chain game. Rules reverse-engineered from the game\'s client bundles, not guessed: ConceptNet Numberbatch cosine similarity (800 of 813 sampled pairs match exactly; a second lexical measure is still being pinned down), a 0.3995 link threshold, top-5 link pruning, and a 50-word board cap. Builds the threshold graph, runs bidirectional BFS for every shortest chain ranked by average link score, and checks each chain against a port of the board simulator before you type it in. Offline after the first run. The atlas at /linxicon-solver/ replays each day\'s search.'
     },
 
     {
@@ -145,7 +145,7 @@ const PROJECTS = [
         repo: 'https://github.com/Jordan-Leis/Microgrid-RL',
         tags: ['Reinforcement Learning', 'TensorFlow', 'Gymnasium', 'NASA POWER'],
         note: 'first-author, CUCAI 2026, -23% diesel',
-        description: 'Reinforcement learning controller for off-grid hybrid microgrids in rural sub-Saharan Africa. Most work in the field treats electricity as a commodity to sell back to a grid; this treated it as a scarce resource, optimizing how many people one generator can reach. A 150-run benchmark on five years of NASA POWER climate data found DDPG optimal: 23% less diesel per year at equal reliability. Led an 11-person team. First-authored, accepted at CUCAI 2026.'
+        description: 'Reinforcement learning controller for off-grid hybrid microgrids in rural sub-Saharan Africa. Most of the field treats electricity as a commodity to sell back to a grid; this treats it as scarce and asks how many people one generator can reach. A 150-run benchmark on five years of NASA POWER climate data found DDPG optimal: 23% less diesel per year at equal reliability. Led an 11-person team. First author, CUCAI 2026.'
     },
     {
         id: 'rag', folder: 'papers', slug: 'rag_agents',
@@ -154,6 +154,6 @@ const PROJECTS = [
         repo: 'https://github.com/Madhav-Malhotra/political-chatbot',
         tags: ['RAG', 'LLM Evaluation', 'Multi-Agent'],
         note: 'co-author, CUCAI 2025',
-        description: 'Evaluated retrieval-augmented generation architectures for generalized decision-making across domains. 400+ simulated games measuring strategic consistency, extended to political analysis with human evaluation from 50+ participants. Co-authored; presented at CUCAI 2025 and the Ethical Tech for Global Futures Symposium, where it received Best Undergraduate Research Presentation.'
+        description: 'Evaluated retrieval-augmented generation architectures for decision-making across domains: 400+ simulated games scoring strategic consistency, then political analysis with human evaluation from 50+ participants. Co-author; presented at CUCAI 2025 and the Ethical Tech for Global Futures Symposium (Best Undergraduate Research Presentation).'
     }
 ];
