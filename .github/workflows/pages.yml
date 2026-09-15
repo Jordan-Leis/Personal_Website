@@ -4,7 +4,10 @@ on:
   push:
     branches: [main]
   schedule:
-    - cron: '17 * * * *'
+    # Linxicon changes puzzle at 00:00 UTC. GitHub runs crons late and drops some, so check
+    # every ten minutes for the two hours after the rollover and hourly otherwise.
+    - cron: '*/10 0-1 * * *'
+    - cron: '17 2-23 * * *'
   workflow_dispatch:
     inputs:
       force:
@@ -18,7 +21,7 @@ on:
 
 permissions:
   contents: read
-  actions: read
+  actions: write
 
 concurrency:
   group: pages-production
@@ -49,7 +52,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: Jordan-Leis/linxicon-optimal-solver
-          ref: 6181a8887934f622d3699ac2d52f54be88452525
+          ref: a1962f33fa50c75588bbd1323f63af4bb51df86e
           path: solver
           persist-credentials: false
       - name: Restore solver datasets and caches
@@ -84,6 +87,13 @@ jobs:
           with open(os.environ['GITHUB_STEP_SUMMARY'],'a') as f:
               f.write('### Atlas update\n```json\n'+json.dumps(data,indent=2)+'\n```\n')
           PY
+      - name: Keep the schedule enabled
+        # GitHub disables scheduled workflows after 60 days without repository activity;
+        # re-enabling through the API counts as activity and is a no-op when already enabled.
+        if: github.event_name == 'schedule'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh api -X PUT "repos/${GITHUB_REPOSITORY}/actions/workflows/pages.yml/enable"
       - name: Decide whether publication is needed
         id: decision
         env:

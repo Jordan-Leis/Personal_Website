@@ -57,17 +57,19 @@ export function weight(g,wordA,wordB){
 // Word indices are alphabetical in the export, so comparing index paths compares word tuples.
 const comparePaths=(x,y)=>{for(let i=0;i<Math.min(x.length,y.length);i++){if(x[i]!==y[i])return x[i]-y[i];}return x.length-y.length;};
 
-/** Port of Graph.shortest_chains: BFS layers from src, then k-best DP over layer-advancing links. */
-export function shortestChains(g,src,dst,k=5){
+/** Port of Graph.shortest_chains: BFS layers from src, then k-best DP over layer-advancing links.
+    `blocked` words (ones the game's dictionary rejected) are never entered; starters are exempt. */
+export function shortestChains(g,src,dst,k=5,blocked=null){
   const s=g.index.get(src),t=g.index.get(dst);
   if(s==null||t==null)return {chains:[],visited:0,layers:0};
   if(s===t)return {chains:[{words:[src],scores:[],total:0,added:-1}],visited:1,layers:0};
   const dist=new Int32Array(g.words.length).fill(-1);dist[s]=0;
+  if(blocked)for(const w of blocked){const i=g.index.get(w);if(i!=null&&i!==s&&i!==t)dist[i]=-2;}// -2: never discovered
   const order=[s];let head=0;
   while(head<order.length){
     const u=order[head++];
     if(u===t)break;
-    for(let i=g.offsets[u];i<g.offsets[u+1];i++){const v=g.neighbors[i];if(dist[v]<0){dist[v]=dist[u]+1;order.push(v);}}
+    for(let i=g.offsets[u];i<g.offsets[u+1];i++){const v=g.neighbors[i];if(dist[v]===-1){dist[v]=dist[u]+1;order.push(v);}}
   }
   const visited=order.length;
   if(dist[t]<0)return {chains:[],visited,layers:dist[order[order.length-1]]};
