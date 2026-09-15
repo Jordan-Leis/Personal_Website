@@ -3,7 +3,7 @@ title: "My final dying roar"
 date: 2026-09-13
 tags: [personal]
 theme: uYBO_Sk5YiE
-theme_title: "The Tale of a Cruel World — DM DOKURO"
+theme_title: "The Tale of a Cruel World by DM DOKURO"
 ---
 
 "If I should die before you continue, you will have heard my final dying roar"
@@ -32,7 +32,7 @@ I remember the first time I fought the Devourer of Gods, I died well over 200+ t
 
 !["You are no god"](/assets/posts/goodbye-cruel-world/you-are-no-god.png)
 
-I don't know how many times I saw that text on screen. I remember when "Universal Collapse" became the 2nd phase theme for DOG, that song to this day is still what I use when I need to get into the zone. When 1 hit would mean death, when everything is on the line — that song can just bring me into the right headspace because of how many times I've heard it. It triggers something in me nothing else can.
+I don't know how many times I saw that text on screen. I remember when "Universal Collapse" became the 2nd phase theme for DOG, that song to this day is still what I use when I need to get into the zone. When 1 hit would mean death, when everything is on the line, that song can just bring me into the right headspace because of how many times I've heard it. It triggers something in me nothing else can.
 
 !["It's not over yet, kid"](/assets/posts/goodbye-cruel-world/its-not-over-yet-kid.png)
 
