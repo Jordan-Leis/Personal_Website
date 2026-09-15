@@ -201,3 +201,7 @@ The PNG artwork is bundled without pixel edits and scaled with CSS. Repository b
 | `categories` → `devices` | `applications-games.png` (upstream alias of `devices/input-gaming.png`) |
 
 This desktop uses an original CSS/SVG wallpaper and generic application branding. It is not affiliated with Ubuntu, Canonical, Mozilla, or GitHub.
+
+## AI vs Human pilot
+
+`ai-vs-human/` is a static anonymous reading experiment backed by Supabase RPCs. `config.js` contains only the public URL and publishable key. Corpus, labels, migrations, curation, exports, and secrets belong to the private Ai-Vs-Human repository. The page needs no build step beyond the existing Jekyll site build.

@@ -1,0 +1,369 @@
+import { rpc } from "./api.js";
+import {
+  CONSENT,
+  node,
+  button,
+  store,
+  demographics,
+  errorBox,
+  attribution,
+  focusMain,
+} from "./shared.js";
+const app = document.querySelector("#app");
+let busy = false;
+let active = store.get("session");
+let current = null;
+const source = new URLSearchParams(location.search).get("src");
+if (source !== null) store.set("source", source.slice(0, 100));
+function screen(cls = "narrow") {
+  app.replaceChildren();
+  const box = node("div", undefined, cls);
+  app.append(box);
+  focusMain();
+  return box;
+}
+function landing() {
+  active = null;
+  current = null;
+  store.remove("session");
+  const box = screen("");
+  box.innerHTML =
+    '<p class="eyebrow">A small experiment in perception</p><h1>Sounds human.<br><em>But is it?</em></h1><p class="lead">Read a passage. Trust your instincts. Find out how well you can tell human writing from AI.</p>';
+  const modes = node("div", undefined, "modes");
+  for (const [mode, name, desc, tag] of [
+    [
+      "normal",
+      "One passage. One judgment.",
+      "Choose human or AI, and how sure you feel.",
+      "NORMAL · 12 ROUNDS",
+    ],
+    [
+      "hard",
+      "Four passages. Any could be AI.",
+      "Select every passage you think is AI. Even zero.",
+      "HARD · 5 ROUNDS",
+    ],
+  ]) {
+    const b = button("", () => consent(mode), "mode");
+    b.append(
+      node("span", tag, "tag"),
+      node("strong", name),
+      node("small", desc),
+      node("span", "Start " + mode + " →", "arrow"),
+    );
+    modes.append(b);
+  }
+  box.append(
+    modes,
+    node(
+      "p",
+      "18+ · Anonymous responses · No account · Results at the end",
+      "fine",
+    ),
+    node(
+      "p",
+      "Pilot edition: short encyclopedia-style passages. This is an exploratory experiment, not a test of today’s best models.",
+      "fine",
+    ),
+  );
+}
+function consent(mode) {
+  const box = screen();
+  box.innerHTML =
+    '<p class="eyebrow">Before you begin</p><h2>Your choice to take part.</h2><div class="panel"><p>This independent pilot records your answers, confidence, reading time, mode, and an optional campaign tag. Demographic questions are optional. We do not collect your name, email, IP address, or browser fingerprint in the experiment database.</p><p>You must be 18 or older. You can stop at any time; answers already submitted remain stored, and unfinished sessions are excluded from the main analysis. Anonymous records cannot be reliably retrieved for later withdrawal.</p><p>Results may be used in exploratory analysis and aggregate reporting. Hosting providers may process technical logs. <a href="about.html">Data use and contact details</a>.</p></div>';
+  const label = node("label", undefined, "check");
+  const check = node("input");
+  check.type = "checkbox";
+  label.append(
+    check,
+    node(
+      "span",
+      "I am 18 or older, have read this information, and agree to participate.",
+    ),
+  );
+  const next = button("Continue →", () => demo(mode), "primary");
+  next.disabled = true;
+  check.onchange = () => (next.disabled = !check.checked);
+  box.append(label, next);
+}
+function demo(mode) {
+  const box = screen();
+  box.innerHTML =
+    '<p class="eyebrow">Optional · Skip any question</p><h2>A little context.</h2><p class="fine">These broad categories help us explore differences between groups.</p>';
+  const d = demographics();
+  box.append(d.element);
+  const actions = node("div", undefined, "actions");
+  actions.append(
+    button("Start reading →", () => start(mode, d.values()), "primary"),
+    button("Skip all", () => start(mode, {})),
+  );
+  box.append(actions);
+}
+async function start(mode, d) {
+  if (busy) return;
+  busy = true;
+  app.querySelectorAll("button").forEach((b) => (b.disabled = true));
+  try {
+    const id = await rpc("start_session", {
+      p_mode: mode,
+      p_source: store.get("source"),
+      p_demographics: d,
+      p_consent_version: CONSENT,
+    });
+    active = { id, mode };
+    store.set("session", active);
+    busy = false;
+    await advance();
+  } catch {
+    busy = false;
+    app.querySelectorAll("button").forEach((b) => (b.disabled = false));
+    errorBox(
+      app,
+      "Could not start the quiz. Check your connection and try again.",
+    );
+  }
+}
+async function advance(uncertainTrial = null) {
+  if (busy) return;
+  busy = true;
+  try {
+    const t = await rpc("next_trial", { p_session_id: active.id });
+    if (t.done) {
+      await results();
+    } else {
+      current = t;
+      renderTrial(t);
+      if (t.trial_id === uncertainTrial)
+        errorBox(app, "Your answer was not saved. Please choose again.");
+    }
+  } catch {
+    const box = screen();
+    box.append(node("h2", "Your place is saved."));
+    errorBox(
+      box,
+      "We could not retrieve your next round. Reconnect and retry.",
+      () => advance(),
+    );
+    box.append(button("Leave quiz", landing));
+  } finally {
+    busy = false;
+  }
+}
+function renderTrial(t) {
+  const box = screen(t.mode === "hard" ? "" : "narrow");
+  const top = node("div", undefined, "trial-top");
+  top.append(
+    node("span", `${t.mode.toUpperCase()} / ROUND ${t.idx + 1} OF ${t.total}`),
+    button("Stop", landing),
+  );
+  const progress = node("progress");
+  progress.max = t.total;
+  progress.value = t.idx;
+  progress.setAttribute("aria-label", `Round ${t.idx + 1} of ${t.total}`);
+  box.append(
+    top,
+    progress,
+    node("h2", t.prompt.text, "prompt"),
+    node(
+      "p",
+      t.mode === "hard"
+        ? "Select every passage you think is AI. Zero, one, two, three, or four are all allowed."
+        : "Who do you think wrote this? Choose how sure you feel.",
+      "fine",
+    ),
+  );
+  const passages = node(
+    "div",
+    undefined,
+    "passages " + (t.mode === "hard" ? "hard" : ""),
+  );
+  const selected = new Set();
+  t.passages.forEach((s, i) => {
+    const card = node("section", undefined, "passage");
+    card.append(
+      node("span", `PASSAGE ${String.fromCharCode(65 + i)}`, "label"),
+      node("p", s.text),
+    );
+    if (t.mode === "hard") {
+      const toggle = button(
+        "Mark as AI",
+        () => {
+          if (selected.has(s.sample_id)) selected.delete(s.sample_id);
+          else selected.add(s.sample_id);
+          const yes = selected.has(s.sample_id);
+          toggle.setAttribute("aria-pressed", String(yes));
+          toggle.textContent = yes ? "Selected as AI ✓" : "Mark as AI";
+          card.classList.toggle("selected", yes);
+          submit.textContent = `Submit (${selected.size} selected) →`;
+        },
+        "toggle",
+      );
+      toggle.setAttribute("aria-pressed", "false");
+      toggle.setAttribute(
+        "aria-label",
+        `Mark passage ${String.fromCharCode(65 + i)} as AI`,
+      );
+      card.append(toggle);
+    }
+    card.append(attribution(s));
+    passages.append(card);
+  });
+  box.append(passages);
+  const stamp = store.get("timer");
+  const started = stamp?.trial === t.trial_id ? stamp.started : Date.now();
+  store.set("timer", { trial: t.trial_id, started });
+  const submit = button(
+    "Submit (0 selected) →",
+    () =>
+      send(
+        t,
+        t.passages.map((s) => ({
+          sample_id: s.sample_id,
+          judged_ai: selected.has(s.sample_id),
+          confidence: null,
+        })),
+        started,
+      ),
+    "primary",
+  );
+  if (t.mode === "hard") box.append(submit);
+  else {
+    const answers = node("div", undefined, "answers");
+    for (const [label, ai, confidence] of [
+      ["Definitely human", false, 2],
+      ["Probably human", false, 1],
+      ["Probably AI", true, 1],
+      ["Definitely AI", true, 2],
+    ])
+      answers.append(
+        button(label, () =>
+          send(
+            t,
+            [{ sample_id: t.passages[0].sample_id, judged_ai: ai, confidence }],
+            started,
+          ),
+        ),
+      );
+    box.append(answers);
+  }
+  box.append(
+    node(
+      "p",
+      "No answers are revealed until you finish. Please judge the writing without searching the source.",
+      "fine",
+    ),
+  );
+}
+async function send(t, judgments, started) {
+  if (busy) return;
+  busy = true;
+  app.querySelectorAll("button").forEach((b) => (b.disabled = true));
+  const ms = Math.min(86400000, Math.max(0, Date.now() - started));
+  let uncertain = null;
+  try {
+    await rpc("submit_trial", {
+      p_session_id: active.id,
+      p_trial_id: t.trial_id,
+      p_judgments: judgments.map((j) => ({ ...j, response_ms: ms })),
+    });
+  } catch {
+    uncertain = t.trial_id;
+    // A lost response may still have committed. Only next_trial decides what remains.
+  } finally {
+    busy = false;
+    await advance(uncertain);
+  }
+}
+async function results() {
+  const r = await rpc("finish_session", { p_session_id: active.id });
+  store.remove("timer");
+  const box = screen();
+  box.innerHTML =
+    '<p class="eyebrow">Experiment complete</p><h2>How your instincts did.</h2>';
+  const score = node("div", undefined, "score");
+  score.append(`${r.correct}`, node("small", ` / ${r.total}`));
+  box.append(
+    score,
+    node(
+      "p",
+      `${Math.round(r.accuracy * 100)}% of passages judged correctly.`,
+      "lead",
+    ),
+    node(
+      "p",
+      r.global_avg === null
+        ? "You’re among the first to finish this edition. A comparison average will appear as more people complete it."
+        : `Other completed ${active.mode} sessions in this edition average ${Math.round(r.global_avg * 100)}%.`,
+    ),
+  );
+  const entries = Object.entries(r.per_model_seen);
+  if (entries.length) {
+    box.append(node("h3", "AI passages that fooled you"));
+    const table = node("table", undefined, "stats");
+    table.innerHTML =
+      "<thead><tr><th>Dataset model</th><th>Judged human / seen</th></tr></thead>";
+    const body = node("tbody");
+    for (const [model, n] of entries) {
+      const row = node("tr");
+      row.append(
+        node("td", model),
+        node("td", `${r.per_model_fooled[model] || 0} / ${n}`),
+      );
+      body.append(row);
+    }
+    table.append(body);
+    box.append(table);
+    const max = Math.max(...entries.map(([m]) => r.per_model_fooled[m] || 0));
+    box.append(
+      node(
+        "p",
+        max
+          ? `${entries
+              .filter(([m]) => (r.per_model_fooled[m] || 0) === max)
+              .map(([m]) => m)
+              .join(
+                " and ",
+              )} fooled you most by count${entries.filter(([m]) => (r.per_model_fooled[m] || 0) === max).length > 1 ? " (tie)" : ""}.`
+          : "You identified every AI passage you saw.",
+      ),
+    );
+  } else
+    box.append(node("p", "This session happened to contain no AI passages."));
+  box.append(
+    node(
+      "p",
+      "A small sample, not a model ranking. These are historical dataset labels; factual errors and familiar topics can influence your judgment.",
+      "fine",
+    ),
+  );
+  const actions = node("div", undefined, "actions");
+  actions.append(
+    button(
+      "Try " + (active.mode === "normal" ? "Hard" : "Normal"),
+      () => consent(active.mode === "normal" ? "hard" : "normal"),
+      "primary",
+    ),
+  );
+  const link = node("a", "Contribute writing", "button");
+  link.href = "submit.html";
+  actions.append(
+    link,
+    button("Share result", async () => {
+      const text = `I scored ${r.correct}/${r.total} on AI vs Human. Can you tell?`;
+      const url = "https://jordanleis.com/ai-vs-human/";
+      try {
+        if (navigator.share)
+          await navigator.share({ title: "AI vs Human", text, url });
+        else {
+          await navigator.clipboard.writeText(text + " " + url);
+          box.append(node("p", "Result copied.", "status"));
+        }
+      } catch {
+        box.append(node("p", text + " " + url, "status"));
+      }
+    }),
+  );
+  box.append(actions);
+}
+if (active) advance();
+else landing();

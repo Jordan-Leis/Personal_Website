@@ -32,6 +32,9 @@ jobs:
           set -e
           python3 scripts/check_atlas.py _site
           test -f _site/index.html
+          test -f _site/ai-vs-human/index.html
+          test -f _site/ai-vs-human/submit.html
+          test -f _site/ai-vs-human/about.html
           test -f _site/CNAME
           test -f _site/cracked-profiles/privacy/index.html
           test -f _site/blog/index.html
