@@ -1,1 +1,158 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>About the pilot — AI vs Human</title><link rel="stylesheet" href="app.css"></head><body><div class="shell"><header><a class="brand" href="./">AI <span>vs</span> HUMAN</a><a href="./">Try the experiment ↗</a></header><main><article class="narrow prose"><p class="eyebrow">About / Pilot edition 0.1</p><h1>Can we hear the difference?</h1><p>This independent project by Jordan Leis explores how people judge human and AI writing. It is an early pilot for testing the task and collecting exploratory responses. It is not a University of Waterloo study or a claim of institutional ethics approval.</p><h2>What you’ll read</h2><p>The first edition contains 96 short encyclopedia-style passages in 12 topic groups. Human passages originate from Wikipedia; AI passages come from the historical RAID dataset, using its <code>chatgpt</code> and <code>gpt4</code> labels. These labels do not identify today’s model versions.</p><p>Topic groups were assigned retrospectively. The four passages in a Hard round share a broad topic or style, not necessarily an original writing prompt. Both classes are excerpted using the same rules: remove formatting, collapse whitespace, and take leading complete sentences. Wording is not rewritten.</p><p>Some passages contain incorrect or outdated statements. Read them as experimental stimuli, not as reference material. Familiarity with topics, factual errors, source style, and repeated play can all affect results.</p><h2>How the two modes work</h2><p>Normal has 12 rounds: one passage from each group, six human and six AI. One tap records your judgment and whether you are “probably” or “definitely” sure. Hard has five rounds of four passages. Each round independently has an equal chance of containing zero, one, two, three, or four AI passages. Select all the passages you think are AI.</p><p>There is no correctness feedback until the end. Your final score counts passages judged correctly. Model statistics show AI passages you judged human, alongside how many you saw. The comparison average includes other completed, non-test sessions of the same mode and corpus edition.</p><h2 id="data">Your data and choices</h2><p>Participation is optional and for adults aged 18 or older. We store a random session identifier, mode, optional campaign tag, answers, confidence, response times, consent version, corpus edition, and timestamps. Optional demographics are broad categories: AI-tool use, UW affiliation and faculty, native English, and age bracket. No question requests your identity.</p><p>The experiment database does not collect names, email addresses, IP addresses, or raw user-agent strings. GitHub Pages and Supabase may process technical connection logs under their own policies. Session and draft state is stored in your browser’s session storage for this tab, allowing refresh recovery; it is not a cross-site tracker.</p><p>You can stop anytime. Submitted answers remain stored, but unfinished sessions are excluded from the main analysis. We cannot reliably identify anonymous records for later withdrawal. Raw responses are kept privately for this pilot and follow-up analysis; only aggregate findings are intended for publication. No fixed deletion date has been set for pilot records.</p><p>For Normal rounds, reading time runs from rendering to answering. Hard rounds record the same render-to-submit duration for each passage. Reloading a round retains the original start time when browser storage is available.</p><h2 id="sources">Sources, attribution, and reuse</h2><p>Dataset: <a href="https://github.com/liamdugan/raid">RAID: A Shared Benchmark for Robust Evaluation of Machine-Generated Text Detectors</a>, Dugan and colleagues, ACL 2024. Wikipedia-source records were obtained through <a href="https://huggingface.co/datasets/aadityaubhat/GPT-wiki-intro">GPT Wiki Intro</a> by Aaditya Bhat. We use RAID’s unmodified English training partition and preserve the original dataset labels.</p><p>Every passage has a topic-source link. For reused Wikipedia text, that article and its history identify the contributing authors. Wikipedia-derived text remains available under <a href="https://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a>, with credit to Wikipedia contributors. Passages have been excerpted and formatting normalized. The same topic links appear on AI passages to identify their source topic; a link does not disclose authorship.</p><p>RAID-distributed generated text is covered by its <a href="RAID-LICENSE.txt">MIT license and copyright notice</a>. These notices apply to the respective source materials and do not replace upstream licenses. The browser receives individual passages and topic attribution, never the dataset’s per-passage answer labels.</p><p>Because the source texts are public, someone could search for them or infer labels from repeated sessions. Please avoid outside lookup while playing. This pilot is not designed to resist a determined participant researching the answer key.</p><h2>Contributing writing</h2><p>Contributions require separate consent and are stored privately as pending. Only original, voluntarily submitted writing that passes manual curation becomes eligible for a future corpus edition. Please do not include private information or paste third-party writing.</p><h2>Contact</h2><p>Questions about the experiment or data use: <a href="mailto:jordan.jay.leis@gmail.com">jordan.jay.leis@gmail.com</a>.</p><div class="actions"><a class="button primary" href="./">Try the experiment →</a><a class="button" href="submit.html">Contribute writing</a></div></article></main><footer><span>An independent experiment by Jordan Leis · v0.1</span><a href="https://jordanleis.com">jordanleis.com</a></footer></div></body></html>
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>About the pilot — AI vs Human</title>
+    <link rel="stylesheet" href="app.css" />
+  </head>
+  <body>
+    <div class="shell">
+      <header>
+        <a class="brand" href="./">AI <span>vs</span> HUMAN</a
+        ><a href="./">Try the experiment ↗</a>
+      </header>
+      <main>
+        <article class="narrow prose">
+          <p class="eyebrow">About / Pilot edition 0.1</p>
+          <h1>Can we hear the difference?</h1>
+          <p>
+            This independent project by Jordan Leis explores how people judge
+            human and AI writing. It is an early pilot for testing the task and
+            collecting exploratory responses. It is not a University of Waterloo
+            study or a claim of institutional ethics approval.
+          </p>
+          <h2>What you’ll read</h2>
+          <p>
+            The first edition contains 96 short encyclopedia-style passages in
+            12 topic groups. Human passages originate from Wikipedia; AI
+            passages come from the historical RAID dataset, using its
+            <code>chatgpt</code> and <code>gpt4</code> labels. These labels do
+            not identify today’s model versions.
+          </p>
+          <p>
+            Topic groups were assigned retrospectively. The four passages in a
+            Hard round share a broad topic or style, not necessarily an original
+            writing prompt. Both classes are excerpted using the same rules:
+            remove formatting, collapse whitespace, and take leading complete
+            sentences. Wording is not rewritten.
+          </p>
+          <p>
+            Some passages contain incorrect or outdated statements. Read them as
+            experimental stimuli, not as reference material. Familiarity with
+            topics, factual errors, source style, and repeated play can all
+            affect results.
+          </p>
+          <h2>How the two modes work</h2>
+          <p>
+            Normal has 12 rounds: one passage from each group, six human and six
+            AI. One tap records your judgment and whether you are “probably” or
+            “definitely” sure. Hard has five rounds of four passages. Each round
+            independently has an equal chance of containing zero, one, two,
+            three, or four AI passages. Select all the passages you think are
+            AI.
+          </p>
+          <p>
+            There is no correctness feedback until the end. Your final score
+            counts passages judged correctly. Model statistics show AI passages
+            you judged human, alongside how many you saw. The comparison average
+            includes other completed, non-test sessions of the same mode and
+            corpus edition.
+          </p>
+          <h2 id="data">Your data and choices</h2>
+          <p>
+            Participation is optional and for adults aged 18 or older. We store
+            a random session identifier, mode, optional campaign tag, answers,
+            confidence, response times, consent version, corpus edition, and
+            timestamps. Optional demographics are broad categories: AI-tool use,
+            UW affiliation and faculty, native English, and age bracket. No
+            question requests your identity.
+          </p>
+          <p>
+            The experiment database does not collect names, email addresses, IP
+            addresses, or raw user-agent strings. GitHub Pages and Supabase may
+            process technical connection logs under their own policies. Session
+            and draft state is stored in your browser’s session storage for this
+            tab, allowing refresh recovery; it is not a cross-site tracker.
+          </p>
+          <p>
+            You can stop anytime. Submitted answers remain stored, but
+            unfinished sessions are excluded from the main analysis. We cannot
+            reliably identify anonymous records for later withdrawal. Raw
+            responses are kept privately for this pilot and follow-up analysis;
+            only aggregate findings are intended for publication. No fixed
+            deletion date has been set for pilot records.
+          </p>
+          <p>
+            For Normal rounds, reading time runs from rendering to answering.
+            Hard rounds record the same render-to-submit duration for each
+            passage. Reloading a round retains the original start time when
+            browser storage is available.
+          </p>
+          <h2 id="sources">Sources, attribution, and reuse</h2>
+          <p>
+            Dataset:
+            <a href="https://github.com/liamdugan/raid"
+              >RAID: A Shared Benchmark for Robust Evaluation of
+              Machine-Generated Text Detectors</a
+            >, Dugan and colleagues, ACL 2024. Wikipedia-source records were
+            obtained through
+            <a
+              href="https://huggingface.co/datasets/aadityaubhat/GPT-wiki-intro"
+              >GPT Wiki Intro</a
+            >
+            by Aaditya Bhat. We use RAID’s unmodified English training partition
+            and preserve the original dataset labels.
+          </p>
+          <p>
+            Every passage has a topic-source link. For reused Wikipedia text,
+            that article and its history identify the contributing authors.
+            Wikipedia-derived text remains available under
+            <a href="https://creativecommons.org/licenses/by-sa/3.0/"
+              >CC BY-SA 3.0</a
+            >, with credit to Wikipedia contributors. Passages have been
+            excerpted and formatting normalized. The same topic links appear on
+            AI passages to identify their source topic; a link does not disclose
+            authorship.
+          </p>
+          <p>
+            RAID-distributed generated text is covered by its
+            <a href="RAID-LICENSE.txt">MIT license and copyright notice</a>.
+            These notices apply to the respective source materials and do not
+            replace upstream licenses. The browser receives individual passages
+            and topic attribution, never the dataset’s per-passage answer
+            labels.
+          </p>
+          <p>
+            Because the source texts are public, someone could search for them
+            or infer labels from repeated sessions. Please avoid outside lookup
+            while playing. This pilot is not designed to resist a determined
+            participant researching the answer key.
+          </p>
+          <h2>Contributing writing</h2>
+          <p>
+            Contributions require separate consent and are stored privately as
+            pending. Only original, voluntarily submitted writing that passes
+            manual curation becomes eligible for a future corpus edition. Please
+            do not include private information or paste third-party writing.
+          </p>
+          <h2>Contact</h2>
+          <p>
+            Questions about the experiment or data use:
+            <a href="mailto:jordan.jay.leis@gmail.com"
+              >jordan.jay.leis@gmail.com</a
+            >.
+          </p>
+          <div class="actions">
+            <a class="button primary" href="./">Try the experiment →</a
+            ><a class="button" href="submit.html">Contribute writing</a>
+          </div>
+        </article>
+      </main>
+      <footer>
+        <span>An independent experiment by Jordan Leis · v0.1</span
+        ><a href="https://jordanleis.com">jordanleis.com</a>
+      </footer>
+    </div>
+  </body>
+</html>
