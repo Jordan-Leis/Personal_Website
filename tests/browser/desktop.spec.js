@@ -185,8 +185,8 @@ test.describe('system menu, terminal, filesystem, and Easter eggs', () => {
     await p.keyboard.press('ArrowDown'); ok(await p.locator('#terminal-input').inputValue(), 'draft');
     await p.locator('#terminal-input').fill('clear'); await p.keyboard.press('Enter'); ok(await p.locator('#terminal-output').innerText(), ''); ok(await p.locator('#terminal-intro').isVisible(), false);
     for (const c of ['whoami', 'cat about.md', 'cat mission.txt']) { const out = await cmd(p, c); ok(out.length > 10, true); ok(/ {3,}/.test(out), false); }
-    const contact = JSON.parse(await cmd(p, 'cat contact.json')); ok(contact.email, 'jordan.jay.leis@gmail.com'); ok(contact.looking_for[0], 'FPGA / RTL co-op, 2027.');
-    ok((await cmd(p, 'cat looking_for.txt | head -1')), 'FPGA / RTL co-op, 2027.');
+    const contact = JSON.parse(await cmd(p, 'cat contact.json')); ok(contact.email, 'jordan.jay.leis@gmail.com'); ok(contact.looking_for[0], 'FPGA / RTL co-op. Winter 2027 in Asia, Fall 2027 anywhere.');
+    ok((await cmd(p, 'cat looking_for.txt | head -1')), 'FPGA / RTL co-op. Winter 2027 in Asia, Fall 2027 anywhere.');
     await cmd(p, 'cd Projects/software'); assert.match(await cmd(p, 'cat "AI Document Summarization Tool"'), /Health Canada/); await cmd(p, 'cd ~');
     assert.match(await cmd(p, 'cat Documents/experience.txt'), /Health Canada/);
 
@@ -531,7 +531,7 @@ test('copy rules hold in the built page', async ({request, baseURL}) => {
   const html = await (await request.get('/')).text();
   const projects = await (await request.get('/assets/js/projects.js')).text();
   const text = html + projects;
-  for (const banned of [/passion/i, /Building Tomorrow/i, /empower/i, /create positive change/i, /journey/i, /driven by the belief/i, /meaningful problems/i, /bridging the gap/i, /25% less diesel/, /Co-Authored-By/i]) {
+  for (const banned of [/passion/i, /Building Tomorrow/i, /empower/i, /create positive change/i, /journey/i, /driven by the belief/i, /meaningful problems/i, /bridging the gap/i, /25% less diesel/, /Co-Authored-By/i, /\u2014/]) {
     expect(text, 'banned phrase ' + banned).not.toMatch(banned);
   }
   expect(text).toContain('23%');

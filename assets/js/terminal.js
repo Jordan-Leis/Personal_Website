@@ -1,11 +1,11 @@
 const reducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 const HELLO_PREFIX = "Hi, I'm Jordan. ";
 const HELLO_FINAL = 'I like to build.';
-const HELLO_ROLES = ["I'm a research engineer.", "I'm a hardware engineer.", "I'm a software engineer.", "I'm an ML engineer."];
+const HELLO_ROLES = ["I'm a hardware engineer.", "I'm a software engineer.", "I'm a research engineer.", "I'm an ML engineer."];
 const BOOT_LINES = [
     '[  OK  ] Started JORDAN-OS v3B (University of Waterloo build).',
     '[  OK  ] Found device Zynq UltraScale+ MPSoC. Fabric online.',
-    '[  OK  ] Loaded kernel modules: research.ko ml.ko software.ko hardware.ko.',
+    '[  OK  ] Loaded kernel modules: hardware.ko software.ko research.ko ml.ko rtl.ko.',
     '[  OK  ] Mounted /home/jordan/hardware.', '[  OK  ] Mounted /home/jordan/papers.',
     '[  OK  ] Mounted /home/jordan/software.', '[  OK  ] Mounted /home/jordan/posts.',
     '[  OK  ] Reached target Timing Closure. No phys_opt_design required.',
@@ -176,7 +176,7 @@ const Terminal = {
             if (secret === 'work work') { Session.discover('work'); Media.work(); result = 'Work, work.'; }
             else if (secret === '1 million bit register') { Session.discover('register'); result = 'the compiler will just optimize it away'; }
             else switch (cmd) {
-                case 'help': result = 'help — supported commands\nls [-a] [path] — list files\npwd — current directory\ncd [path] — change directory\nclear — clear the screen\nwhoami — about Jordan\ndate — current date\ncat <file> — read text\necho <text> — print text\ntree — project tree\n./hello.sh — introduction\nUse Up/Down for command history. Files supports Show hidden files.'; break;
+                case 'help': result = 'help  supported commands\nls [-a] [path]  list files\npwd  current directory\ncd [path]  change directory\nclear  clear the screen\nwhoami  about Jordan\ndate  current date\ncat <file>  read text\necho <text>  print text\ntree  project tree\n./hello.sh  introduction\nUse Up/Down for command history. Files supports Show hidden files.'; break;
                 case 'pwd': result = '/home/jordan' + (this.cwd === '/' ? '' : this.cwd); break;
                 case 'whoami': result = lines(document.getElementById('identity-text').textContent); break;
                 case 'date': result = new Date().toString(); break;

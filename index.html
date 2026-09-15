@@ -6,13 +6,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Jordan Leis</title>
-    <meta name="description" content="Electrical Engineering student at the University of Waterloo. Research, ML, software, and now RTL — I build at whatever layer the problem is stuck at. Cansbridge Fellow.">
+    <meta name="description" content="Electrical Engineering at Waterloo. I built an RL controller that cut a microgrid's diesel by 23%, then couldn't get the board to run it. Now I write RTL. Cansbridge Fellow.">
     <!-- Link previews (LinkedIn, iMessage, Slack, X) -->
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://jordanleis.com/">
     <meta property="og:site_name" content="JordanLeis.com">
     <meta property="og:title" content="JordanLeis.com">
-    <meta property="og:description" content="Electrical Engineering student at the University of Waterloo. Research, ML, software, and now RTL — I build at whatever layer the problem is stuck at. Cansbridge Fellow.">
+    <meta property="og:description" content="Electrical Engineering at Waterloo. I built an RL controller that cut a microgrid's diesel by 23%, then couldn't get the board to run it. Now I write RTL. Cansbridge Fellow.">
     <meta property="og:image" content="https://jordanleis.com/assets/og/headshot.jpg">
     <meta property="og:image:width" content="400">
     <meta property="og:image:height" content="420">
@@ -20,7 +20,7 @@
     <meta name="twitter:card" content="summary">
     <meta name="twitter:image" content="https://jordanleis.com/assets/og/headshot.jpg">
     <meta name="twitter:title" content="JordanLeis.com">
-    <meta name="twitter:description" content="Electrical Engineering student at the University of Waterloo. Research, ML, software, and now RTL — I build at whatever layer the problem is stuck at. Cansbridge Fellow.">
+    <meta name="twitter:description" content="Electrical Engineering at Waterloo. I built an RL controller that cut a microgrid's diesel by 23%, then couldn't get the board to run it. Now I write RTL. Cansbridge Fellow.">
     <link rel="stylesheet" href="{{ "/assets/css/desktop.css" | relative_url }}">
 </head>
 <body>
@@ -83,7 +83,7 @@
     <div id="crash-screen" class="crash-screen" hidden role="alert"><pre>JORDAN-OS
 
 [FAILED] Desktop recursion limit exceeded.
-Kernel panic — recursive display server.
+Kernel panic: recursive display server.
 
 Restarting display manager…</pre></div>
 
@@ -190,18 +190,16 @@ Restarting display manager…</pre></div>
                     <span class="prompt"><span class="user">jordan@waterloo</span>:<span class="path">~</span>$</span> <span class="command">whoami</span>
                 </div>
                 <div class="terminal-line">
-                    <div class="output" id="identity-text">Electrical Engineering @ <span class="highlight">University of Waterloo</span> (3B)<br>
-                    Research → ML → software → hardware. Currently: <span class="highlight">RTL on Zynq UltraScale+</span>.<br>
-                    I build at whatever layer the problem is stuck at.<br>
-                    <span class="highlight">Cansbridge Fellow</span> — 1 of 15 selected nationally</div>
+                    <div class="output" id="identity-text">Electrical Engineering @ <span class="highlight">University of Waterloo</span>, 3B.<br>
+                    <span class="highlight">RTL on Zynq UltraScale+</span> this term, on my own time.<br>
+                    <span class="highlight">Cansbridge Fellow</span>, 1 of 15 selected nationally.</div>
                 </div>
 
                 <div class="terminal-line">
                     <span class="prompt"><span class="user">jordan@waterloo</span>:<span class="path">~</span>$</span> <span class="command">cat mission.txt</span>
                 </div>
                 <div class="terminal-line">
-                    <div class="output" id="mission-text">Making compute <span class="success">cheaper</span> and <span class="success">more available</span> —<br>
-                    at the model, the software, or the silicon, whichever is the bottleneck.</div>
+                    <div class="output" id="mission-text">Make compute <span class="success">cheaper</span> and reach <span class="success">more people</span>, at whichever layer is the bottleneck.</div>
                 </div>
 
                 <div class="terminal-line">
@@ -230,7 +228,7 @@ Restarting display manager…</pre></div>
                     <span class="prompt"><span class="user">jordan@waterloo</span>:<span class="path">~</span>$</span> <span class="command">cat looking_for.txt | head -1</span>
                 </div>
                 <div class="terminal-line">
-                    <div class="output">FPGA / RTL co-op, 2027.  <span class="dir-comment"># full ask in contact.json</span></div>
+                    <div class="output">FPGA / RTL co-op. Winter 2027 in Asia, Fall 2027 anywhere.  <span class="dir-comment"># full ask in contact.json</span></div>
                 </div>
                 </div>
                 <button id="intro-skip" class="intro-skip" hidden>Skip introduction</button>
@@ -256,22 +254,21 @@ Restarting display manager…</pre></div>
                 <div class="about-content">
                     <div class="about-text">
                         <h2>I like to build.</h2>
-                        <p>I'm a <span class="highlight">3B Electrical Engineering student</span> at the University of Waterloo. I've built at every layer I've needed to: an RL controller and the paper behind it, RAG pipelines over 300-page regulatory documents, a Qt/C++ motion-control app, PCBs through EMI/EMC compliance, and now <span class="highlight">pipelined fixed-point accelerators in SystemVerilog</span>. Not to collect skills. The problem kept moving.</p>
+                        <p><span class="highlight">3B Electrical Engineering</span> at the University of Waterloo. I started in hardware: PCB design on the Midnight Sun solar car, then boards through EMI/EMC compliance at Harding Technologies. Then I went up the stack.</p>
 
-                        <p>I got here from the other direction. I spent two years doing AI research at <span class="highlight">Wat.AI</span>, leading an 11-person team building a reinforcement learning controller for off-grid microgrids in rural sub-Saharan Africa. It worked: <span class="highlight">23% less diesel per year at equal reliability</span>, and a first-authored paper accepted at CUCAI 2026.</p>
+                        <p>From September 2024 to April 2026 I was at <span class="highlight">Wat.AI</span>, leading an 11-person team on a reinforcement learning controller for off-grid microgrids in rural sub-Saharan Africa. It worked: <span class="highlight">23% less diesel per year at equal reliability</span>, and a first-author paper at CUCAI 2026.</p>
 
-                        <p>Then I looked at deploying it. The low-cost board we needed to run the controller had roughly doubled in price and was unavailable, squeezed by the AI compute shortage. The inference compute cost more than parts of the microgrid it was supposed to control. The algorithm was never the bottleneck. The hardware was. And when compute gets scarce, the people with the least get cut off first.</p>
+                        <p>Then we tried to deploy it. The low-cost board we needed had doubled in price and was out of stock, squeezed by the AI compute shortage. The inference hardware cost more than parts of the microgrid it was supposed to control. The algorithm was never the problem. The hardware was.</p>
 
-                        <p>I called it a pivot. It isn't. I started at the application, hit a wall made of hardware, and went one layer down to work on the wall.</p>
+                        <p>So I went back down. <span class="highlight">ECE 124, 222 and 327</span> done; the MVM and tanh accelerators in ~/hardware came out of that, timing closed through architecture instead of tool flags. This term I'm writing SystemVerilog for the Zynq UltraScale+ on my own time. Along the way: ML Engineer at Health Canada's PMRA, where the summarization tool in ~/software is now in testing with toxicologists, and an experiment at the National Research Council I designed to quantify volumetric airflow from flat-roof vents, with about $100,000 of lab equipment specced for it.</p>
 
-                        <p>Right now the bottleneck is hardware, so that's where I am: working through the <span class="highlight">ECE 124 → ECE 222 → ECE 327 Digital Hardware Systems</span> sequence, closing timing through architecture instead of tool flags. If the bottleneck moves again, I'll move with it. Before this: ML Engineer (Research) at Health Canada's PMRA; an experiment I designed at the National Research Council with roughly $100,000 of lab equipment specced for it; TAing ECE 150 for 400+ first-years.</p>
-
-                        <p><span class="highlight">Cansbridge Fellow</span>, 1 of 15 selected nationally — Asia internship Winter 2027. <span class="highlight">VP Services</span>, Waterloo Engineering Society.</p>
+                        <p>Winter 2027: Asia, on the <span class="highlight">Cansbridge Fellowship</span>. Fall 2027: open.</p>
                     </div>
                 </div>
 
                 <div class="terminal-line">
-<pre class="output tree"><span class="highlight">2026 Jan–Aug</span>       ML Engineer (Research), Health Canada (PMRA)
+<pre class="output tree"><span class="highlight">2026 May–Aug</span>       VP Services, Waterloo Engineering Society
+<span class="highlight">2026 Jan–Aug</span>       ML Engineer (Research), Health Canada (PMRA)
 <span class="highlight">2026 Jan–Apr</span>       Director, Wat.AI
 <span class="highlight">2025 May–2026 Apr</span>  Technical Project Manager, Wat.AI
 <span class="highlight">2025 May–Aug</span>       Research Assistant, National Research Council of Canada
@@ -349,16 +346,14 @@ Restarting display manager…</pre></div>
             <div class="window-content">
                 <pre class="json-doc" id="contact-json">{
   <span class="json-key">"looking_for"</span>: [
-    <span class="json-str">"FPGA / RTL co-op, 2027."</span>,
-    <span class="json-str">"I'm in Asia January through April on the Cansbridge Fellowship."</span>,
-    <span class="json-str">"If you do ASIC design or manufacturing out there, I'd like to talk."</span>,
-    <span class="json-str">"Also happy to hear from anyone who's been through a full tapeout —"</span>,
-    <span class="json-str">"I want to understand how IP licensing and mask costs change the"</span>,
-    <span class="json-str">"decisions I make in RTL."</span>,
+    <span class="json-str">"FPGA / RTL co-op. Winter 2027 in Asia, Fall 2027 anywhere."</span>,
+    <span class="json-str">"Winter is the Cansbridge Fellowship term, so Asia is fixed. The rest is open."</span>,
+    <span class="json-str">"If you do ASIC design or manufacturing there, I want to talk."</span>,
+    <span class="json-str">"If you have been through a full tapeout, tell me how IP licensing and"</span>,
+    <span class="json-str">"mask costs change the decisions I make in RTL."</span>,
     <span class="json-str">""</span>,
-    <span class="json-str">"Hardware is first on the list, not the whole list. ML systems, or the"</span>,
-    <span class="json-str">"software between the model and the silicon — if the work makes compute"</span>,
-    <span class="json-str">"reach more people, I'm interested."</span>
+    <span class="json-str">"Hardware is first on the list, not the whole list. ML systems and the"</span>,
+    <span class="json-str">"software between the model and the silicon count too."</span>
   ],
   <span class="json-key">"email"</span>: <span class="json-str">"<a href="mailto:jordan.jay.leis@gmail.com">jordan.jay.leis@gmail.com</a>"</span>,
   <span class="json-key">"linkedin"</span>: <span class="json-str">"https://www.linkedin.com/in/jordan-leis/"</span>,
@@ -374,17 +369,17 @@ Restarting display manager…</pre></div>
                     </a>
                     <a class="contact-row" href="https://www.linkedin.com/in/jordan-leis/">
                         <img src="/assets/icons/yaru/webbrowser-app.png" alt="">
-                        <span><strong>LinkedIn</strong><span class="contact-description">Professional network and updates</span></span>
+                        <span><strong>LinkedIn</strong><span class="contact-description">jordan-leis</span></span>
                         <span class="contact-arrow" aria-hidden="true">↗</span>
                     </a>
                     <a class="contact-row" href="https://github.com/Jordan-Leis">
                         <img src="/assets/icons/yaru/webbrowser-app.png" alt="">
-                        <span><strong>GitHub</strong><span class="contact-description">Open source projects and code</span></span>
+                        <span><strong>GitHub</strong><span class="contact-description">Jordan-Leis</span></span>
                         <span class="contact-arrow" aria-hidden="true">↗</span>
                     </a>
                     <a class="contact-row" href="https://drive.google.com/file/d/1jHbSPjZX3hLAVGLmC30Kj_MwDdtXkR9Z/view?usp=sharing">
                         <img src="/assets/icons/yaru/application-pdf.png" alt="">
-                        <span><strong>Resume</strong><span class="contact-description">Detailed experience and skills</span></span>
+                        <span><strong>Resume</strong><span class="contact-description">PDF on Google Drive</span></span>
                         <span class="contact-arrow" aria-hidden="true">↗</span>
                     </a>
                 </nav>
