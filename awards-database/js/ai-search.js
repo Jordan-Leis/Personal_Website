@@ -45,6 +45,10 @@ const AISearch = (() => {
   let breakerUntil = 0;
   let inFlight = false;
   let undoSnapshot = null;
+  // The exact question whose interpretation is currently applied. app.js asks
+  // ownsQuery() before releasing the query override on `input`, so a debounce
+  // that fires *after* a fast (edge-cached, ~100ms) AI answer doesn't undo it.
+  let lastAppliedQuestion = null;
 
   const el = {};
 
@@ -85,6 +89,13 @@ const AISearch = (() => {
     el.chips.hidden = true;
     el.undoBtn.hidden = true;
     undoSnapshot = null;
+    lastAppliedQuestion = null;
+  }
+
+  /** True while the text in the box is exactly the question the AI last
+   *  interpreted — i.e. the current filters/override are the AI's, not stale. */
+  function ownsQuery(text) {
+    return lastAppliedQuestion !== null && String(text || "").trim() === lastAppliedQuestion;
   }
 
   /** Chips are built with textContent, never innerHTML: `keywords` is the one
@@ -223,12 +234,21 @@ const AISearch = (() => {
       const data = await ask(question);
       consecutiveFailures = 0;
 
-      const snap = snapshot();
+      // Snapshot only the first time: Undo should return to the student's own
+      // pre-AI state, not to the previous AI answer when they ask twice in a row.
+      const snap = undoSnapshot || snapshot();
       const { used, relaxed, count } = applyWithRelaxation(data.filters, data.keywords);
       undoSnapshot = snap;
+      lastAppliedQuestion = question;
 
       const notes = [];
-      if (data.notes === "area_expanded") {
+      // Explain the widening whenever faculty-wide values sit next to a specific
+      // program — regardless of whether the model added them itself or the
+      // Worker's safety net did (data.notes only reports the latter).
+      const areas = used.areaOfStudy || [];
+      const hasWide = areas.some((a) => a === "All Programs" || a.endsWith("Faculty - All Programs"));
+      const hasSpecific = areas.some((a) => a !== "All Programs" && !a.endsWith("Faculty - All Programs"));
+      if (hasWide && hasSpecific) {
         notes.push("Also included faculty-wide and all-programs awards, which you're eligible for too.");
       }
       if (relaxed.length) {
@@ -314,5 +334,5 @@ const AISearch = (() => {
     if (el.hint) el.hint.hidden = true;
   }
 
-  return { attach, reset };
+  return { attach, reset, ownsQuery };
 })();

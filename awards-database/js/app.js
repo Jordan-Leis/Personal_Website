@@ -266,7 +266,12 @@
     // feature breaks plain search: the box would appear to stop responding
     // after one AI query.
     el.searchInput.addEventListener("input", debounce(() => {
-      queryOverride = null;
+      // Keep the AI's override only if the box still holds the exact question
+      // it interpreted. Without this check, an edge-cached AI answer (~100ms)
+      // lands *before* this 150ms debounce fires, which then wiped the
+      // override and Fuse-searched the whole sentence — 52 results became 1.
+      const aiOwns = typeof AISearch !== "undefined" && AISearch.ownsQuery(el.searchInput.value);
+      if (!aiOwns) queryOverride = null;
       applyFiltersAndSearch(true);
     }, 150));
     el.clearFilters.addEventListener("click", () => {
