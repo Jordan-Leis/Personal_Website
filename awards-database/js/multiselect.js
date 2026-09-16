@@ -148,6 +148,27 @@ const MultiSelect = (() => {
         }
         syncButton();
       },
+      /**
+       * Replace the selection programmatically (used by AI search to show what
+       * it understood).
+       *
+       * Iterates `rows`, not `values`, so a value that isn't a real option is
+       * simply never selected — a free last line of validation on anything
+       * arriving from outside the page.
+       *
+       * Silent by default: setting six filters should trigger one re-render,
+       * not six re-renders of up to 1,533 cards.
+       */
+      set(values, { silent = true } = {}) {
+        const wanted = new Set(Array.isArray(values) ? values : []);
+        selected.clear();
+        for (const r of rows) {
+          r.cb.checked = wanted.has(r.value);
+          if (r.cb.checked) selected.add(r.value);
+        }
+        syncButton();
+        if (!silent) onChange(Array.from(selected));
+      },
       close,
       root,
     };

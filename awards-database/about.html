@@ -88,8 +88,29 @@
       <h2>Your data / privacy</h2>
       <p>
         The "Match my profile" feature stores your selected program/level/area of study only in your own
-        browser's local storage. Nothing you enter here is sent anywhere or seen by anyone else.
+        browser's local storage. It is never sent anywhere.
       </p>
+      <p>
+        <strong>The AI question box is the one exception.</strong> When you press Enter or click
+        "Ask AI", the text of your question is sent to a small server run by this site's maintainer
+        (a Cloudflare Worker), which forwards it to Google's Gemini API. What you should know:
+      </p>
+      <ul>
+        <li><strong>Only the question is sent.</strong> Your profile, your filters, and the award data
+          never leave your browser.</li>
+        <li><strong>The AI only picks filters.</strong> It never sees the awards and never writes any
+          of the text you read here — everything on screen comes from the mirrored directory data.</li>
+        <li><strong>Questions may be cached</strong> at the edge for up to 30 days so that identical
+          questions don't use up the free quota. Please don't type personal information (your name,
+          student number, financial details) into the box — plain descriptions like "2nd year CS
+          student" are all it needs.</li>
+        <li><strong>It's best-effort and free.</strong> It runs on Google's free tier, which is shared by
+          everyone using this site. When that runs out for the day, the box quietly falls back to normal
+          keyword search and tells you so. Nothing breaks.</li>
+        <li>Google's handling of API requests is described in their
+          <a href="https://ai.google.dev/gemini-api/terms" target="_blank" rel="noopener">Gemini API terms</a>;
+          on the free tier, Google may use inputs to improve their products.</li>
+      </ul>
 
       <h2>Questions or issues</h2>
       <p>

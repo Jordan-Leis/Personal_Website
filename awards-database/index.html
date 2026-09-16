@@ -33,7 +33,17 @@
 
     <section class="controls">
       <div class="search-row">
-        <input type="search" id="search-input" placeholder="Search award name, description, eligibility…" aria-label="Search awards">
+        <input type="search" id="search-input" placeholder="Search awards, or ask a question and press Enter…" aria-label="Search awards">
+        <!-- Unhidden by js/ai-search.js only if that script loaded. Everything
+             in this AI block is inert (and invisible) without it. -->
+        <button class="btn btn-primary ai-ask" id="ai-ask-btn" type="button" hidden>✨ Ask AI</button>
+      </div>
+
+      <p class="ai-hint" id="ai-hint" hidden>Press Enter to turn that into filters.</p>
+      <p class="ai-status" id="ai-status" role="status" aria-live="polite" hidden></p>
+      <div class="ai-chips" id="ai-chips" hidden></div>
+      <div class="ai-undo-row">
+        <button class="btn ai-undo" id="ai-undo-btn" type="button" hidden>Undo AI filters</button>
       </div>
 
       <!-- Multi-select filter controls are built by js/multiselect.js -->
@@ -80,6 +90,8 @@
   <script src="js/multiselect.js"></script>
   <script src="js/profile.js"></script>
   <script src="js/search.js"></script>
+  <!-- Optional. app.js guards on window.AISearch, so a 404 here is a non-event. -->
+  <script src="js/ai-search.js"></script>
   <script src="js/app.js"></script>
 </body>
 </html>

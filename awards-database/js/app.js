@@ -4,6 +4,18 @@
   let currentResults = [];
   const filterControls = {};
 
+  // When AI search interprets a question, the student's full sentence stays in
+  // the box (so they can edit it) but Fuse.js gets the AI's tight keywords
+  // instead — a whole natural-language sentence scores terribly against award
+  // text.
+  //
+  // Tri-state, and the distinction matters: null means "no override, search
+  // whatever is in the box" (the normal case), while "" means "the AI said the
+  // filters express everything, so run no text search at all". Collapsing the
+  // two would send the question itself to Fuse and cut a 52-award result down
+  // to 1.
+  let queryOverride = null;
+
   const el = {
     searchInput: document.getElementById("search-input"),
     filterBar: document.getElementById("filter-bar"),
@@ -162,12 +174,13 @@
   function applyFiltersAndSearch(reset) {
     const profile = Profile.get();
     currentResults = AwardSearch.run({
-      query: el.searchInput.value,
+      query: queryOverride !== null ? queryOverride : el.searchInput.value,
       filters: currentFilters(),
       profile,
       matchModeEnabled: el.matchToggle.checked,
     });
     renderResults(reset !== false);
+    return currentResults.length;
   }
 
   function debounce(fn, ms) {
@@ -248,10 +261,24 @@
 
     setupProfileEditor();
 
-    el.searchInput.addEventListener("input", debounce(() => applyFiltersAndSearch(true), 150));
+    // Editing the box means the student is driving again, so drop any AI
+    // keyword override. Missing either of these two resets is the way this
+    // feature breaks plain search: the box would appear to stop responding
+    // after one AI query.
+    el.searchInput.addEventListener("input", debounce(() => {
+      queryOverride = null;
+      applyFiltersAndSearch(true);
+    }, 150));
     el.clearFilters.addEventListener("click", () => {
       el.searchInput.value = "";
+      queryOverride = null;
       MultiSelect.clearAll();
+      // `typeof`, not `window.AISearch`: js/ai-search.js declares AISearch with
+      // `const`, which is a lexical global and never a property of `window`
+      // (same as MultiSelect and AwardSearch).
+      if (typeof AISearch !== "undefined") {
+        try { AISearch.reset(); } catch (e) { /* AI layer is optional */ }
+      }
       applyFiltersAndSearch(true);
     });
     el.loadMoreBtn.addEventListener("click", () => {
@@ -275,6 +302,26 @@
 
     applyFiltersAndSearch(true);
     openAwardFromUrl(awards);
+
+    // Optional AI layer, wired up last and guarded on both sides: if
+    // js/ai-search.js is missing or throws, everything above has already run
+    // and the page is exactly the site it was before this feature existed.
+    if (typeof AISearch !== "undefined") {
+      try {
+        AISearch.attach({
+          input: el.searchInput,
+          controls: filterControls,
+          rerun: () => applyFiltersAndSearch(true),
+          getQuery: () => el.searchInput.value,
+          setQuery: (v) => { el.searchInput.value = v; },
+          getQueryOverride: () => queryOverride,
+          // null clears the override; a string (including "") sets it.
+          setQueryOverride: (v) => { queryOverride = typeof v === "string" ? v : null; },
+        });
+      } catch (e) {
+        console.warn("AI search unavailable:", e);
+      }
+    }
   }
 
   main();

@@ -623,3 +623,110 @@ body.modal-open {
 .ms-group-heading[hidden] {
   display: none !important;
 }
+
+/* ------------------------------------------------------------------ AI search
+   Every rule here is scoped to .ai-*; nothing above is modified. All of this
+   markup ships hidden and is only revealed by js/ai-search.js. */
+
+.ai-ask {
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.ai-ask.is-loading {
+  opacity: 0.7;
+  cursor: progress;
+}
+
+.ai-hint,
+.ai-status {
+  margin: 0;
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  animation: fade-in 0.2s ease-out;
+}
+
+.ai-status.ai-warn {
+  color: var(--text);
+  background: var(--disclaimer-bg);
+  border: 1px solid var(--disclaimer-border);
+  border-radius: 8px;
+  padding: 0.45rem 0.7rem;
+}
+
+.ai-status.ai-busy::after {
+  content: "";
+  display: inline-block;
+  width: 0.6em;
+  height: 0.6em;
+  margin-left: 0.45em;
+  border: 2px solid var(--accent);
+  border-right-color: transparent;
+  border-radius: 50%;
+  vertical-align: baseline;
+  animation: ai-spin 0.7s linear infinite;
+}
+
+@keyframes ai-spin {
+  to { transform: rotate(360deg); }
+}
+
+.ai-chips {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+  animation: fade-in 0.2s ease-out;
+}
+
+.ai-chip-intro {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.ai-chip {
+  background: var(--accent-soft);
+  color: var(--accent);
+  border: 1px solid transparent;
+  border-radius: 999px;
+  padding: 0.15rem 0.6rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  animation: ai-chip-in 0.22s cubic-bezier(0.2, 0.8, 0.3, 1) both;
+}
+
+.ai-chip-keywords {
+  background: var(--tag-bg);
+  color: var(--tag-text);
+  font-style: italic;
+}
+
+.ai-chip-note {
+  flex-basis: 100%;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+@keyframes ai-chip-in {
+  from { opacity: 0; transform: translateY(4px) scale(0.94); }
+  to   { opacity: 1; transform: none; }
+}
+
+.ai-undo-row:empty { display: none; }
+
+/* Match the [hidden] handling the .ms-* rules above needed: these are flex
+   containers, so an author display value would otherwise beat [hidden]. */
+.ai-chips[hidden] {
+  display: none !important;
+}
+
+@media (max-width: 520px) {
+  .search-row {
+    flex-wrap: wrap;
+  }
+
+  .ai-ask {
+    width: 100%;
+  }
+}
