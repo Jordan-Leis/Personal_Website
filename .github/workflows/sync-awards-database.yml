@@ -25,6 +25,9 @@ concurrency:
 
 permissions:
   contents: write
+  # Needed only to dispatch pages.yml at the end (see the comment on that
+  # step) — this job never touches any other workflow's permissions.
+  actions: write
 
 jobs:
   sync:
@@ -94,6 +97,7 @@ jobs:
       # ./_site and leaves it alone for the same reason.
 
       - name: Commit if the mirrored content actually changed
+        id: commit
         run: |
           set -euo pipefail
           # 'git add' first, then check the *index*: a bare `git diff --quiet`
@@ -126,3 +130,18 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git commit -m "Sync awards-database from uw-awards-search@${{ steps.src.outputs.sha }}"
           git push
+          echo "pushed=true" >> "$GITHUB_OUTPUT"
+
+      # A push made with the default GITHUB_TOKEN does NOT trigger other
+      # workflows' `on: push` (GitHub's anti-recursion rule for that token) —
+      # discovered the hard way: the commit above landed on main, but
+      # pages.yml never fired, and its own hourly schedule doesn't rescue this
+      # either (its publish gate is "did the daily puzzle change", not "did
+      # anything change", so a schedule tick here just no-ops the deploy). So
+      # explicitly ask for a publish; workflow_dispatch across workflows via
+      # the API is unaffected by the anti-recursion rule.
+      - name: Trigger the Pages publish (git push doesn't cascade to it)
+        if: steps.commit.outputs.pushed == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run pages.yml --repo "${{ github.repository }}"
