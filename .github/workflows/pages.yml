@@ -52,7 +52,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: Jordan-Leis/linxicon-optimal-solver
-          ref: a1962f33fa50c75588bbd1323f63af4bb51df86e
+          ref: 856738bea382e3562295178ed44c8dda575c98f9
           path: solver
           persist-credentials: false
       - name: Restore solver datasets and caches
@@ -86,6 +86,16 @@ jobs:
               f.write('changed='+str(data['changed']).lower()+'\n')
           with open(os.environ['GITHUB_STEP_SUMMARY'],'a') as f:
               f.write('### Atlas update\n```json\n'+json.dumps(data,indent=2)+'\n```\n')
+          if data.get('outcome')=='stale':
+              # A stale result keeps the last complete bundle, which is right for a brief outage
+              # but hid a broken puzzle fetch for a whole day. Fail once the grace window after
+              # the 00:00 UTC rollover has passed and the site is still on an earlier puzzle.
+              import datetime
+              print('::warning::Atlas not refreshed: '+str(data.get('error')))
+              latest=json.load(open('linxicon-solver/data/latest.json'))
+              now=datetime.datetime.now(datetime.timezone.utc)
+              if latest['game']['date']<now.date().isoformat() and now.hour>=2:
+                  raise SystemExit('Published atlas is still '+latest['game']['date']+' after the rollover grace window: '+str(data.get('error')))
           PY
       - name: Keep the schedule enabled
         # GitHub disables scheduled workflows after 60 days without repository activity;
