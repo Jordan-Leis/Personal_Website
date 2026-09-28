@@ -85,7 +85,42 @@ jobs:
           test -f _site/awards-database/js/app.js
           test -f _site/awards-database/data/awards.json
           test -f _site/awards-database/data/meta.json
+          # filters.json and sources.json are fetched by the awards page but
+          # guarded, so losing them does NOT break it visibly -- it silently
+          # drops to six hardcoded filters and hides the "More sources" row.
+          # That is exactly the kind of quiet degradation nobody notices, so
+          # assert them here rather than trusting rsync.
+          test -f _site/awards-database/data/filters.json
+          test -f _site/awards-database/data/sources.json
           echo "Build OK: blog and awards-database both present."
+
+      # awards.json holds only the always-loaded sources; the rest live in
+      # data/sources/<id>.json and are fetched on demand. A shard listed in
+      # sources.json but missing from the build is a chip that fails when a
+      # visitor clicks it, which is invisible until someone does.
+      - name: Verify every source shard sources.json promises is actually present
+        run: |
+          python3 - <<'PY'
+          import json, pathlib, sys
+          root = pathlib.Path("_site/awards-database/data")
+          sources = json.loads((root / "sources.json").read_text(encoding="utf-8"))
+          missing = []
+          shards = 0
+          for source_id, entry in sorted(sources.items()):
+              shard = entry.get("shard_path")
+              if not shard or entry.get("status") != "active":
+                  continue
+              shards += 1
+              path = root / shard
+              if not path.is_file():
+                  missing.append(shard)
+                  continue
+              n = len(json.loads(path.read_text(encoding="utf-8")))
+              print(f"  {source_id}: {shard} ({n} awards)")
+          if missing:
+              sys.exit("Missing shard(s) promised by sources.json: " + ", ".join(missing))
+          print(f"Shard check OK: {shards} shard(s) present.")
+          PY
 
       # No cleanup step here on purpose. jekyll-build-pages is a Docker action
       # that runs as root, so _site ends up root-owned and `rm -rf _site` fails
