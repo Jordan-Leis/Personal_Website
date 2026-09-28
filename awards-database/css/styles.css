@@ -127,10 +127,76 @@ main {
   color: var(--text);
 }
 
+/* The filter bar is built at runtime from data/filters.json, so it holds an
+   unknown number of controls in an unknown number of groups. It is a column of
+   labelled groups, each of which wraps its own controls. */
 .filter-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: 0.6rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.filter-group {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.filter-group__label {
+  flex: 0 0 100%;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+/* Controls sit side by side and wrap, rather than being forced into equal
+   grid columns: a year-of-study picker and a program picker with 180 entries
+   do not want the same width. */
+.filter-group > * {
+  flex: 1 1 170px;
+  min-width: 0;
+}
+
+.filter-range,
+.filter-bool {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 0.85rem;
+}
+
+.filter-bool {
+  padding: 0.5rem 0.6rem;
+}
+
+.filter-range__label {
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.filter-range__input {
+  width: 100%;
+  min-width: 0;
+  padding: 0.2rem 0.3rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+}
+
+.filter-range__input:focus-visible,
+.filter-bool:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
 }
 
 .filter-grid select {

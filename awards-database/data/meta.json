@@ -1,8 +1,22 @@
 {
-  "generated_at_utc": "2026-09-11T03:21:33+00:00",
-  "last_updated": "2026-09-11",
-  "total_awards": 1533,
-  "scraped_awards": 1533,
+  "generated_at_utc": "2026-09-27T20:04:32+00:00",
+  "last_updated": "2026-09-27",
+  "total_awards": 1588,
+  "scraped_awards": 1588,
   "scrape_error_count": 0,
+  "sources": {
+    "alberta-student-aid": {
+      "total": 55,
+      "scraped": 55,
+      "errors": 0,
+      "source_url": "https://studentaid.alberta.ca/scholarships/"
+    },
+    "uw": {
+      "total": 1533,
+      "scraped": 1533,
+      "errors": 0,
+      "source_url": "https://uwaterloo.ca/awards-directory/"
+    }
+  },
   "source_url": "https://uwaterloo.ca/awards-directory/"
 }

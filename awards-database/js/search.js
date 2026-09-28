@@ -1,12 +1,23 @@
 // Fuse.js setup + the combined search/filter/profile pipeline.
+//
+// Filtering is driven by data/filters.json, which is compiled from
+// tools/facets.py. The two implementations are deliberately mirror images: the
+// facet/gate distinction and the "unstated is unconstrained" rule are stated
+// once in Python and once here, and tests/test_filters.py pins the Python
+// side. Previously this file hardcoded six filters with subtly different
+// semantics from the CLI's — most visibly, it treated affiliation as an OR
+// facet while find_awards.py treated it as an eligibility gate, so the site
+// and the tool disagreed about who qualified for 94 awards.
 const AwardSearch = (() => {
   let fuse = null;
   let allAwards = [];
+  let spec = { facets: [], groups: [] };
 
   const FACULTY_WIDE_SUFFIX = "Faculty - All Programs";
 
-  function init(awards) {
+  function init(awards, filterSpec) {
     allAwards = awards;
+    if (filterSpec && Array.isArray(filterSpec.facets)) spec = filterSpec;
     fuse = new Fuse(awards, {
       includeScore: false,
       threshold: 0.32,
@@ -21,32 +32,100 @@ const AwardSearch = (() => {
     });
   }
 
+  function getSpec() {
+    return spec;
+  }
+
+  // Facets a given corpus actually has values for. A filter with nothing
+  // behind it is noise, so the UI hides it — that is what keeps the eligibility
+  // filters invisible until extraction has run, without any extra flags.
+  function activeFacets() {
+    return spec.facets.filter((f) => {
+      if (f.kind === "range" || f.kind === "bool") {
+        return allAwards.some((a) => a[f.key] !== null && a[f.key] !== undefined);
+      }
+      return valuesFor(f).length > 0;
+    });
+  }
+
   function textSearch(query) {
-    const q = query.trim();
+    const q = (query || "").trim();
     if (!q) return allAwards;
     return fuse.search(q).map((r) => r.item);
   }
 
-  // Each filter holds an array of selected values. Empty = no constraint.
-  // Values within one filter are OR'd; separate filters are AND'd.
-  function matchesAny(awardValues, selected) {
-    if (!selected || selected.length === 0) return true;
-    if (!awardValues || awardValues.length === 0) return false;
-    return selected.some((v) => awardValues.includes(v));
+  function awardValues(award, facet) {
+    const raw = award[facet.key];
+    if (raw === null || raw === undefined) return [];
+    return Array.isArray(raw) ? raw : [raw];
   }
 
-  function passesStructuredFilters(award, f) {
-    if (f.career && f.career.length && !f.career.includes(award.career)) return false;
-    if (!matchesAny(award.levels, f.level)) return false;
-    if (!matchesAny(award.award_types, f.awardType)) return false;
-    if (!matchesAny(award.terms, f.term)) return false;
-    if (!matchesAny(award.affiliations, f.affiliation)) return false;
-    if (!matchesAny(award.areas_of_study, f.areaOfStudy)) return false;
+  /**
+   * One facet's verdict for one award. Mirrors facets.matches() in Python.
+   *
+   * "facet"  an award that states no value is UNCONSTRAINED and passes. This
+   *          is why a source that publishes no program taxonomy (Alberta
+   *          Student Aid) does not vanish when a program filter is applied.
+   * "gate"   an award that states values is RESTRICTED to them; one that
+   *          states none is open to everyone. Affiliation works this way.
+   */
+  function matchesFacet(award, facet, selected) {
+    if (facet.kind === "range") {
+      if (!selected) return true;
+      const lo = selected.min ?? null;
+      const hi = selected.max ?? null;
+      if (lo === null && hi === null) return true;
+      const value = award[facet.key];
+      // Deliberate exception to "unstated is unconstrained" — see the matching
+      // comment in tools/facets.py. Award value is a preference, not an
+      // eligibility criterion, and letting nulls through made this filter
+      // match 2,795 of 4,016 awards.
+      if (value === null || value === undefined) return false;
+      if (lo !== null && value < lo) return false;
+      if (hi !== null && value > hi) return false;
+      return true;
+    }
+
+    if (facet.kind === "bool") {
+      if (selected === null || selected === undefined || selected === "") return true;
+      const has = Boolean(award[facet.key]);
+      return has === (selected === true || selected === "true");
+    }
+
+    const values = awardValues(award, facet);
+
+    if (facet.semantics === "tag") {
+      // Browse semantics: no selection shows everything; a selection shows
+      // only awards carrying it. See tools/facets.py for why affiliation is a
+      // tag and not a gate.
+      if (!selected || selected.length === 0) return true;
+      return values.some((v) => selected.includes(v));
+    }
+
+    if (facet.semantics === "gate") {
+      if (values.length === 0) return true;
+      const chosen = selected || [];
+      // An empty selection is "not answered", not "none of these apply". See
+      // the matching comment in tools/facets.py: declaring nothing must hide
+      // nothing.
+      if (chosen.length === 0) return true;
+      return values.some((v) => chosen.includes(v));
+    }
+
+    if (!selected || selected.length === 0) return true;
+    if (values.length === 0) return true;
+    return values.some((v) => selected.includes(v));
+  }
+
+  function passesStructuredFilters(award, filters) {
+    for (const facet of spec.facets) {
+      if (!matchesFacet(award, facet, (filters || {})[facet.filter_key])) return false;
+    }
     return true;
   }
 
   function run({ query, filters, profile, matchModeEnabled }) {
-    let results = textSearch(query || "");
+    let results = textSearch(query);
     results = results.filter((a) => passesStructuredFilters(a, filters || {}));
     if (matchModeEnabled && profile) {
       results = results.filter((a) => Profile.matchesAward(a, profile));
@@ -54,40 +133,65 @@ const AwardSearch = (() => {
     return results;
   }
 
-  function uniqueValues(arrayKey) {
-    const set = new Set();
+  // Distinct values for a facet, most-common first then alphabetical, each
+  // with its count so the UI can show how much a filter would leave.
+  function valuesFor(facet) {
+    const counts = new Map();
     for (const award of allAwards) {
-      for (const v of award[arrayKey] || []) set.add(v);
+      for (const v of awardValues(award, facet)) {
+        if (v === null || v === undefined || v === "") continue;
+        counts.set(v, (counts.get(v) || 0) + 1);
+      }
     }
-    return Array.from(set).sort((a, b) => a.localeCompare(b));
+    return Array.from(counts.entries())
+      .sort((a, b) => b[1] - a[1] || String(a[0]).localeCompare(String(b[0])))
+      .map(([value, count]) => ({ value, count }));
   }
 
-  function uniqueScalarValues(key) {
-    const set = new Set();
-    for (const award of allAwards) {
-      if (award[key]) set.add(award[key]);
-    }
-    return Array.from(set).sort((a, b) => a.localeCompare(b));
+  function rangeFor(facet) {
+    const values = allAwards
+      .map((a) => a[facet.key])
+      .filter((v) => typeof v === "number" && !Number.isNaN(v));
+    if (!values.length) return null;
+    return { min: Math.min(...values), max: Math.max(...values) };
   }
 
   /**
    * Areas of study split into faculty-wide entries vs individual programs.
    *
-   * The source directory lists these as one flat alphabetical list and exposes
-   * no program-to-faculty mapping (a faculty filter there returns only awards
-   * tagged faculty-wide — it does not expand into that faculty's programs), so
-   * grouping programs under their faculty isn't derivable from the data. This
-   * two-way split is the grouping the data does support.
+   * The source directories list these as one flat alphabetical list and expose
+   * no program-to-faculty mapping, so grouping programs under their faculty
+   * isn't derivable from the data. This two-way split is the grouping the data
+   * does support.
    */
-  function areaOfStudyGroups() {
-    const all = uniqueValues("areas_of_study");
-    const facultyWide = all.filter((v) => v.includes(FACULTY_WIDE_SUFFIX) || v === "All Programs");
-    const programs = all.filter((v) => !facultyWide.includes(v));
+  function groupedValues(facet) {
+    const values = valuesFor(facet).map((v) => v.value);
+    if (facet.filter_key !== "areaOfStudy") return [{ name: null, values }];
+    const facultyWide = values.filter(
+      (v) => String(v).includes(FACULTY_WIDE_SUFFIX) || v === "All Programs"
+    );
+    const programs = values.filter((v) => !facultyWide.includes(v));
     const groups = [];
     if (facultyWide.length) groups.push({ name: "Faculty-wide", values: facultyWide });
     if (programs.length) groups.push({ name: "Specific programs", values: programs });
     return groups;
   }
 
-  return { init, run, uniqueValues, uniqueScalarValues, areaOfStudyGroups };
+  // Retained for backward compatibility with any caller still using the
+  // pre-spec API (ai-search.js reads these).
+  function uniqueValues(arrayKey) {
+    return valuesFor({ key: arrayKey }).map((v) => v.value).sort((a, b) => a.localeCompare(b));
+  }
+  function uniqueScalarValues(key) {
+    return uniqueValues(key);
+  }
+  function areaOfStudyGroups() {
+    return groupedValues({ filter_key: "areaOfStudy", key: "areas_of_study" });
+  }
+
+  return {
+    init, run, getSpec, activeFacets, valuesFor, rangeFor, groupedValues,
+    matchesFacet, passesStructuredFilters,
+    uniqueValues, uniqueScalarValues, areaOfStudyGroups,
+  };
 })();

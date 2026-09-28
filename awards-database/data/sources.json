@@ -1,0 +1,148 @@
+{
+  "alberta-student-aid": {
+    "id": "alberta-student-aid",
+    "name": "Alberta Student Aid Scholarships",
+    "short_name": "Alberta Student Aid",
+    "status": "active",
+    "source_url": "https://studentaid.alberta.ca/scholarships/",
+    "defaults": {
+      "residency": {
+        "value": [
+          "AB"
+        ],
+        "confidence": 0.9,
+        "src": "Implicit: Alberta Student Aid scholarships require Alberta residency. Most detail pages restate this, but the few that do not still require it."
+      }
+    },
+    "disclaimer": "Unofficial mirror of the Alberta Student Aid scholarship listings. Not affiliated with or endorsed by the Government of Alberta. Verify anything time-sensitive against https://studentaid.alberta.ca/scholarships/."
+  },
+  "awardspring": {
+    "id": "awardspring",
+    "name": "AwardSpring (McMaster, Toronto Metropolitan, UCalgary)",
+    "short_name": "AwardSpring",
+    "status": "blocked",
+    "source_url": "https://mcmaster.awardspring.ca/",
+    "blocked_reason": "robots.txt returns \"User-agent: * / Disallow: /\" on every AwardSpring tenant (verified 2026-09-26). The data is public and unauthenticated and the JSON API is trivially parsable, but site-wide robots exclusion is respected.",
+    "manual_check_url": "https://mcmaster.awardspring.ca/AS/public/scholarships"
+  },
+  "concordia": {
+    "id": "concordia",
+    "name": "Concordia University Awards",
+    "short_name": "Concordia",
+    "status": "planned",
+    "source_url": "https://concordia.academicworks.ca/opportunities",
+    "defaults": {
+      "institution": {
+        "value": [
+          "concordia-university"
+        ],
+        "confidence": 0.95,
+        "src": "Implicit: Concordia University Awards own award listing."
+      }
+    },
+    "disclaimer": "Unofficial mirror of the Concordia University Awards listings. Not affiliated with or endorsed by the institution."
+  },
+  "scholarshipscanada": {
+    "id": "scholarshipscanada",
+    "name": "ScholarshipsCanada.com",
+    "short_name": "ScholarshipsCanada",
+    "status": "blocked",
+    "source_url": "https://www.scholarshipscanada.com/",
+    "blocked_reason": "Crawl permission unverifiable — Cloudflare 403s /robots.txt and the Terms of Service page 404s (checked 2026-09-26). Unreadable directives are treated as disallow. Resolve by contacting the operator for written permission.",
+    "manual_check_url": "https://www.scholarshipscanada.com/Scholarships/"
+  },
+  "scholartree": {
+    "id": "scholartree",
+    "name": "ScholarTree",
+    "short_name": "ScholarTree",
+    "status": "blocked",
+    "source_url": "https://scholartree.ca/",
+    "blocked_reason": "Prohibited by robots.txt (Disallow: /scholarships and /graphql) AND by Terms of Service §3, which forbids automated or manual extraction. Account also required to browse. Not revisitable without explicit written permission.",
+    "manual_check_url": "https://scholartree.ca/scholarships"
+  },
+  "trent": {
+    "id": "trent",
+    "name": "Trent University Awards",
+    "short_name": "Trent",
+    "status": "planned",
+    "source_url": "https://trentu.academicworks.ca/opportunities",
+    "defaults": {
+      "institution": {
+        "value": [
+          "trent-university"
+        ],
+        "confidence": 0.95,
+        "src": "Implicit: Trent University Awards own award listing."
+      }
+    },
+    "disclaimer": "Unofficial mirror of the Trent University Awards listings. Not affiliated with or endorsed by the institution."
+  },
+  "umanitoba": {
+    "id": "umanitoba",
+    "name": "University of Manitoba Awards",
+    "short_name": "UManitoba",
+    "status": "planned",
+    "source_url": "https://umanitoba.academicworks.ca/opportunities",
+    "defaults": {
+      "institution": {
+        "value": [
+          "university-of-manitoba"
+        ],
+        "confidence": 0.95,
+        "src": "Implicit: University of Manitoba Awards own award listing."
+      }
+    },
+    "disclaimer": "Unofficial mirror of the University of Manitoba Awards listings. Not affiliated with or endorsed by the institution."
+  },
+  "uofa": {
+    "id": "uofa",
+    "name": "University of Alberta Awards",
+    "short_name": "UAlberta",
+    "status": "planned",
+    "source_url": "https://alberta.academicworks.ca/opportunities",
+    "defaults": {
+      "institution": {
+        "value": [
+          "university-of-alberta"
+        ],
+        "confidence": 0.95,
+        "src": "Implicit: the University of Alberta's own award listing. A small number of entries are externally tenable, so this is 0.95 rather than 1.0."
+      }
+    },
+    "disclaimer": "Unofficial mirror of the University of Alberta award listings. Not affiliated with or endorsed by the University of Alberta."
+  },
+  "usask": {
+    "id": "usask",
+    "name": "University of Saskatchewan Awards",
+    "short_name": "USask",
+    "status": "planned",
+    "source_url": "https://usask.academicworks.ca/opportunities",
+    "defaults": {
+      "institution": {
+        "value": [
+          "university-of-saskatchewan"
+        ],
+        "confidence": 0.95,
+        "src": "Implicit: University of Saskatchewan Awards own award listing."
+      }
+    },
+    "disclaimer": "Unofficial mirror of the University of Saskatchewan Awards listings. Not affiliated with or endorsed by the institution."
+  },
+  "uw": {
+    "id": "uw",
+    "name": "University of Waterloo Awards Directory",
+    "short_name": "Waterloo",
+    "status": "active",
+    "source_url": "https://uwaterloo.ca/awards-directory/",
+    "defaults": {
+      "institution": {
+        "value": [
+          "university-of-waterloo"
+        ],
+        "confidence": 1.0,
+        "src": "Implicit: this is the University of Waterloo's own awards directory."
+      }
+    },
+    "disclaimer": "Unofficial mirror of the University of Waterloo Awards Directory. Not affiliated with or endorsed by the University of Waterloo, and not an official API. Verify anything time-sensitive against https://uwaterloo.ca/awards-directory/."
+  }
+}

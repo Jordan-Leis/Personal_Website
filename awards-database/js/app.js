@@ -2,7 +2,7 @@
   const PAGE_SIZE = 50;
   let visibleCount = PAGE_SIZE;
   let currentResults = [];
-  const filterControls = {};
+  let filterControls = {};
 
   // When AI search interprets a question, the student's full sentence stays in
   // the box (so they can edit it) but Fuse.js gets the AI's tight keywords
@@ -50,15 +50,45 @@
     }
   }
 
+  // If data/filters.json cannot be loaded, fall back to the six filters this
+  // page shipped with, so the search stays fully usable.
+  const FALLBACK_FILTER_SPEC = {
+    version: 0,
+    groups: ["Study", "Award", "Eligibility"],
+    facets: [
+      { key: "career", filter_key: "career", label: "Career", kind: "scalar", semantics: "facet", group: "Study" },
+      { key: "levels", filter_key: "level", label: "Year of study", kind: "list", semantics: "facet", group: "Study" },
+      { key: "areas_of_study", filter_key: "areaOfStudy", label: "Program", kind: "list", semantics: "facet", group: "Study", searchable: true },
+      { key: "award_types", filter_key: "awardType", label: "Award type", kind: "list", semantics: "facet", group: "Award" },
+      { key: "terms", filter_key: "term", label: "Term", kind: "list", semantics: "facet", group: "Award" },
+      { key: "affiliations", filter_key: "affiliation", label: "Eligibility group", kind: "list", semantics: "gate", group: "Eligibility" },
+    ],
+  };
+
   function currentFilters() {
-    return {
-      career: filterControls.career.value,
-      level: filterControls.level.value,
-      awardType: filterControls.awardType.value,
-      term: filterControls.term.value,
-      affiliation: filterControls.affiliation.value,
-      areaOfStudy: filterControls.areaOfStudy.value,
-    };
+    const out = {};
+    for (const [key, control] of Object.entries(filterControls)) {
+      out[key] = control.value;
+    }
+    return out;
+  }
+
+  function activeFilterCount() {
+    let n = 0;
+    for (const control of Object.values(filterControls)) {
+      const v = control.value;
+      if (Array.isArray(v)) n += v.length ? 1 : 0;
+      else if (v && typeof v === "object") n += (v.min != null || v.max != null) ? 1 : 0;
+      else if (v !== null && v !== undefined && v !== "") n += 1;
+    }
+    return n;
+  }
+
+  function clearAllFilters() {
+    for (const control of Object.values(filterControls)) {
+      if (control.clear) control.clear();
+    }
+    applyFiltersAndSearch(true);
   }
 
   function snippetFor(award) {
@@ -151,7 +181,7 @@
     el.modalBackdrop.hidden = false;
     document.body.classList.add("modal-open");
     if (history.pushState) {
-      history.pushState({ award: award.award_id }, "", `?award=${encodeURIComponent(award.award_id)}`);
+      history.pushState({ award: permalinkId(award) }, "", `?award=${encodeURIComponent(permalinkId(award))}`);
     }
   }
 
@@ -163,11 +193,24 @@
     }
   }
 
+  // Permalinks now carry award_uid ("<source>:<native id>"), because award_id
+  // is only unique within a single source. Links shared before that change
+  // carry a bare award_id, so both forms resolve: uid first, then the legacy
+  // bare id. Dropping the fallback would silently break every link already in
+  // the wild.
+  function findByPermalinkId(awards, id) {
+    return awards.find((a) => a.award_uid === id) || awards.find((a) => a.award_id === id);
+  }
+
+  function permalinkId(award) {
+    return award.award_uid || award.award_id;
+  }
+
   function openAwardFromUrl(awards) {
     const params = new URLSearchParams(window.location.search);
     const id = params.get("award");
     if (!id) return;
-    const award = awards.find((a) => a.award_id === id);
+    const award = findByPermalinkId(awards, id);
     if (award) openModal(award);
   }
 
@@ -191,19 +234,107 @@
     };
   }
 
+  // Every filter is built from data/filters.json, which is compiled from
+  // tools/facets.py. Adding a filter is a Python edit, not a JS one — and the
+  // eligibility filters (province, citizenship, identity, grade floor) appear
+  // here automatically once extraction populates them, because activeFacets()
+  // hides any facet the current corpus has no values for.
   function buildFilters() {
     const onChange = () => applyFiltersAndSearch(true);
-    const mk = (label, groups, searchable) =>
-      MultiSelect.create({ mount: el.filterBar, label, groups, onChange, searchable });
+    filterControls = {};
 
-    filterControls.career = mk("All careers", [{ values: AwardSearch.uniqueScalarValues("career") }]);
-    filterControls.level = mk("All levels", [{ values: AwardSearch.uniqueValues("levels") }]);
-    filterControls.awardType = mk("All award types", [{ values: AwardSearch.uniqueValues("award_types") }]);
-    filterControls.term = mk("All terms", [{ values: AwardSearch.uniqueValues("terms") }]);
-    filterControls.affiliation = mk("All affiliations", [{ values: AwardSearch.uniqueValues("affiliations") }]);
-    // ~180 entries, so this one gets a type-ahead box plus the faculty-wide /
-    // specific-program grouping.
-    filterControls.areaOfStudy = mk("All areas of study", AwardSearch.areaOfStudyGroups(), true);
+    const facets = AwardSearch.activeFacets();
+    const byGroup = new Map();
+    for (const facet of facets) {
+      const group = facet.group || "Filters";
+      if (!byGroup.has(group)) byGroup.set(group, []);
+      byGroup.get(group).push(facet);
+    }
+
+    for (const [groupName, groupFacets] of byGroup) {
+      const section = document.createElement("div");
+      section.className = "filter-group";
+      const heading = document.createElement("span");
+      heading.className = "filter-group__label";
+      heading.textContent = groupName;
+      section.appendChild(heading);
+      el.filterBar.appendChild(section);
+
+      for (const facet of groupFacets) {
+        filterControls[facet.filter_key] = buildControl(section, facet, onChange);
+      }
+    }
+  }
+
+  function buildControl(mount, facet, onChange) {
+    if (facet.kind === "range") return buildRangeControl(mount, facet, onChange);
+    if (facet.kind === "bool") return buildBoolControl(mount, facet, onChange);
+
+    const groups = AwardSearch.groupedValues(facet).map((g) => ({
+      name: g.name,
+      values: g.values,
+    }));
+    // MultiSelect already exposes { value, clear }, which is the whole
+    // contract buildFilters needs from a control.
+    return MultiSelect.create({
+      mount,
+      label: `Any ${facet.label.toLowerCase()}`,
+      groups,
+      onChange,
+      searchable: Boolean(facet.searchable) || groups.reduce((n, g) => n + g.values.length, 0) > 12,
+    });
+  }
+
+  function buildRangeControl(mount, facet, onChange) {
+    const bounds = AwardSearch.rangeFor(facet) || { min: 0, max: 0 };
+    const wrap = document.createElement("span");
+    wrap.className = "filter-range";
+    wrap.title = facet.help || "";
+    const unit = facet.unit || "";
+    const mkInput = (placeholder) => {
+      const i = document.createElement("input");
+      i.type = "number";
+      i.className = "filter-range__input";
+      i.placeholder = placeholder;
+      i.setAttribute("aria-label", `${facet.label} ${placeholder}`);
+      i.addEventListener("change", onChange);
+      return i;
+    };
+    const label = document.createElement("span");
+    label.className = "filter-range__label";
+    label.textContent = facet.label;
+    const min = mkInput(`min ${unit}${bounds.min}`.trim());
+    const max = mkInput(`max ${unit}${bounds.max}`.trim());
+    wrap.append(label, min, document.createTextNode("–"), max);
+    mount.appendChild(wrap);
+
+    return {
+      get value() {
+        const lo = min.value === "" ? null : Number(min.value);
+        const hi = max.value === "" ? null : Number(max.value);
+        return lo === null && hi === null ? null : { min: lo, max: hi };
+      },
+      clear() { min.value = ""; max.value = ""; },
+    };
+  }
+
+  function buildBoolControl(mount, facet, onChange) {
+    const select = document.createElement("select");
+    select.className = "filter-bool";
+    select.title = facet.help || "";
+    select.setAttribute("aria-label", facet.label);
+    for (const [value, text] of [["", `${facet.label}: any`], ["true", "Yes"], ["false", "No"]]) {
+      const opt = document.createElement("option");
+      opt.value = value;
+      opt.textContent = text;
+      select.appendChild(opt);
+    }
+    select.addEventListener("change", onChange);
+    mount.appendChild(select);
+    return {
+      get value() { return select.value === "" ? null : select.value === "true"; },
+      clear() { select.value = ""; },
+    };
   }
 
   function setupProfileEditor() {
@@ -252,7 +383,19 @@
       return;
     }
 
-    AwardSearch.init(awards);
+    // The filter spec is fetched separately and deliberately NOT awaited with
+    // the two required files: a missing or malformed filters.json must degrade
+    // to the built-in fallback, never blank the page. Same reasoning as the
+    // guard around ai-search.js.
+    let filterSpec = null;
+    try {
+      const resp = await fetch("data/filters.json");
+      if (resp.ok) filterSpec = await resp.json();
+    } catch (e) {
+      filterSpec = null;
+    }
+
+    AwardSearch.init(awards, filterSpec || FALLBACK_FILTER_SPEC);
     buildFilters();
 
     populateSelect(el.profileCareer, AwardSearch.uniqueScalarValues("career"), "No preference");

@@ -1,9 +1,23 @@
 {
-  "schema_version": 1,
-  "generated_at_utc": "2026-09-11T03:21:33+00:00",
-  "last_updated": "2026-09-11",
-  "total_awards": 1533,
-  "disclaimer": "Unofficial mirror of the University of Waterloo Awards Directory. Not affiliated with or endorsed by the University of Waterloo, and not an official API. Verify anything time-sensitive against https://uwaterloo.ca/awards-directory/. Refreshed ~3x/year — please cache rather than polling.",
+  "schema_version": 2,
+  "generated_at_utc": "2026-09-27T20:04:32+00:00",
+  "last_updated": "2026-09-27",
+  "total_awards": 1588,
+  "sources": {
+    "alberta-student-aid": {
+      "total": 55,
+      "scraped": 55,
+      "errors": 0,
+      "source_url": "https://studentaid.alberta.ca/scholarships/"
+    },
+    "uw": {
+      "total": 1533,
+      "scraped": 1533,
+      "errors": 0,
+      "source_url": "https://uwaterloo.ca/awards-directory/"
+    }
+  },
+  "disclaimer": "Unofficial aggregation of publicly listed Canadian student awards. Not an official API and not affiliated with or endorsed by any listed institution. Verify anything time-sensitive against the original source. Refreshed ~3x/year — please cache rather than polling. Unofficial mirror of the Alberta Student Aid scholarship listings. Not affiliated with or endorsed by the Government of Alberta. Verify anything time-sensitive against https://studentaid.alberta.ca/scholarships/. Unofficial mirror of the University of Waterloo Awards Directory. Not affiliated with or endorsed by the University of Waterloo, and not an official API. Verify anything time-sensitive against https://uwaterloo.ca/awards-directory/.",
   "endpoints": {
     "awards": {
       "path": "awards.json",
@@ -14,6 +28,8 @@
       "description": "all awards without long prose fields",
       "keys": [
         "id",
+        "uid",
+        "src",
         "name",
         "career",
         "levels",
@@ -27,12 +43,20 @@
     "meta": {
       "path": "meta.json",
       "description": "freshness and counts"
+    },
+    "sources": {
+      "path": "sources.json",
+      "description": "source registry, including sources deliberately not ingested"
+    },
+    "filters": {
+      "path": "filters.json",
+      "description": "the filter/facet spec the UI builds itself from"
     }
   },
   "facets": {
     "career": {
-      "Undergraduate": 1122,
-      "Graduate": 411
+      "Undergraduate": 1169,
+      "Graduate": 419
     },
     "levels": {
       "UG Year 4": 626,
@@ -40,32 +64,8 @@
       "UG Year 2": 499,
       "Master's": 360,
       "Doctoral": 336,
-      "UG Entering Year 1": 333,
+      "UG Entering Year 1": 336,
       "UG Year 1": 273
-    },
-    "terms": {
-      "Fall": 716,
-      "Winter": 391,
-      "Entrance": 350,
-      "Spring": 281
-    },
-    "award_types": {
-      "Awards/Scholarships/Prizes": 1153,
-      "Bursaries/Financial need": 208,
-      "Varsity/Athletics": 113,
-      "International experience": 52,
-      "Entrepreneurial": 35,
-      "Other experiential awards": 28
-    },
-    "affiliations": {
-      "Women": 94,
-      "Indigenous": 44,
-      "Black": 35,
-      "Part-time student": 16,
-      "Mature learner": 11,
-      "Ontario first generation": 5,
-      "Refugee or protected person": 3,
-      "Students with disabilities": 2
     },
     "areas_of_study": {
       "All Programs": 321,
@@ -197,6 +197,41 @@
       "Scientific Computation": 1,
       "Studio Art": 1,
       "Water": 1
-    }
+    },
+    "affiliations": {
+      "Women": 94,
+      "Indigenous": 44,
+      "Black": 35,
+      "Part-time student": 16,
+      "Mature learner": 11,
+      "Ontario first generation": 5,
+      "Refugee or protected person": 3,
+      "Students with disabilities": 2
+    },
+    "award_types": {
+      "Awards/Scholarships/Prizes": 1153,
+      "Bursaries/Financial need": 208,
+      "Varsity/Athletics": 113,
+      "International experience": 52,
+      "Entrepreneurial": 35,
+      "Other experiential awards": 28
+    },
+    "terms": {
+      "Fall": 716,
+      "Winter": 391,
+      "Entrance": 350,
+      "Spring": 281
+    },
+    "source_id": {
+      "uw": 1533,
+      "alberta-student-aid": 55
+    },
+    "application_type": {
+      "open": 55
+    },
+    "residency": {},
+    "citizenship": {},
+    "institution": {},
+    "identity": {}
   }
 }

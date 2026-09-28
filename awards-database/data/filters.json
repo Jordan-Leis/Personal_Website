@@ -1,0 +1,152 @@
+{
+  "version": 1,
+  "facets": [
+    {
+      "filter_key": "career",
+      "label": "Career",
+      "kind": "scalar",
+      "semantics": "facet",
+      "group": "Study",
+      "help": "Undergraduate or graduate.",
+      "key": "career"
+    },
+    {
+      "filter_key": "level",
+      "label": "Year of study",
+      "kind": "list",
+      "semantics": "facet",
+      "group": "Study",
+      "help": "Which year(s) of a program an award is open to.",
+      "key": "levels"
+    },
+    {
+      "filter_key": "areaOfStudy",
+      "label": "Program",
+      "kind": "list",
+      "semantics": "facet",
+      "group": "Study",
+      "searchable": true,
+      "help": "Faculty-wide entries ('Engineering Faculty - All Programs') match every program in that faculty.",
+      "key": "areas_of_study"
+    },
+    {
+      "filter_key": "affiliation",
+      "label": "Restricted to",
+      "kind": "list",
+      "semantics": "tag",
+      "group": "Eligibility",
+      "help": "Awards reserved for a specific group. Leave blank to see everything; pick a group to see only its awards.",
+      "key": "affiliations"
+    },
+    {
+      "filter_key": "awardType",
+      "label": "Award type",
+      "kind": "list",
+      "semantics": "facet",
+      "group": "Award",
+      "key": "award_types"
+    },
+    {
+      "filter_key": "term",
+      "label": "Term",
+      "kind": "list",
+      "semantics": "facet",
+      "group": "Award",
+      "help": "The term an award is applied for or paid in — not a deadline.",
+      "key": "terms"
+    },
+    {
+      "filter_key": "source",
+      "label": "Source",
+      "kind": "scalar",
+      "semantics": "facet",
+      "group": "Award",
+      "help": "Which institution or organisation published the award.",
+      "key": "source_id"
+    },
+    {
+      "filter_key": "applicationType",
+      "label": "How you apply",
+      "kind": "scalar",
+      "semantics": "facet",
+      "group": "Award",
+      "help": "Nomination-only and institution-mediated awards cannot be applied for directly, however well you match them.",
+      "key": "application_type"
+    },
+    {
+      "filter_key": "amount",
+      "label": "Award value",
+      "kind": "range",
+      "semantics": "facet",
+      "group": "Award",
+      "unit": "$",
+      "help": "Only awards that state a dollar figure. Setting this hides awards whose value is not published.",
+      "key": "amount_max"
+    },
+    {
+      "filter_key": "hasDeadline",
+      "label": "Has a known deadline",
+      "kind": "bool",
+      "semantics": "facet",
+      "group": "Award",
+      "help": "Many sources publish a prose window rather than a date.",
+      "key": "deadline_date"
+    },
+    {
+      "filter_key": "province",
+      "label": "Your province",
+      "kind": "list",
+      "semantics": "facet",
+      "group": "Eligibility",
+      "help": "Residency requirements, e.g. 12 months in Alberta.",
+      "key": "residency"
+    },
+    {
+      "filter_key": "citizenship",
+      "label": "Status in Canada",
+      "kind": "list",
+      "semantics": "facet",
+      "group": "Eligibility",
+      "key": "citizenship"
+    },
+    {
+      "filter_key": "institution",
+      "label": "School you attend",
+      "kind": "list",
+      "semantics": "facet",
+      "group": "Eligibility",
+      "key": "institution"
+    },
+    {
+      "filter_key": "identity",
+      "label": "Identity / background",
+      "kind": "list",
+      "semantics": "tag",
+      "group": "Eligibility",
+      "key": "identity"
+    },
+    {
+      "filter_key": "financialNeed",
+      "label": "Requires financial need",
+      "kind": "bool",
+      "semantics": "facet",
+      "group": "Eligibility",
+      "key": "financial_need"
+    },
+    {
+      "filter_key": "gpa",
+      "label": "Minimum grade required",
+      "kind": "range",
+      "semantics": "facet",
+      "group": "Eligibility",
+      "unit": "%",
+      "help": "Only awards that state a grade requirement.",
+      "key": "gpa_min"
+    }
+  ],
+  "groups": [
+    "Study",
+    "Eligibility",
+    "Award"
+  ]
+}
