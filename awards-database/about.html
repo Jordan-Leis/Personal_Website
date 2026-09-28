@@ -73,12 +73,23 @@
         The mirrored data is published as plain JSON if you want to build something with it:
       </p>
       <ul>
-        <li><code>data/index.json</code> — manifest: freshness, counts, and every filter value in use (~6 KB)</li>
-        <li><code>data/awards.slim.json</code> — all awards without the long description text (~455 KB)</li>
-        <li><code>data/awards.json</code> — everything, all fields (~2.6 MB)</li>
+        <li><code>data/index.json</code> — manifest: freshness, counts, and every filter value in use (~7 KB)</li>
+        <li><code>data/meta.json</code> — freshness and per-source counts only (~1 KB)</li>
+        <li><code>data/sources.json</code> — every source, its award count, and the ones deliberately not mirrored, with reasons (~7 KB)</li>
+        <li><code>data/awards.slim.json</code> — <strong>all</strong> awards, every source, without the long description text (~1.4 MB)</li>
+        <li><code>data/awards.json</code> — awards from the core sources only, all fields (~3.8 MB)</li>
+        <li><code>data/sources/&lt;source_id&gt;.json</code> — one file per additional source, same shape as <code>awards.json</code></li>
       </ul>
       <p>
-        <strong>This is an unofficial mirror, not a University of Waterloo API.</strong> There is no
+        <code>awards.json</code> is deliberately not the whole collection. Awards that only a
+        particular school's own students can apply for are kept in separate per-source files, and
+        this page loads one of those only if you ask for that school — otherwise every visitor would
+        download tens of megabytes of awards they cannot apply for.
+        <code>data/sources.json</code> lists what is available, and
+        <code>awards.slim.json</code> always covers everything.
+      </p>
+      <p>
+        <strong>This is an unofficial mirror, not an API from any listed institution.</strong> There is no
         stability or availability guarantee, the data is only as fresh as the last refresh shown in the
         footer, and anything time-sensitive should be verified against the
         <a href="https://uwaterloo.ca/awards-directory/" target="_blank" rel="noopener">official directory</a>.

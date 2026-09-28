@@ -34,6 +34,8 @@
     modalBackdrop: document.getElementById("modal-backdrop"),
     modalBody: document.getElementById("modal-body"),
     freshnessNote: document.getElementById("freshness-note"),
+    sourceLoader: document.getElementById("source-loader"),
+    sourceLoaderList: document.getElementById("source-loader-list"),
   };
 
   function populateSelect(selectEl, values, placeholder) {
@@ -84,10 +86,127 @@
     return n;
   }
 
+  // Some facets ship a default selection, declared in tools/facets.py rather
+  // than here. Only "Application status" uses one today: 2,164 of UofA's 2,428
+  // awards are closed for this cycle, so an unfiltered corpus is mostly
+  // expired. It is a default and not a hard filter because annual awards
+  // reopen — clearing it brings them back.
+  //
+  // Selecting "Open" does NOT hide awards whose status is unstated: the facet
+  // is a scalar "facet", and an award stating no value is unconstrained by it.
+  // That is the load-bearing detail, since most sources publish no status at
+  // all. Guarded by tests/test_filters.py.
+  // --- lazily-loaded source shards ------------------------------------
+  // Sources whose awards are restricted to one institution's own students are
+  // not in awards.json; they sit in data/sources/<id>.json and load when a
+  // visitor asks. The gate is the same in both directions: an award only
+  // relevant to UofA students is also the award a UW student should not be
+  // made to download.
+  const loadedShards = new Set();
+
+  // Shard loads are serialised through this chain. Each one ends in
+  // rebuildFilters(), which snapshots the current selections, tears the filter
+  // bar down and puts them back — so two overlapping loads can interleave such
+  // that one snapshots the *other's* half-built controls and reads every
+  // selection as empty. Restoring that empty snapshot then wipes both the
+  // visitor's own filters and the pre-selected "Open" status default, which is
+  // what hides 2,164 closed awards. Clicking six chips quickly was enough to
+  // turn the closed-award default off and silently show all of them.
+  let shardQueue = Promise.resolve();
+
+  function renderSourceLoader(sources) {
+    const shards = Object.values(sources || {}).filter(
+      (s) => s.status === "active" && s.shard_path && s.award_count,
+    );
+    if (!shards.length) return;          // stays hidden; page works unchanged
+
+    shards.sort((a, b) => b.award_count - a.award_count);
+    el.sourceLoaderList.innerHTML = "";
+    for (const source of shards) {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "source-chip";
+      btn.dataset.sourceId = source.id;
+      btn.textContent = `+ ${source.short_name || source.name} (${source.award_count.toLocaleString()})`;
+      btn.title = source.disclaimer || source.name;
+      btn.addEventListener("click", () => loadShard(source, btn));
+      el.sourceLoaderList.appendChild(btn);
+    }
+    el.sourceLoader.hidden = false;
+  }
+
+  function loadShard(source, btn) {
+    if (loadedShards.has(source.id)) return shardQueue;
+    // Claim it before queueing, so a double-click cannot enqueue two fetches of
+    // the same shard.
+    loadedShards.add(source.id);
+    btn.disabled = true;
+    const label = btn.textContent;
+    btn.textContent = `Loading ${source.short_name || source.name}\u2026`;
+    shardQueue = shardQueue.then(() => fetchShard(source, btn));
+    return shardQueue;
+  }
+
+  async function fetchShard(source, btn) {
+    try {
+      const resp = await fetch(`data/${source.shard_path}`);
+      if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+      const added = AwardSearch.addAwards(await resp.json());
+      btn.classList.add("source-chip--loaded");
+      btn.textContent = `\u2713 ${source.short_name || source.name} (${added.toLocaleString()})`;
+      // New records bring new programs, faculties and statuses, so the filter
+      // vocabulary has to be rebuilt -- while keeping what the visitor already
+      // selected.
+      rebuildFilters();
+      applyFiltersAndSearch(true);
+    } catch (e) {
+      // A shard is an enhancement. Losing one must never break the page, so it
+      // says so and leaves everything already loaded working. Same reasoning as
+      // the guards around filters.json and ai-search.js.
+      loadedShards.delete(source.id);   // allow a retry
+      btn.disabled = false;
+      btn.textContent = label;
+      btn.classList.add("source-chip--failed");
+      btn.title = `Couldn't load ${source.name}. Everything else still works.`;
+    }
+  }
+
+  // buildFilters() appends, so re-running it without clearing would duplicate
+  // every control. Selections are snapshotted and restored because the visitor
+  // did not ask for their filters to be reset just because more data arrived.
+  //
+  // Only multi-selects are restored: range and bool controls expose no setter,
+  // so an award-value range set before loading a shard reverts to unset. That
+  // is a visible reset rather than a silently wrong filter, which is the right
+  // way round, but it is a gap — give those controls a `set` if it starts to
+  // matter.
+  function rebuildFilters() {
+    const previous = {};
+    for (const [key, control] of Object.entries(filterControls)) {
+      if (control && control.set) previous[key] = control.value;
+    }
+    el.filterBar.innerHTML = "";
+    buildFilters();
+    for (const [key, values] of Object.entries(previous)) {
+      const control = filterControls[key];
+      if (control && control.set) control.set(values);
+    }
+  }
+
+  function applyFacetDefaults() {
+    for (const facet of AwardSearch.activeFacets()) {
+      if (!Array.isArray(facet.default) || !facet.default.length) continue;
+      const control = filterControls[facet.filter_key];
+      // `set` is MultiSelect-only; a range or bool control has no defaults.
+      if (control && control.set) control.set(facet.default);
+    }
+  }
+
   function clearAllFilters() {
     for (const control of Object.values(filterControls)) {
       if (control.clear) control.clear();
     }
+    applyFacetDefaults();
     applyFiltersAndSearch(true);
   }
 
@@ -127,6 +246,7 @@
 
       card.innerHTML = `
         <h3>${escapeHtml(award.award_name || "Untitled award")}</h3>
+        ${statusBadge(award)}
         <div class="tag-row">${tags.map((t) => `<span class="tag">${escapeHtml(t)}</span>`).join("")}</div>
         <p class="snippet">${escapeHtml(snippetFor(award))}</p>
       `;
@@ -141,6 +261,20 @@
     });
 
     el.loadMoreRow.hidden = visibleCount >= currentResults.length;
+  }
+
+  // Only rendered for a stated, non-open status. The overwhelming majority of
+  // awards publish no status at all, and labelling those would be inventing a
+  // fact about them — silence is not a closed window.
+  const STATUS_BADGE = {
+    Ended: "Closed for this cycle",
+    Upcoming: "Not open yet",
+  };
+
+  function statusBadge(award) {
+    const label = STATUS_BADGE[award.application_status];
+    if (!label) return "";
+    return `<p class="award-status">${escapeHtml(label)}</p>`;
   }
 
   function escapeHtml(str) {
@@ -160,6 +294,7 @@
         <h2>${escapeHtml(award.award_name || "Untitled award")}</h2>
         <button class="modal-close" id="modal-close-x" aria-label="Close">&times;</button>
       </div>
+      ${statusBadge(award)}
       <div class="tag-row">
         ${[award.career, ...(award.levels || []), ...(award.terms || [])]
           .filter(Boolean).map((t) => `<span class="tag">${escapeHtml(t)}</span>`).join("")}
@@ -241,7 +376,13 @@
   // hides any facet the current corpus has no values for.
   function buildFilters() {
     const onChange = () => applyFiltersAndSearch(true);
-    filterControls = {};
+    // Emptied IN PLACE, never reassigned. ai-search.js is handed this exact
+    // object once by AISearch.attach() and keeps the reference, so replacing it
+    // with a fresh `{}` would leave the AI layer writing to controls that have
+    // already been removed from the DOM — the AI would tick filters and nothing
+    // would happen. Harmless while buildFilters() only ran once at boot;
+    // rebuildFilters() (on loading a source shard) makes it reachable.
+    for (const key of Object.keys(filterControls)) delete filterControls[key];
 
     const facets = AwardSearch.activeFacets();
     const byGroup = new Map();
@@ -264,6 +405,8 @@
         filterControls[facet.filter_key] = buildControl(section, facet, onChange);
       }
     }
+
+    applyFacetDefaults();
   }
 
   function buildControl(mount, facet, onChange) {
@@ -398,6 +541,16 @@
     AwardSearch.init(awards, filterSpec || FALLBACK_FILTER_SPEC);
     buildFilters();
 
+    // Also optional, and for the same reason as filters.json: without
+    // sources.json the visitor simply gets the core corpus with no offer to
+    // load more, which is a smaller page rather than a broken one.
+    try {
+      const resp = await fetch("data/sources.json");
+      if (resp.ok) renderSourceLoader(await resp.json());
+    } catch (e) {
+      /* no shard offers; core corpus is fully usable */
+    }
+
     populateSelect(el.profileCareer, AwardSearch.uniqueScalarValues("career"), "No preference");
     populateSelect(el.profileLevel, AwardSearch.uniqueValues("levels"), "No preference");
     populateSelect(el.profileArea, AwardSearch.uniqueValues("areas_of_study"), "No preference");
@@ -421,6 +574,10 @@
       el.searchInput.value = "";
       queryOverride = null;
       MultiSelect.clearAll();
+      // Reset means "back to how the page loaded", not "show me 2,164 expired
+      // awards". Without this, the Reset button is the one click that floods
+      // the results with closed opportunities.
+      applyFacetDefaults();
       // `typeof`, not `window.AISearch`: js/ai-search.js declares AISearch with
       // `const`, which is a lexical global and never a property of `window`
       // (same as MultiSelect and AwardSearch).

@@ -32,6 +32,26 @@ const AwardSearch = (() => {
     });
   }
 
+  // Merging a lazily-loaded source shard. The Fuse index is rebuilt rather
+  // than appended to, because Fuse has no public incremental-add API and a
+  // stale index silently stops matching the new records.
+  //
+  // Deduplicated on award_uid: a double-click on "load" or a re-render must not
+  // double the corpus, and award_uid is the only globally unique key (award_id
+  // is unique only WITHIN a source).
+  function addAwards(incoming) {
+    if (!Array.isArray(incoming) || !incoming.length) return 0;
+    const known = new Set(allAwards.map((a) => a.award_uid));
+    const fresh = incoming.filter((a) => a.award_uid && !known.has(a.award_uid));
+    if (!fresh.length) return 0;
+    init(allAwards.concat(fresh), spec);
+    return fresh.length;
+  }
+
+  function count() {
+    return allAwards.length;
+  }
+
   function getSpec() {
     return spec;
   }
@@ -190,7 +210,7 @@ const AwardSearch = (() => {
   }
 
   return {
-    init, run, getSpec, activeFacets, valuesFor, rangeFor, groupedValues,
+    init, addAwards, count, run, getSpec, activeFacets, valuesFor, rangeFor, groupedValues,
     matchesFacet, passesStructuredFilters,
     uniqueValues, uniqueScalarValues, areaOfStudyGroups,
   };

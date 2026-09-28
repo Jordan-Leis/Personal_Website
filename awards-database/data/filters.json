@@ -65,6 +65,18 @@
       "key": "source_id"
     },
     {
+      "filter_key": "applicationStatus",
+      "label": "Application status",
+      "kind": "scalar",
+      "semantics": "facet",
+      "group": "Award",
+      "default": [
+        "Open"
+      ],
+      "help": "Awards whose application window has closed are hidden by default. Many are annual and will reopen, so they are kept and can be shown — sources that publish no status at all are always shown.",
+      "key": "application_status"
+    },
+    {
       "filter_key": "applicationType",
       "label": "How you apply",
       "kind": "scalar",

@@ -11,6 +11,8 @@
   --tag-text: #3a3f66;
   --disclaimer-bg: #fff6e5;
   --disclaimer-border: #f0c766;
+  --status-bg: #fdecec;
+  --status-text: #8c2f2f;
   --shadow: 0 1px 3px rgba(20, 22, 40, 0.08), 0 1px 2px rgba(20, 22, 40, 0.06);
   --radius: 10px;
 }
@@ -29,6 +31,8 @@
     --tag-text: #c3c8ee;
     --disclaimer-bg: #2e2712;
     --disclaimer-border: #7a5c1c;
+    --status-bg: #3a1f1f;
+    --status-text: #f0a8a8;
     --shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
   }
 }
@@ -301,6 +305,19 @@ button {
 .tag {
   background: var(--tag-bg);
   color: var(--tag-text);
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 0.2rem 0.5rem;
+  border-radius: 999px;
+}
+
+/* Only shown when a source actually states a non-open status. Most awards
+   publish none, and an absent status means unknown, not closed. */
+.award-status {
+  display: inline-block;
+  margin: 0 0 0.4rem;
+  background: var(--status-bg);
+  color: var(--status-text);
   font-size: 0.72rem;
   font-weight: 600;
   padding: 0.2rem 0.5rem;
@@ -795,4 +812,55 @@ body.modal-open {
   .ai-ask {
     width: 100%;
   }
+}
+
+/* Lazily-loaded source shards. Hidden until data/sources.json offers at least
+   one, so the page is unchanged when there is nothing to load. */
+.source-loader {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+
+.source-loader__label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+}
+
+.source-loader__list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.source-chip {
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 0.25rem 0.7rem;
+  font: inherit;
+  font-size: 0.78rem;
+  cursor: pointer;
+}
+
+.source-chip:hover:not(:disabled) { border-color: var(--accent); }
+.source-chip:disabled { cursor: default; }
+
+.source-chip--loaded {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  color: var(--accent-hover);
+  font-weight: 600;
+}
+
+.source-chip--failed {
+  background: var(--status-bg);
+  border-color: var(--status-text);
+  color: var(--status-text);
 }

@@ -1,8 +1,8 @@
 {
-  "generated_at_utc": "2026-09-27T20:04:32+00:00",
-  "last_updated": "2026-09-27",
-  "total_awards": 1588,
-  "scraped_awards": 1588,
+  "generated_at_utc": "2026-09-28T19:17:22+00:00",
+  "last_updated": "2026-09-28",
+  "total_awards": 8675,
+  "scraped_awards": 8675,
   "scrape_error_count": 0,
   "sources": {
     "alberta-student-aid": {
@@ -11,11 +11,53 @@
       "errors": 0,
       "source_url": "https://studentaid.alberta.ca/scholarships/"
     },
+    "electrofed": {
+      "total": 46,
+      "scraped": 46,
+      "errors": 0,
+      "source_url": "https://www.electrofed.com/about/efc-scholarship-program/"
+    },
+    "mtroyal": {
+      "total": 788,
+      "scraped": 788,
+      "errors": 0,
+      "source_url": "https://mtroyal.academicworks.ca/opportunities"
+    },
+    "nait": {
+      "total": 999,
+      "scraped": 999,
+      "errors": 0,
+      "source_url": "https://nait.academicworks.ca/opportunities"
+    },
+    "norquest": {
+      "total": 109,
+      "scraped": 109,
+      "errors": 0,
+      "source_url": "https://norquest.academicworks.ca/opportunities"
+    },
+    "uleth": {
+      "total": 696,
+      "scraped": 696,
+      "errors": 0,
+      "source_url": "https://uleth.academicworks.ca/opportunities"
+    },
+    "uofa": {
+      "total": 2428,
+      "scraped": 2428,
+      "errors": 0,
+      "source_url": "https://alberta.academicworks.ca/opportunities"
+    },
     "uw": {
       "total": 1533,
       "scraped": 1533,
       "errors": 0,
       "source_url": "https://uwaterloo.ca/awards-directory/"
+    },
+    "western": {
+      "total": 2021,
+      "scraped": 2021,
+      "errors": 0,
+      "source_url": "https://studentservices.uwo.ca/secure/Awards/awardMain.cfm"
     }
   },
   "source_url": "https://uwaterloo.ca/awards-directory/"

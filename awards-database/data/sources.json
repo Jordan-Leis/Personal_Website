@@ -5,6 +5,7 @@
     "short_name": "Alberta Student Aid",
     "status": "active",
     "source_url": "https://studentaid.alberta.ca/scholarships/",
+    "delivery": "core",
     "defaults": {
       "residency": {
         "value": [
@@ -14,7 +15,8 @@
         "src": "Implicit: Alberta Student Aid scholarships require Alberta residency. Most detail pages restate this, but the few that do not still require it."
       }
     },
-    "disclaimer": "Unofficial mirror of the Alberta Student Aid scholarship listings. Not affiliated with or endorsed by the Government of Alberta. Verify anything time-sensitive against https://studentaid.alberta.ca/scholarships/."
+    "disclaimer": "Unofficial mirror of the Alberta Student Aid scholarship listings. Not affiliated with or endorsed by the Government of Alberta. Verify anything time-sensitive against https://studentaid.alberta.ca/scholarships/.",
+    "award_count": 55
   },
   "awardspring": {
     "id": "awardspring",
@@ -22,6 +24,7 @@
     "short_name": "AwardSpring",
     "status": "blocked",
     "source_url": "https://mcmaster.awardspring.ca/",
+    "delivery": "shard",
     "blocked_reason": "robots.txt returns \"User-agent: * / Disallow: /\" on every AwardSpring tenant (verified 2026-09-26). The data is public and unauthenticated and the JSON API is trivially parsable, but site-wide robots exclusion is respected.",
     "manual_check_url": "https://mcmaster.awardspring.ca/AS/public/scholarships"
   },
@@ -31,6 +34,7 @@
     "short_name": "Concordia",
     "status": "planned",
     "source_url": "https://concordia.academicworks.ca/opportunities",
+    "delivery": "shard",
     "defaults": {
       "institution": {
         "value": [
@@ -42,12 +46,124 @@
     },
     "disclaimer": "Unofficial mirror of the Concordia University Awards listings. Not affiliated with or endorsed by the institution."
   },
+  "electrofed": {
+    "id": "electrofed",
+    "name": "Electro-Federation Canada Scholarships",
+    "short_name": "Electro-Federation",
+    "status": "active",
+    "source_url": "https://www.electrofed.com/about/efc-scholarship-program/",
+    "delivery": "core",
+    "defaults": {
+      "citizenship": {
+        "value": [
+          "citizen",
+          "pr"
+        ],
+        "confidence": 0.5,
+        "src": "Weak, deliberately below the 0.75 exclusion threshold: EFC scholarships are for students at Canadian institutions and most restate a citizenship or residency requirement, but the association does not state one globally, so this must never exclude anyone on its own."
+      }
+    },
+    "disclaimer": "Unofficial mirror of the Electro-Federation Canada scholarship listings. Not affiliated with or endorsed by Electro-Federation Canada. Apply through EFC's own application centre at https://scholarship.electrofed.com/.",
+    "award_count": 46
+  },
+  "mtroyal": {
+    "id": "mtroyal",
+    "name": "Mount Royal University Awards",
+    "short_name": "Mount Royal",
+    "status": "active",
+    "source_url": "https://mtroyal.academicworks.ca/opportunities",
+    "delivery": "shard",
+    "defaults": {
+      "residency": {
+        "value": [
+          "AB"
+        ],
+        "confidence": 0.4,
+        "src": "Weak, deliberately below the 0.75 exclusion threshold: an Alberta institution's awards mostly go to Alberta students, but that is a tendency and not a stated rule, so it must never exclude anyone on its own. Recorded so the signal exists once extraction can confirm it."
+      },
+      "institution": {
+        "value": [
+          "mount-royal-university"
+        ],
+        "confidence": 0.95,
+        "src": "Implicit: Mount Royal University's own award listing. A small number of entries are externally tenable, so this is 0.95 rather than 1.0."
+      }
+    },
+    "disclaimer": "Unofficial mirror of the Mount Royal University award listings. Not affiliated with or endorsed by Mount Royal University.",
+    "award_count": 788,
+    "shard_path": "sources/mtroyal.json"
+  },
+  "nait": {
+    "id": "nait",
+    "name": "Northern Alberta Institute of Technology (NAIT) Awards",
+    "short_name": "NAIT",
+    "status": "active",
+    "source_url": "https://nait.academicworks.ca/opportunities",
+    "delivery": "shard",
+    "defaults": {
+      "residency": {
+        "value": [
+          "AB"
+        ],
+        "confidence": 0.4,
+        "src": "Weak, deliberately below the 0.75 exclusion threshold: an Alberta institution's awards mostly go to Alberta students, but that is a tendency and not a stated rule, so it must never exclude anyone on its own. Recorded so the signal exists once extraction can confirm it."
+      },
+      "institution": {
+        "value": [
+          "nait"
+        ],
+        "confidence": 0.95,
+        "src": "Implicit: NAIT's own award listing. A small number of entries are externally tenable, so this is 0.95 rather than 1.0."
+      }
+    },
+    "disclaimer": "Unofficial mirror of the NAIT award listings. Not affiliated with or endorsed by NAIT.",
+    "award_count": 999,
+    "shard_path": "sources/nait.json"
+  },
+  "norquest": {
+    "id": "norquest",
+    "name": "NorQuest College Awards",
+    "short_name": "NorQuest",
+    "status": "active",
+    "source_url": "https://norquest.academicworks.ca/opportunities",
+    "delivery": "shard",
+    "defaults": {
+      "residency": {
+        "value": [
+          "AB"
+        ],
+        "confidence": 0.4,
+        "src": "Weak, deliberately below the 0.75 exclusion threshold: an Alberta institution's awards mostly go to Alberta students, but that is a tendency and not a stated rule, so it must never exclude anyone on its own. Recorded so the signal exists once extraction can confirm it."
+      },
+      "institution": {
+        "value": [
+          "norquest-college"
+        ],
+        "confidence": 0.95,
+        "src": "Implicit: NorQuest College's own award listing. A small number of entries are externally tenable, so this is 0.95 rather than 1.0."
+      }
+    },
+    "disclaimer": "Unofficial mirror of the NorQuest College award listings. Not affiliated with or endorsed by NorQuest College.",
+    "award_count": 109,
+    "shard_path": "sources/norquest.json"
+  },
+  "scholarab": {
+    "id": "scholarab",
+    "name": "ScholarAB (Alberta scholarship directory)",
+    "short_name": "ScholarAB",
+    "status": "blocked",
+    "source_url": "https://scholarab.ca/",
+    "delivery": "shard",
+    "blocked_reason": "The database is licensed CC BY-SA 4.0. Reuse is expressly permitted with attribution, but ShareAlike would require releasing this project's entire published dataset — including the UW and AcademicWorks records — under the same licence. Excluded on that basis, not on robots, which allows everything but /api/. Used for source discovery only; verified 2026-09-27.",
+    "manual_check_url": "https://scholarab.ca/scholarships"
+  },
   "scholarshipscanada": {
     "id": "scholarshipscanada",
     "name": "ScholarshipsCanada.com",
     "short_name": "ScholarshipsCanada",
     "status": "blocked",
     "source_url": "https://www.scholarshipscanada.com/",
+    "delivery": "shard",
     "blocked_reason": "Crawl permission unverifiable — Cloudflare 403s /robots.txt and the Terms of Service page 404s (checked 2026-09-26). Unreadable directives are treated as disallow. Resolve by contacting the operator for written permission.",
     "manual_check_url": "https://www.scholarshipscanada.com/Scholarships/"
   },
@@ -57,6 +173,7 @@
     "short_name": "ScholarTree",
     "status": "blocked",
     "source_url": "https://scholartree.ca/",
+    "delivery": "shard",
     "blocked_reason": "Prohibited by robots.txt (Disallow: /scholarships and /graphql) AND by Terms of Service §3, which forbids automated or manual extraction. Account also required to browse. Not revisitable without explicit written permission.",
     "manual_check_url": "https://scholartree.ca/scholarships"
   },
@@ -66,6 +183,7 @@
     "short_name": "Trent",
     "status": "planned",
     "source_url": "https://trentu.academicworks.ca/opportunities",
+    "delivery": "shard",
     "defaults": {
       "institution": {
         "value": [
@@ -77,12 +195,40 @@
     },
     "disclaimer": "Unofficial mirror of the Trent University Awards listings. Not affiliated with or endorsed by the institution."
   },
+  "uleth": {
+    "id": "uleth",
+    "name": "University of Lethbridge Awards",
+    "short_name": "ULethbridge",
+    "status": "active",
+    "source_url": "https://uleth.academicworks.ca/opportunities",
+    "delivery": "shard",
+    "defaults": {
+      "residency": {
+        "value": [
+          "AB"
+        ],
+        "confidence": 0.4,
+        "src": "Weak, deliberately below the 0.75 exclusion threshold: an Alberta institution's awards mostly go to Alberta students, but that is a tendency and not a stated rule, so it must never exclude anyone on its own. Recorded so the signal exists once extraction can confirm it."
+      },
+      "institution": {
+        "value": [
+          "university-of-lethbridge"
+        ],
+        "confidence": 0.95,
+        "src": "Implicit: University of Lethbridge's own award listing. A small number of entries are externally tenable, so this is 0.95 rather than 1.0."
+      }
+    },
+    "disclaimer": "Unofficial mirror of the University of Lethbridge award listings. Not affiliated with or endorsed by University of Lethbridge.",
+    "award_count": 696,
+    "shard_path": "sources/uleth.json"
+  },
   "umanitoba": {
     "id": "umanitoba",
     "name": "University of Manitoba Awards",
     "short_name": "UManitoba",
     "status": "planned",
     "source_url": "https://umanitoba.academicworks.ca/opportunities",
+    "delivery": "shard",
     "defaults": {
       "institution": {
         "value": [
@@ -98,8 +244,9 @@
     "id": "uofa",
     "name": "University of Alberta Awards",
     "short_name": "UAlberta",
-    "status": "planned",
+    "status": "active",
     "source_url": "https://alberta.academicworks.ca/opportunities",
+    "delivery": "shard",
     "defaults": {
       "institution": {
         "value": [
@@ -109,7 +256,19 @@
         "src": "Implicit: the University of Alberta's own award listing. A small number of entries are externally tenable, so this is 0.95 rather than 1.0."
       }
     },
-    "disclaimer": "Unofficial mirror of the University of Alberta award listings. Not affiliated with or endorsed by the University of Alberta."
+    "disclaimer": "Unofficial mirror of the University of Alberta award listings. Not affiliated with or endorsed by the University of Alberta.",
+    "award_count": 2428,
+    "shard_path": "sources/uofa.json"
+  },
+  "uoft": {
+    "id": "uoft",
+    "name": "University of Toronto Award Explorer",
+    "short_name": "UofT",
+    "status": "blocked",
+    "source_url": "https://award-explorer.utoronto.ca/",
+    "delivery": "shard",
+    "blocked_reason": "award-explorer.utoronto.ca/robots.txt disallows crawling the Award Explorer. The same report is reachable on the vendor host uoftscholarships.smartsimple.com, whose robots.txt 404s, but an absent file on a third-party SaaS host is not permission from UofT — and this project respects robots.txt strictly (see sources/blocked/awardspring.yaml, excluded the same way at a cost of ~2,100 awards). Costs ~4,490 awards. Resolvable by asking UofT Student Accounts in writing; verified 2026-09-27.",
+    "manual_check_url": "https://future.utoronto.ca/finances/awards/"
   },
   "usask": {
     "id": "usask",
@@ -117,6 +276,7 @@
     "short_name": "USask",
     "status": "planned",
     "source_url": "https://usask.academicworks.ca/opportunities",
+    "delivery": "shard",
     "defaults": {
       "institution": {
         "value": [
@@ -134,6 +294,7 @@
     "short_name": "Waterloo",
     "status": "active",
     "source_url": "https://uwaterloo.ca/awards-directory/",
+    "delivery": "core",
     "defaults": {
       "institution": {
         "value": [
@@ -143,6 +304,27 @@
         "src": "Implicit: this is the University of Waterloo's own awards directory."
       }
     },
-    "disclaimer": "Unofficial mirror of the University of Waterloo Awards Directory. Not affiliated with or endorsed by the University of Waterloo, and not an official API. Verify anything time-sensitive against https://uwaterloo.ca/awards-directory/."
+    "disclaimer": "Unofficial mirror of the University of Waterloo Awards Directory. Not affiliated with or endorsed by the University of Waterloo, and not an official API. Verify anything time-sensitive against https://uwaterloo.ca/awards-directory/.",
+    "award_count": 1533
+  },
+  "western": {
+    "id": "western",
+    "name": "Western University Awards",
+    "short_name": "Western",
+    "status": "active",
+    "source_url": "https://studentservices.uwo.ca/secure/Awards/awardMain.cfm",
+    "delivery": "shard",
+    "defaults": {
+      "institution": {
+        "value": [
+          "western-university"
+        ],
+        "confidence": 0.95,
+        "src": "Implicit: Western University's own award listing. A small number of entries are externally tenable, so this is 0.95 rather than 1.0."
+      }
+    },
+    "disclaimer": "Unofficial mirror of the Western University award listings. Not affiliated with or endorsed by Western University.",
+    "award_count": 2021,
+    "shard_path": "sources/western.json"
   }
 }

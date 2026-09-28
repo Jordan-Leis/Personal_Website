@@ -49,6 +49,19 @@
       <!-- Multi-select filter controls are built by js/multiselect.js -->
       <div class="filter-grid" id="filter-bar"></div>
 
+      <!--
+        Institution-restricted sources load on demand: awards.json costs ~2.4 KB
+        per award and is fetched on every page load, so carrying the whole
+        AcademicWorks estate in it would mean a 25 MB first paint for a visitor
+        who only wanted their own school. Populated by js/app.js from
+        data/sources.json, and `hidden` until there is something to offer — the
+        page is fully usable if this never appears.
+      -->
+      <div class="source-loader" id="source-loader" hidden>
+        <span class="source-loader__label">More sources</span>
+        <div class="source-loader__list" id="source-loader-list"></div>
+      </div>
+
       <div class="filter-actions">
         <button class="btn" id="clear-filters" type="button">Clear filters</button>
       </div>
