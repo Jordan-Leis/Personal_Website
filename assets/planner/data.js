@@ -8,17 +8,18 @@ const must = ({ data, error }) => {
 
 export async function loadAll() {
   const since = new Date(Date.now() - 30 * 864e5).toISOString();
-  const [tasks, subtasks, proofs, placements, blocks, events] = await Promise.all([
+  const [tasks, subtasks, proofs, placements, blocks, events, overrides] = await Promise.all([
     supabase.from("tasks").select("*").or(`status.neq.done,completed_at.gte.${since}`),
     supabase.from("subtasks").select("*").order("sort_order").order("created_at"),
     supabase.from("task_proofs").select("*").order("created_at"),
     supabase.from("placements").select("*").order("placed_at"),
     supabase.from("blocks").select("*").order("start_at"),
     supabase.from("calendar_events").select("*").order("start_at"),
+    supabase.from("event_overrides").select("*").neq("status", "dismissed").order("start_at"),
   ]);
   return {
     tasks: must(tasks), subtasks: must(subtasks), proofs: must(proofs),
-    placements: must(placements), blocks: must(blocks), events: must(events),
+    placements: must(placements), blocks: must(blocks), events: must(events), overrides: must(overrides),
   };
 }
 
@@ -63,3 +64,13 @@ export const deletePlacement = (id) => supabase.from("placements").delete().eq("
 export const loadReviewItems = () =>
   supabase.from("review_items").select("*").eq("status", "open").order("received_at", { ascending: false }).then(must);
 export const updateReviewItem = (id, patch) => supabase.from("review_items").update(patch).eq("id", id).select().single().then(must);
+
+// Event overrides: approve/dismiss a suggestion, or ignore/restore an event by hand.
+export const setOverrides = (keys, status, decidedBy) =>
+  supabase.from("event_overrides").update({ status, decided_by: decidedBy, decided_at: new Date().toISOString() })
+    .in("event_key", keys).then(must);
+export const ignoreEvent = (event, decidedBy) =>
+  supabase.from("event_overrides").upsert({
+    event_key: event.id, source: event.source, title: event.title, start_at: event.start_at, end_at: event.end_at,
+    reason: "ignored by hand", status: "approved", decided_by: decidedBy, decided_at: new Date().toISOString(),
+  }).then(must);

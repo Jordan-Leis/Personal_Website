@@ -176,3 +176,33 @@ pre.gdesc { background: #111; padding: 8px; border-radius: 6px; font-family: var
 .legend i.ol { border: 1px dashed; }
 .legend i.due { border-top: 2px dashed #ff8a8a; border-radius: 0; height: 0; }
 @media (max-width: 900px) { main.sched { grid-template-columns: minmax(0, 1fr); } }
+
+/* ---------- projects + approvals ---------- */
+.approvals { border-color: rgba(252, 233, 79, .35); }
+.approval { padding: 8px 0; border-top: 1px solid var(--win-border); }
+.approval:first-of-type { border-top: 0; }
+.approval .opts { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+.approval.warnline b { color: #ffb08f; }
+.appr-list { list-style: none; padding: 0; margin: 8px 0 0; font-size: 12px; max-height: 220px; overflow-y: auto; }
+.appr-list li { display: flex; justify-content: space-between; gap: 8px; align-items: center; padding: 3px 0; border-bottom: 1px solid #2c2c2c; }
+.projects { margin-bottom: 16px; }
+.projects h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .06em; color: var(--fg-muted); margin: 0 0 8px; font-weight: 500; }
+.proj-row { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 10px; }
+.proj { background: var(--card); border: 1px solid rgba(233, 84, 32, .45); border-radius: 10px; padding: 10px; cursor: pointer; }
+.proj:hover { background: var(--card-hover); }
+.proj.done { opacity: .6; border-color: var(--win-border); }
+.proj .t { font-weight: 700; overflow-wrap: anywhere; }
+.proj .meta { display: flex; flex-wrap: wrap; gap: 4px; margin: 6px 0 4px; }
+.bar { height: 6px; background: #3a3a3a; border-radius: 3px; overflow: hidden; margin: 6px 0; }
+.bar i { display: block; height: 100%; background: var(--term-green); }
+.badge.ofproj { background: rgba(233, 84, 32, .12); color: var(--fg-dim); }
+.linkbtn { background: none; border: 0; padding: 0; color: var(--term-blue); text-align: left; text-decoration: underline; overflow-wrap: anywhere; }
+.grow { flex: 1; min-width: 0; }
+.drawer .row.part { gap: 6px; }
+.drawer .row.split { flex-wrap: wrap; }
+.drawer input[type=number] { width: 64px; flex: none; background: #111; border: 1px solid #333; border-radius: 6px; padding: 6px 8px; color-scheme: dark; }
+.spread { display: flex; flex-direction: column; gap: 6px; max-height: 50vh; overflow-y: auto; }
+.spread-row { display: flex; gap: 6px; align-items: center; padding: 4px 6px; border-radius: 6px; border: 1px solid #333; flex-wrap: wrap; }
+.spread-row.late { border-color: var(--term-yellow); }
+.spread-row select { background: #111; border: 1px solid #333; border-radius: 6px; padding: 3px 6px; color-scheme: dark; }
+.daycol .ev.ignored { opacity: .35; text-decoration: line-through; }

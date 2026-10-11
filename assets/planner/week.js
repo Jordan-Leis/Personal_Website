@@ -2,6 +2,7 @@
 import { requireMember, signOut } from "./auth.js";
 import * as db from "./data.js";
 import { esc, todayStr, addDays, dayOf, minOf, fmtTime, fmtDay, Model, KIND_LABEL } from "./model.js";
+import { approvalsHTML, handleApprovalClick } from "./approvals.js";
 
 const app = document.getElementById("app");
 const session = await requireMember(app);
@@ -16,6 +17,7 @@ const view = {
   week: mondayOf(/^\d{4}-\d{2}-\d{2}$/.test(params.get("week") || "") ? params.get("week") : todayStr()),
   reviews: [],
   selected: null, // { type: "block", key } | { type: "event", id }
+  showIgnored: false,
 };
 
 app.innerHTML = `
@@ -33,8 +35,10 @@ app.innerHTML = `
     <button class="btn" data-action="signout">Sign out</button>
   </div>
   <main class="sched">
-    <section class="panel week-panel"><h2 id="week-title"></h2><div class="week-scroll"><div class="week" id="week"></div></div></section>
+    <section class="panel week-panel"><div class="row between"><h2 id="week-title"></h2>
+      <label class="check hint"><input type="checkbox" data-action="toggle-ignored"> Show ignored events</label></div><div class="week-scroll"><div class="week" id="week"></div></div></section>
     <aside class="side">
+      <div class="panel approvals" id="approvals" hidden></div>
       <div class="panel"><h2>Needs your pick (from email)</h2><div id="reviews"></div></div>
       <div class="panel"><h2>Details</h2><div id="details" class="hint">Click a block or event.</div></div>
       <div class="panel"><h2>This week</h2><div id="stats" class="mono"></div></div>
@@ -82,8 +86,9 @@ function renderWeek() {
     `<div style="top:calc(var(--ppm)*${i * 60}px)">${(i + 8) % 12 || 12}${i + 8 < 12 ? "a" : "p"}</div>`).join("") + `</div>`;
   for (const d of ds) {
     h += `<div class="daycol">`;
-    for (const e of m.eventsOn(d)) {
-      const cls = e.auto_added ? "ai" : e.source === "portal" ? "class" : "personal";
+    const ignored = view.showIgnored ? m.ignoredEvents().filter((e) => dayOf(e.start_at) === d) : [];
+    for (const e of [...m.eventsOn(d), ...ignored]) {
+      const cls = (e.auto_added ? "ai" : e.source === "portal" ? "class" : "personal") + (m.isIgnored(e) ? " ignored" : "");
       const sel = view.selected?.type === "event" && view.selected.id === e.id ? " sel" : "";
       h += `<button class="ev ${cls}${sel}" data-event="${e.id}" style="${pos(minOf(e.start_at), minOf(e.end_at))}">${e.auto_added ? '<span class="badge ai">AUTO</span> ' : ""}${esc(e.title.replace(/^\[Auto\]\s*/, ""))}</button>`;
     }
@@ -133,9 +138,14 @@ function renderDetails() {
     const e = m.events.find((x) => x.id === s.id);
     if (!e) { view.selected = null; return renderDetails(); }
     const source = { portal: "UW Portal (classes)", outlook: "UW Outlook", google: "Google calendar" }[e.source] || e.source;
+    const ignored = m.isIgnored(e), o = m.override(e.id);
     el.innerHTML = `<div class="det-h">${esc(e.title)}</div>
       <div>${fmtDay(dayOf(e.start_at))} ${fmtTime(e.start_at)}–${fmtTime(e.end_at)}</div>
-      <div class="hint">${source}${e.auto_added ? " · added automatically from email" : ""}</div>`;
+      <div class="hint">${source}${e.auto_added ? " · added automatically from email" : ""}</div>
+      ${ignored
+        ? `<div class="hint mt">Ignored (${esc(o.reason)}): not counted as busy.</div><button class="btn mt" data-action="restore">Restore</button>`
+        : `<button class="btn mt" data-action="ignore">Ignore this event…</button>
+           <div class="hint">Stops it counting as busy and hides it here. The source calendar isn't changed.</div>`}`;
   }
 }
 
@@ -169,14 +179,41 @@ function renderStats() {
   $("counter").textContent = `said→did · today ${c.today.done}/${c.today.total} · week ${c.week.done}/${c.week.total}`;
 }
 
+function renderApprovals() {
+  const html = approvalsHTML(m, (task, p) =>
+    `<a class="btn small primary" href="${todoLink(p.block_key.split(":")[0] >= todayStr() ? p.block_key.split(":")[0] : todayStr(), task.id)}">Re-place in /to-do</a>`);
+  $("approvals").hidden = !html;
+  $("approvals").innerHTML = html;
+}
+
 function render() {
+  renderApprovals();
   renderWeek();
   renderDetails();
   renderReviews();
   renderStats();
 }
 
+async function setIgnored(e, ignore) {
+  try {
+    if (ignore) {
+      await db.ignoreEvent(e, session.user.email);
+      const o = m.override(e.id);
+      if (o) Object.assign(o, { status: "approved", reason: "ignored by hand" });
+      else m.overrides.push({ event_key: e.id, status: "approved", reason: "ignored by hand" });
+    } else {
+      await db.setOverrides([e.id], "dismissed", session.user.email);
+      m.override(e.id).status = "dismissed";
+    }
+    toast(ignore ? "Ignored: blocks adjust at the next sync" : "Restored: counts as busy again at the next sync");
+    render();
+  } catch (err) {
+    toast(err.message, true);
+  }
+}
+
 document.addEventListener("click", async (e) => {
+  if (await handleApprovalClick(e, m, { email: session.user.email, rerender: render, toast })) return;
   const a = e.target.closest("[data-action]");
   const blk = e.target.closest("[data-block]"), ev = e.target.closest("[data-event]");
   const accept = e.target.closest("[data-accept]"), dismiss = e.target.closest("[data-dismiss]");
@@ -199,8 +236,14 @@ document.addEventListener("click", async (e) => {
     return;
   }
   if (!a) return;
+  const sel = view.selected?.type === "event" && m.events.find((x) => x.id === view.selected.id);
   switch (a.dataset.action) {
     case "signout": return signOut();
+    case "toggle-ignored": view.showIgnored = a.checked; return renderWeek();
+    case "ignore":
+      if (sel && confirm(`Ignore “${sel.title}” on ${fmtDay(dayOf(sel.start_at))}? It stops counting as busy; you can restore it any time.`)) setIgnored(sel, true);
+      return;
+    case "restore": return sel && setIgnored(sel, false);
     case "prev": view.week = addDays(view.week, -7); break;
     case "next": view.week = addDays(view.week, 7); break;
     case "this": view.week = mondayOf(todayStr()); break;

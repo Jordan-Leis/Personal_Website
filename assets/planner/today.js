@@ -2,6 +2,7 @@
 import { requireMember, signOut } from "./auth.js";
 import * as db from "./data.js";
 import { prepareImage } from "./proof-upload.js";
+import { approvalsHTML, handleApprovalClick } from "./approvals.js";
 import {
   esc, todayStr, addDays, dayOf, minOf, fmtTime, fmtDay, zonedToIso, isoToLocalInputs,
   Model, COLUMNS, KIND_LABEL,
@@ -15,7 +16,7 @@ const m = new Model();
 const params = new URLSearchParams(location.search);
 const view = {
   date: /^\d{4}-\d{2}-\d{2}$/.test(params.get("date") || "") ? params.get("date") : todayStr(),
-  openTask: null, log: [], urls: {}, pending: null,
+  openTask: null, log: [], urls: {}, pending: null, spread: null,
 };
 
 app.innerHTML = `
@@ -33,7 +34,11 @@ app.innerHTML = `
     <button class="btn" data-action="signout">Sign out</button>
   </div>
   <main class="combo">
-    <section><div class="board" id="board"></div></section>
+    <section>
+      <div class="panel approvals" id="approvals" hidden></div>
+      <div class="projects" id="projects" hidden></div>
+      <div class="board" id="board"></div>
+    </section>
     <section class="panel tl-panel"><h2 id="tl-title"></h2><div class="timeline" id="timeline"></div></section>
   </main>
   <aside class="drawer" id="drawer" aria-label="Task details"></aside>
@@ -67,9 +72,10 @@ async function reload() {
 
 // ---------- board ----------
 function deadlineBadge(t) {
-  if (!t.due_at) return "";
-  const u = m.urgency(t);
-  const when = t.due_has_time ? `${fmtDay(dayOf(t.due_at))} ${fmtTime(t.due_at)}` : fmtDay(dayOf(t.due_at));
+  const src = t.due_at ? t : m.projectOf(t)?.due_at ? m.projectOf(t) : null;
+  if (!src) return "";
+  const u = m.urgency({ ...src, status: t.status });
+  const when = src.due_has_time ? `${fmtDay(dayOf(src.due_at))} ${fmtTime(src.due_at)}` : fmtDay(dayOf(src.due_at));
   return `<span class="badge due ${u}">${u === "overdue" ? "overdue · " : "due "}${when}</span>`;
 }
 
@@ -81,9 +87,10 @@ function cardHTML(t) {
   const proof = t.status === "done"
     ? `<span class="badge ok">✓ proof</span>`
     : t.status === "in_progress" && !m.hasProof(t) ? `<span class="badge need">needs proof</span>` : "";
+  const project = m.projectOf(t);
   return `<div class="card" draggable="true" data-task="${t.id}" tabindex="0">
     <div class="t">${esc(t.title)}</div>
-    <div class="meta">${deadlineBadge(t)}${by ? `<span class="badge by">⏱ by ${by}</span>` : ""}${slipped ? `<span class="badge slip">slipped ×${slipped}</span>` : ""}${orphan ? `<span class="badge slip">block moved: re-place</span>` : ""}${subs.length ? `<span class="badge">☑ ${subs.filter((s) => s.done).length}/${subs.length}</span>` : ""}${proof}${t.tags.map((g) => `<span class="badge">#${esc(g)}</span>`).join("")}</div>
+    <div class="meta">${project ? `<span class="badge ofproj">↳ ${esc(project.title)}</span>` : ""}${deadlineBadge(t)}${by ? `<span class="badge by">⏱ by ${by}</span>` : ""}${slipped ? `<span class="badge slip">slipped ×${slipped}</span>` : ""}${orphan ? `<span class="badge slip">block moved: re-place</span>` : ""}${subs.length ? `<span class="badge">☑ ${subs.filter((s) => s.done).length}/${subs.length}</span>` : ""}${proof}${t.tags.map((g) => `<span class="badge">#${esc(g)}</span>`).join("")}</div>
   </div>`;
 }
 
@@ -96,6 +103,28 @@ function renderBoard() {
       ${list.map(cardHTML).join("") || `<div class="empty">nothing here</div>`}
     </div>`;
   }).join("");
+}
+
+function renderProjects() {
+  const list = m.projects().filter((p) => p.status !== "done" || (p.completed_at && Date.now() - new Date(p.completed_at) < 7 * 864e5));
+  const el = $("projects");
+  el.hidden = !list.length;
+  el.innerHTML = list.length ? `<h2>Projects</h2><div class="proj-row">${list.map((p) => {
+    const { done, total } = m.progress(p.id), next = m.nextPart(p.id);
+    return `<div class="proj ${p.status === "done" ? "done" : ""}" data-task="${p.id}" tabindex="0">
+      <div class="t">${esc(p.title)}</div>
+      <div class="bar" role="progressbar" aria-valuenow="${done}" aria-valuemax="${total}"><i style="width:${total ? (100 * done) / total : 0}%"></i></div>
+      <div class="meta"><span class="badge">${done}/${total} parts</span>${deadlineBadge(p)}</div>
+      <div class="hint">${p.status === "done" ? "All parts done ✓" : next ? `Next: ${esc(next.task.title)} · ${fmtDay(next.block.date)} ${fmtTime(next.block.start_at)}` : "No parts committed yet"}</div>
+    </div>`;
+  }).join("")}</div>` : "";
+}
+
+function renderApprovals() {
+  const html = approvalsHTML(m, (task, p) =>
+    `<button class="btn small primary" data-action="replace" data-task-id="${task.id}" data-date="${esc(p.block_key.split(":")[0])}">Re-place</button>`);
+  $("approvals").hidden = !html;
+  $("approvals").innerHTML = html;
 }
 
 // ---------- timeline ----------
@@ -140,13 +169,15 @@ function renderCounter() {
   $("counter").textContent = `said→did · today ${c.today.done}/${c.today.total} · week ${c.week.done}/${c.week.total}`;
 }
 
-function render() {
+function render({ drawer = true } = {}) {
+  renderApprovals();
+  renderProjects();
   renderBoard();
   renderTimeline();
   renderCounter();
   // Don't redraw the drawer under someone's cursor mid-typing.
   const typing = $("drawer").contains(document.activeElement) && document.activeElement.matches("input[type=text], textarea");
-  if (view.openTask && !typing) renderDrawer();
+  if (drawer && view.openTask && !typing) renderDrawer();
 }
 
 // ---------- drawer ----------
@@ -176,11 +207,13 @@ function renderDrawer(gateMessage = "") {
   if (!t) return closeDrawer();
   const due = isoToLocalInputs(t.due_at, t.due_has_time);
   const placements = m.placementsOf(t.id);
+  const isProject = m.isProject(t), project = m.projectOf(t);
   el.innerHTML = `
-    <div class="row between"><h2>Task</h2><button class="btn" data-action="close" aria-label="Close">✕</button></div>
+    <div class="row between"><h2>${isProject ? "Project" : project ? "Part" : "Task"}</h2><button class="btn" data-action="close" aria-label="Close">✕</button></div>
+    ${project ? `<div class="hint">Part of <button class="linkbtn" data-action="open" data-id="${project.id}">${esc(project.title)}</button></div>` : ""}
     <input type="text" class="title-input" value="${esc(t.title)}" data-field="title" aria-label="Title">
     <div class="row">
-      <select data-field="status" aria-label="Status">${COLUMNS.map(([k, l]) => `<option value="${k}" ${k === t.status ? "selected" : ""}>${l}</option>`).join("")}</select>
+      <select data-field="status" aria-label="Status" ${isProject ? "disabled title=\"Set by its parts\"" : ""}>${COLUMNS.map(([k, l]) => `<option value="${k}" ${k === t.status ? "selected" : ""}>${l}</option>`).join("")}</select>
       <input type="text" value="${esc(t.tags.join(", "))}" data-field="tags" placeholder="tags, comma separated" aria-label="Tags">
     </div>
     <div class="sec"><h2>Deadline</h2>
@@ -188,18 +221,23 @@ function renderDrawer(gateMessage = "") {
         <input type="time" value="${due.time}" data-field="due-time" aria-label="Due time (optional)">
         ${t.due_at ? `<button class="btn" data-action="clear-due">Clear</button>` : ""}</div>
       <div class="hint">Time is optional. Without one, it's due by end of day.</div></div>
-    <div class="sec"><h2>Commitments</h2>
+    ${isProject ? partsHTML(t) : ""}
+    <div class="sec" ${isProject && !placements.length ? "hidden" : ""}><h2>Commitments</h2>
       ${placements.map((p) => {
         const b = m.block(p.block_key), o = m.outcome(p);
         return `<div class="row"><span class="badge ${o === "missed" || o === "orphan" ? "slip" : o === "done" ? "ok" : "by"}">${o === "orphan" ? "block moved" : o}</span>
           <span>${b ? `${fmtDay(b.date)} ${m.blockLabel(b)} · ${fmtTime(b.start_at)}–${fmtTime(b.end_at)}` : esc(p.block_key)}</span>
           ${o === "planned" || o === "orphan" ? `<button class="btn small" data-action="unplace" data-id="${p.id}" aria-label="Remove commitment">✕</button>` : ""}</div>`;
       }).join("") || `<div class="hint">Not committed to a block yet.</div>`}
-      ${t.status !== "done" ? `<button class="btn" data-action="commit">+ Commit to a block</button>` : ""}</div>
+      ${t.status !== "done" && !isProject ? `<button class="btn" data-action="commit">+ Commit to a block</button>` : ""}</div>
     <div class="sec"><h2>Subtasks</h2>
       ${m.subtasksOf(t.id).map((s) => `<div class="row"><label class="check"><input type="checkbox" data-sub="${s.id}" ${s.done ? "checked" : ""}> ${esc(s.title)}</label>
         <button class="btn small ghost" data-action="del-sub" data-id="${s.id}" aria-label="Delete subtask">✕</button></div>`).join("")}
       <input type="text" placeholder="+ subtask, press Enter" data-addsub aria-label="Add subtask"></div>
+    ${!isProject && !project && t.status !== "done" ? `<div class="sec"><h2>Spread over several days?</h2>
+      <div class="hint">Turn this into a project: each part gets its own day, block, proof and deadline.</div>
+      ${splitHTML(t)}
+      ${m.subtasksOf(t.id).some((x) => !x.done) ? `<button class="btn mt" data-action="to-parts">Turn unchecked subtasks into parts</button>` : ""}</div>` : ""}
     <div class="sec"><h2>Work log</h2>
       ${view.log.map((l) => `<div class="log"><span class="mono">${fmtDay(dayOf(l.created_at))} ${fmtTime(l.created_at)}</span> · ${esc(l.body)}</div>`).join("")}
       <input type="text" placeholder="What did you just do? Enter to log" data-addlog aria-label="Add log entry"></div>
@@ -211,12 +249,112 @@ function renderDrawer(gateMessage = "") {
         <input type="text" placeholder="https://… link" data-proofurl aria-label="Proof link"><button class="btn" data-action="add-link">Add</button></div>
       <h2 class="mt">Recap</h2>
       <textarea placeholder="What got done? What did you learn?" data-field="recap" aria-label="Recap">${esc(t.recap)}</textarea>
-      <label class="check"><input type="checkbox" data-field="proof_required" ${t.proof_required ? "checked" : ""}> Require proof or recap before Done</label></div>
+      ${isProject ? "" : `<label class="check"><input type="checkbox" data-field="proof_required" ${t.proof_required ? "checked" : ""}> Require proof or recap before Done</label>`}</div>
     <div class="sec row between">
-      ${t.status !== "done" ? `<button class="btn primary" data-action="done">Mark Done</button>` : `<span class="badge ok">Done ${t.completed_at ? fmtDay(dayOf(t.completed_at)) + " " + fmtTime(t.completed_at) : ""}</span>`}
+      ${isProject ? `<span class="hint">${t.status === "done" ? "Done: every part is finished ✓" : "Completes when all its parts are done."}</span>`
+        : t.status !== "done" ? `<button class="btn primary" data-action="done">Mark Done</button>` : `<span class="badge ok">Done ${t.completed_at ? fmtDay(dayOf(t.completed_at)) + " " + fmtTime(t.completed_at) : ""}</span>`}
       <button class="btn danger" data-action="delete">Delete task</button></div>
     <div class="gate ${gateMessage ? "show" : ""}" role="alert">${esc(gateMessage)}</div>`;
   el.classList.add("open");
+}
+
+function splitHTML(t) {
+  return `<div class="row"><input type="text" placeholder="+ add part, press Enter" data-addpart aria-label="Add part"></div>
+    <div class="row split"><span class="hint">or split into</span>
+      <input type="number" min="2" max="50" value="10" data-split-n aria-label="Number of parts">
+      <span class="hint">parts named</span>
+      <input type="text" value="${esc(t.title)}" data-split-name aria-label="Part name">
+      <button class="btn" data-action="split">Split</button></div>`;
+}
+
+function partsHTML(t) {
+  const parts = m.partsOf(t.id), { done, total } = m.progress(t.id);
+  return `<div class="sec"><h2>Parts · ${done}/${total} done</h2>
+    <div class="bar"><i style="width:${total ? (100 * done) / total : 0}%"></i></div>
+    ${parts.map((p) => {
+      const by = p.status !== "done" ? m.doneBy(p.id) : null, slipped = m.slipped(p.id);
+      return `<div class="row part"><span class="badge ${p.status === "done" ? "ok" : p.status === "in_progress" ? "by" : ""}">${COLUMNS.find(([k]) => k === p.status)[1]}</span>
+        <button class="linkbtn grow" data-action="open" data-id="${p.id}">${esc(p.title)}</button>
+        ${by ? `<span class="badge by">⏱ ${by}</span>` : ""}${slipped ? `<span class="badge slip">×${slipped}</span>` : ""}
+        ${p.status !== "done" && !by ? `<button class="btn small" data-action="commit-part" data-id="${p.id}">Commit</button>` : ""}</div>`;
+    }).join("")}
+    ${t.status !== "done" ? `${splitHTML(t)}
+      ${parts.some((p) => p.status !== "done" && !m.plannedFor(p.id).length) ? `<button class="btn primary mt" data-action="spread">Spread across days…</button>` : ""}` : ""}</div>`;
+}
+
+// ---------- projects ----------
+// A project's status follows its parts; keep the stored value in step so the sync job agrees.
+async function syncProject(parentId) {
+  const parent = parentId && m.task(parentId);
+  if (!parent || !m.isProject(parent)) return;
+  const status = m.derivedStatus(parentId);
+  if (status === parent.status) return;
+  m.replaceTask(await db.updateTask(parentId, { status, completed_at: status === "done" ? new Date().toISOString() : null }));
+  if (status === "done") toast(`Project done: ${parent.title} ✓`);
+}
+
+async function addParts(parent, titles) {
+  const base = Date.now();
+  for (const [i, title] of titles.entries()) {
+    m.addTask(await db.createTask({ title, status: "todo", parent_id: parent.id, tags: parent.tags, sort_order: base + i }));
+  }
+  await syncProject(parent.id);
+}
+
+function openSpread(projectId) {
+  const parts = m.partsOf(projectId).filter((p) => p.status !== "done" && !m.plannedFor(p.id).length);
+  const days = m.placeableDays().filter((d) => m.placeableBlocks(d).some((b) => !m.tasksInBlock(b.key).length));
+  if (!days.length) return toast("No free blocks coming up", true);
+  view.spread = {
+    projectId,
+    rows: parts.map((p, i) => {
+      const date = days[Math.min(i, days.length - 1)];
+      const free = m.placeableBlocks(date).find((b) => !m.tasksInBlock(b.key).length);
+      return { taskId: p.id, date, blockKey: free?.key || m.placeableBlocks(date)[0]?.key };
+    }),
+  };
+  renderSpread();
+  $("modal-bg").classList.add("show");
+}
+
+function renderSpread() {
+  const sp = view.spread, project = m.task(sp.projectId), days = m.placeableDays();
+  const late = (key) => { const b = m.block(key); return b && project.due_at && b.end_at > project.due_at; };
+  $("modal").innerHTML = `
+    <h3>Spread: ${esc(project.title)}</h3>
+    <p class="hint">One part per day in the first free block. Change any row, then approve. Nothing is committed until you do.</p>
+    <div class="spread">${sp.rows.map((r, i) => `
+      <div class="spread-row ${late(r.blockKey) ? "late" : ""}">
+        <span class="grow">${esc(m.task(r.taskId).title)}</span>
+        <select data-spread-day="${i}" aria-label="Day">${days.map((d) => `<option value="${d}" ${d === r.date ? "selected" : ""}>${fmtDay(d)}</option>`).join("")}</select>
+        <select data-spread-block="${i}" aria-label="Block">${m.placeableBlocks(r.date).map((b) => {
+          const n = m.tasksInBlock(b.key).length + sp.rows.filter((x, j) => j !== i && x.blockKey === b.key).length;
+          return `<option value="${b.key}" ${b.key === r.blockKey ? "selected" : ""}>${m.blockLabel(b)} ${fmtTime(b.start_at)}${n ? ` (${n})` : ""}</option>`;
+        }).join("")}</select>
+      </div>`).join("")}</div>
+    ${sp.rows.some((r) => late(r.blockKey)) ? `<div class="warn" role="alert">⚠ Highlighted rows end after the project deadline.</div>` : ""}
+    <div class="actions"><button class="btn" data-action="spread-cancel">Cancel</button>
+      <button class="btn primary" data-action="spread-approve">Approve ${sp.rows.length} commitment${sp.rows.length > 1 ? "s" : ""}</button></div>`;
+}
+
+function closeSpread() {
+  view.spread = null;
+  $("modal-bg").classList.remove("show");
+}
+
+async function approveSpread() {
+  const { projectId, rows } = view.spread;
+  closeSpread();
+  await act(async () => {
+    for (const r of rows.filter((r) => r.blockKey)) {
+      m.addPlacement(await db.place(r.taskId, r.blockKey));
+      const t = m.task(r.taskId);
+      if (t.status === "backlog" || t.status === "todo") m.replaceTask(await db.updateTask(r.taskId, { status: "in_progress" }));
+    }
+    await syncProject(projectId);
+    toast(`Committed ${rows.length} parts`);
+    render();
+  });
 }
 
 // ---------- status changes ----------
@@ -230,6 +368,7 @@ async function setStatus(id, status, { fromDrop = false } = {}) {
   render();
   await act(async () => {
     m.replaceTask(await db.updateTask(id, patch));
+    await syncProject(t.parent_id);
     if (status === "in_progress" && !m.plannedFor(id).length) {
       openPlacePopup(id, { revertTo: fromDrop ? prev : null });
     }
@@ -261,12 +400,14 @@ async function markDone(id) {
     }
     m.replaceTask(await db.updateTask(id, { status: "done", completed_at: now.toISOString() }));
     toast("Done ✓");
+    await syncProject(t.parent_id);
     render();
   });
 }
 
 // ---------- placement popup: pick a day, then a block ----------
 function openPlacePopup(taskId, { date = null, blockKey = null, revertTo = null } = {}) {
+  if (m.isProject(m.task(taskId))) return toast("Commit the project's parts instead", true);
   const days = m.placeableDays();
   if (!days.length) return toast("No upcoming blocks to commit to", true);
   const start = blockKey ? m.block(blockKey).date : date && days.includes(date) ? date : days[0];
@@ -284,7 +425,8 @@ function renderPopup() {
     p.blockKey = (blocks.find((b) => !m.tasksInBlock(b.key).length) || blocks[0])?.key || null;
   }
   const chosen = p.blockKey && m.block(p.blockKey);
-  const late = chosen && t.due_at && new Date(chosen.end_at) > new Date(t.due_at);
+  const due = m.effectiveDue(t);
+  const late = chosen && due && new Date(chosen.end_at) > new Date(due);
   $("modal").innerHTML = `
     <h3>Commit: ${esc(t.title)}</h3>
     <p class="hint">Which day?</p>
@@ -297,7 +439,7 @@ function renderPopup() {
         <span>${m.blockLabel(b)}</span><span class="mono">${fmtTime(b.start_at)}–${fmtTime(b.end_at)}</span><span class="hint">${n ? `${n} task${n > 1 ? "s" : ""}` : "free"}</span></label>`;
     }).join("") || `<div class="hint">No blocks left that day.</div>`}</div>
     ${chosen ? `<div class="big">Done by ${fmtDay(chosen.date)} ${fmtTime(chosen.end_at)}</div>` : ""}
-    ${late ? `<div class="warn" role="alert">⚠ That's after the deadline (${fmtDay(dayOf(t.due_at))}${t.due_has_time ? " " + fmtTime(t.due_at) : ""}).</div>` : ""}
+    ${late ? `<div class="warn" role="alert">⚠ That's after the deadline (${fmtDay(dayOf(due))} ${fmtTime(due)}).</div>` : ""}
     <div class="actions"><button class="btn" data-action="popup-cancel">Cancel</button>
       <button class="btn primary" data-action="popup-confirm" ${chosen ? "" : "disabled"}>Commit</button></div>`;
 }
@@ -314,6 +456,7 @@ async function confirmPopup() {
     m.addPlacement(await db.place(taskId, blockKey));
     const t = m.task(taskId);
     if (t.status === "backlog" || t.status === "todo") m.replaceTask(await db.updateTask(taskId, { status: "in_progress" }));
+    await syncProject(t.parent_id);
     const b = m.block(blockKey);
     toast(`Committed to ${fmtDay(b.date)} ${fmtTime(b.start_at)} block`);
     render();
@@ -333,6 +476,7 @@ async function cancelPopup() {
 
 // ---------- events ----------
 document.addEventListener("click", async (e) => {
+  if (await handleApprovalClick(e, m, { email: session.user.email, rerender: render, toast })) return;
   const a = e.target.closest("[data-action]");
   const dayChip = e.target.closest("[data-pick-day]");
   if (dayChip) {
@@ -340,7 +484,7 @@ document.addEventListener("click", async (e) => {
     view.pending.blockKey = null;
     return renderPopup();
   }
-  if (e.target === $("modal-bg")) return cancelPopup();
+  if (e.target === $("modal-bg")) return view.spread ? closeSpread() : cancelPopup();
   if (!a) {
     const card = e.target.closest("[data-task]");
     if (card && !e.target.closest(".drawer")) openDrawer(card.dataset.task);
@@ -356,6 +500,28 @@ document.addEventListener("click", async (e) => {
     case "popup-cancel": return cancelPopup();
     case "popup-confirm": return confirmPopup();
     case "commit": return openPlacePopup(t.id, { date: view.date });
+    case "commit-part": return openPlacePopup(a.dataset.id, { date: view.date });
+    case "open": return openDrawer(a.dataset.id);
+    case "replace": return openPlacePopup(a.dataset.taskId, { date: a.dataset.date >= todayStr() ? a.dataset.date : null });
+    case "spread": return openSpread(t.id);
+    case "spread-cancel": return closeSpread();
+    case "spread-approve": return approveSpread();
+    case "split": {
+      const n = Math.min(50, Math.max(2, parseInt(document.querySelector("[data-split-n]").value, 10) || 0));
+      const name = document.querySelector("[data-split-name]").value.trim() || t.title;
+      if (!confirm(`Create ${n} parts named “${name} (1/${n})” … “(${n}/${n})”?`)) return;
+      return act(async () => {
+        await addParts(t, Array.from({ length: n }, (_, i) => `${name} (${i + 1}/${n})`));
+        toast(`${n} parts added`); render(); renderDrawer();
+      });
+    }
+    case "to-parts":
+      return act(async () => {
+        const subs = m.subtasksOf(t.id).filter((x) => !x.done);
+        await addParts(t, subs.map((x) => x.title));
+        for (const x of subs) { await db.deleteSubtask(x.id); m.removeSubtask(x.id); }
+        toast(`${subs.length} parts created`); render(); renderDrawer();
+      });
     case "done": return markDone(t.id);
     case "clear-due":
       return act(async () => { m.replaceTask(await db.updateTask(t.id, { due_at: null, due_has_time: false })); render(); renderDrawer(); });
@@ -380,16 +546,21 @@ document.addEventListener("click", async (e) => {
         render(); renderDrawer();
       });
     }
-    case "delete":
-      if (!confirm(`Delete “${t.title}”? This also deletes its subtasks, log and proof.`)) return;
+    case "delete": {
+      const parts = m.partsOf(t.id);
+      if (!confirm(`Delete “${t.title}”?${parts.length ? ` Its ${parts.length} parts are deleted too.` : ""} This also deletes subtasks, log and proof.`)) return;
       return act(async () => {
-        const photos = m.proofsOf(t.id).filter((p) => p.storage_path);
-        for (const p of photos) await db.deleteProof(p);
+        for (const x of [t, ...parts]) {
+          for (const p of m.proofsOf(x.id).filter((p) => p.storage_path)) await db.deleteProof(p);
+        }
         await db.deleteTask(t.id);
+        for (const x of parts) m.removeTask(x.id);
         m.removeTask(t.id);
+        await syncProject(t.parent_id);
         closeDrawer();
         render();
       });
+    }
   }
 });
 
@@ -400,6 +571,13 @@ document.addEventListener("change", async (e) => {
     return;
   }
   if (el.name === "blk") { view.pending.blockKey = el.value; return renderPopup(); }
+  if (el.dataset.spreadDay) {
+    const r = view.spread.rows[+el.dataset.spreadDay];
+    r.date = el.value;
+    r.blockKey = (m.placeableBlocks(r.date).find((b) => !m.tasksInBlock(b.key).length) || m.placeableBlocks(r.date)[0])?.key;
+    return renderSpread();
+  }
+  if (el.dataset.spreadBlock) { view.spread.rows[+el.dataset.spreadBlock].blockKey = el.value; return renderSpread(); }
   const t = view.openTask && m.task(view.openTask);
   if (!t || !el.closest("#drawer")) return;
   if (el.matches("[data-photo]")) {
@@ -429,12 +607,13 @@ document.addEventListener("change", async (e) => {
     patch = date ? { due_at: zonedToIso(date, time || "23:59"), due_has_time: Boolean(time) } : { due_at: null, due_has_time: false };
   }
   if (field === "status") return setStatus(t.id, el.value);
-  if (patch) await act(async () => { m.replaceTask(await db.updateTask(t.id, patch)); render(); });
+  // Saving a field fires on blur; redrawing the drawer then would swallow the click that caused the blur.
+  if (patch) await act(async () => { m.replaceTask(await db.updateTask(t.id, patch)); render({ drawer: false }); });
 });
 
 document.addEventListener("keydown", async (e) => {
-  if (e.key === "Escape") return view.pending ? cancelPopup() : closeDrawer();
-  if (e.key === "Enter" && e.target.matches(".card")) return openDrawer(e.target.dataset.task);
+  if (e.key === "Escape") return view.spread ? closeSpread() : view.pending ? cancelPopup() : closeDrawer();
+  if (e.key === "Enter" && e.target.matches(".card, .proj")) return openDrawer(e.target.dataset.task);
   if (e.key !== "Enter" || !e.target.matches("input[type=text]")) return;
   const el = e.target, value = el.value.trim();
   if (!value) return;
@@ -443,6 +622,11 @@ document.addEventListener("keydown", async (e) => {
     return act(async () => { m.addTask(await db.createTask({ title: value, status: el.dataset.add, sort_order: Date.now() })); render(); });
   }
   const t = view.openTask && m.task(view.openTask);
+  if (el.matches("[data-addpart]")) {
+    el.value = "";
+    return act(async () => { await addParts(t, [value]); render(); renderDrawer(); document.querySelector("[data-addpart]")?.focus(); });
+  }
+  if (el.matches("[data-split-name]")) return document.querySelector('[data-action="split"]').click();
   if (el.matches("[data-addsub]")) {
     el.value = "";
     return act(async () => { m.addSubtask(await db.addSubtask(t.id, value, Date.now())); render(); renderDrawer(); document.querySelector("[data-addsub]")?.focus(); });
@@ -484,8 +668,8 @@ document.addEventListener("drop", (e) => {
 document.addEventListener("dragend", () => (dragId = null));
 
 // Keep both people's edits and the sync job's changes fresh.
-window.addEventListener("focus", () => !view.pending && reload().catch(() => {}));
-setInterval(() => !document.hidden && !view.pending && reload().catch(() => {}), 120000);
+window.addEventListener("focus", () => !view.pending && !view.spread && reload().catch(() => {}));
+setInterval(() => !document.hidden && !view.pending && !view.spread && reload().catch(() => {}), 120000);
 setInterval(() => !document.hidden && (renderTimeline(), renderCounter()), 60000);
 
 await reload();

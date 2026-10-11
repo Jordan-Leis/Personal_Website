@@ -41,7 +41,7 @@ export function isoToLocalInputs(iso, hasTime) {
 
 export class Model {
   constructor() {
-    this.set({ tasks: [], subtasks: [], proofs: [], placements: [], blocks: [], events: [] });
+    this.set({ tasks: [], subtasks: [], proofs: [], placements: [], blocks: [], events: [], overrides: [] });
   }
 
   set(data) {
@@ -61,8 +61,45 @@ export class Model {
       .sort((a, b) => (this.block(a.block_key)?.start_at || "").localeCompare(this.block(b.block_key)?.start_at || ""));
   }
 
+  // ---------- projects: a task with parts (one level deep) ----------
+  partsOf(id) { return this.tasks.filter((t) => t.parent_id === id).sort((a, b) => a.sort_order - b.sort_order); }
+  isProject(t) { return Boolean(t) && this.tasks.some((x) => x.parent_id === t.id); }
+  projectOf(t) { return t?.parent_id ? this.task(t.parent_id) : null; }
+  projects() {
+    return this.tasks.filter((t) => this.isProject(t))
+      .sort((a, b) => (a.status === "done") - (b.status === "done") || (a.due_at || "9").localeCompare(b.due_at || "9"));
+  }
+  progress(id) { const ps = this.partsOf(id); return { done: ps.filter((p) => p.status === "done").length, total: ps.length }; }
+  derivedStatus(id) {
+    const ps = this.partsOf(id);
+    if (ps.length && ps.every((p) => p.status === "done")) return "done";
+    if (ps.some((p) => p.status === "in_progress" || p.status === "done")) return "in_progress";
+    return ps.some((p) => p.status === "todo") ? "todo" : "backlog";
+  }
+  nextPart(id) {
+    return this.partsOf(id).flatMap((t) => this.plannedFor(t.id).map((p) => ({ task: t, block: this.block(p.block_key) })))
+      .sort((a, b) => a.block.start_at.localeCompare(b.block.start_at))[0] || null;
+  }
+  effectiveDue(t) {
+    const own = t.due_at, parent = this.projectOf(t)?.due_at;
+    if (own && parent) return own < parent ? own : parent;
+    return own || parent || null;
+  }
+
+  // ---------- approvals ----------
+  suggestionGroups() {
+    const groups = {};
+    for (const o of this.overrides.filter((o) => o.status === "suggested")) (groups[o.reason] ||= []).push(o);
+    return Object.entries(groups).map(([reason, items]) => ({ reason, items }));
+  }
+  orphanCommitments() {
+    return this.placements.filter((p) => this.outcome(p) === "orphan").map((p) => ({ placement: p, task: this.task(p.task_id) }));
+  }
+  ignoredEvents() { return this.events.filter((e) => this.isIgnored(e)); }
+  override(key) { return this.overrides.find((o) => o.event_key === key); }
+
   tasksIn(status) {
-    const list = this.tasks.filter((t) => t.status === status);
+    const list = this.tasks.filter((t) => t.status === status && !this.isProject(t));
     if (status === "done") return list.sort((a, b) => (b.completed_at || "").localeCompare(a.completed_at || ""));
     return list.sort((a, b) =>
       (a.due_at ? 0 : 1) - (b.due_at ? 0 : 1) || (a.due_at || "").localeCompare(b.due_at || "") || a.sort_order - b.sort_order);
@@ -119,7 +156,9 @@ export class Model {
 
   // ---------- calendar ----------
   blocksOn(d) { return this.blocks.filter((b) => b.date === d); }
-  eventsOn(d) { return this.events.filter((e) => !e.ignored && dayOf(e.start_at) === d); }
+  // Ignored = an approved override (read live, so Approve/Restore show up before the next sync).
+  isIgnored(e) { return this.override(e.id)?.status === "approved"; }
+  eventsOn(d) { return this.events.filter((e) => !this.isIgnored(e) && dayOf(e.start_at) === d); }
   dueOn(d) { return this.tasks.filter((t) => t.status !== "done" && t.due_at && dayOf(t.due_at) === d); }
   blockLabel(b) {
     if (b.kind !== "work") return KIND_LABEL[b.kind];
