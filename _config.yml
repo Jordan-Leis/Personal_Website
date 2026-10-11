@@ -26,6 +26,7 @@ exclude:
   - playwright.config.js
   - tests
   - scripts
+  - supabase
   - test-results
   - playwright-report
   - solver
