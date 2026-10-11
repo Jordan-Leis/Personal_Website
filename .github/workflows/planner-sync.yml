@@ -1,4 +1,5 @@
-# Keeps the "Work Blocks" Google Calendar in sync for jordanleis.com/to-do and
+# Scans new Gmail for interviews/meetings, then keeps the "Work Blocks" Google
+# Calendar in sync for jordanleis.com/to-do and
 # /schedule. Reads the UW Portal and Outlook ICS feeds plus the primary Google
 # calendar, regenerates blocks, and patches the calendar in place.
 #
@@ -23,7 +24,7 @@ permissions:
 jobs:
   sync:
     runs-on: ubuntu-latest
-    timeout-minutes: 8
+    timeout-minutes: 12
     steps:
       - uses: actions/checkout@v4
 

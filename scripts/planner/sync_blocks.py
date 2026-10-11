@@ -11,7 +11,7 @@ import argparse
 import datetime as dt
 from zoneinfo import ZoneInfo
 
-from . import overrides, reconcile, tasks_writer, uw_classes
+from . import email_scan, overrides, reconcile, tasks_writer, uw_classes
 from .mirror import mirror
 from .blocks import generate, load_rules, weekly_summary
 from .config import load_env
@@ -25,6 +25,7 @@ def main(argv=None):
     parser.add_argument("--apply", action="store_true")
     parser.add_argument("--days", action="store_true")
     parser.add_argument("--today", type=dt.date.fromisoformat, help="pretend today is this date")
+    parser.add_argument("--no-email", action="store_true", help="skip the Gmail scan")
     args = parser.parse_args(argv)
 
     env, rules = load_env(), load_rules()
@@ -33,20 +34,25 @@ def main(argv=None):
     first, last = max(today, rules["term"]["start"]), rules["term"]["end"]
     window = (dt.datetime.combine(first, dt.time(0), tz), dt.datetime.combine(last + dt.timedelta(days=1), dt.time(0), tz))
 
+    service = calendar_service(env)
+    db = Supabase(env["SUPABASE_URL"], env["SUPABASE_SERVICE_KEY"]) if env.get("SUPABASE_SERVICE_KEY") else None
+
+    # Email first, so an interview found now already counts as busy below.
+    if args.apply and service and db and not args.no_email:
+        print("email:", email_scan.run(env, db, service, dt.datetime.now(tz)))
+
     busy = fetch_ics(env["PORTAL_ICS_URL"], "portal", *window, tz)
     counts = {"portal": len(busy)}
     if env.get("OUTLOOK_ICS_URL"):
         outlook = fetch_ics(env["OUTLOOK_ICS_URL"], "outlook", *window, tz)
         busy += outlook
         counts["outlook"] = len(outlook)
-    service = calendar_service(env)
     if service:
         primary = google_busy(service, "primary", *window)
         busy += primary
         counts["google"] = len(primary)
     print("busy events:", counts, "" if service else "(no Google token yet: primary calendar skipped)")
 
-    db = Supabase(env["SUPABASE_URL"], env["SUPABASE_SERVICE_KEY"]) if env.get("SUPABASE_SERVICE_KEY") else None
     approved: dict[str, str] = {}
     if db:
         approved, suggested = overrides.sync(db, busy, rules, write=args.apply)

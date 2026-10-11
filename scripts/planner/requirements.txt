@@ -4,7 +4,6 @@ google-auth-oauthlib>=1.2
 icalendar>=6.0
 recurring-ical-events>=3.3
 python-dateutil>=2.9
-dateparser>=1.2
 pyyaml>=6.0
 requests>=2.32
 pytest>=8.3
