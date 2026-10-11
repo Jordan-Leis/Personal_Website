@@ -21,7 +21,7 @@ class Changes:
         return len(self.create) + len(self.update) + len(self.delete)
 
 
-def get_or_create_calendar(service, timezone: str) -> str:
+def find_calendar(service) -> str | None:
     token = None
     while True:
         resp = service.calendarList().list(pageToken=token).execute()
@@ -30,7 +30,13 @@ def get_or_create_calendar(service, timezone: str) -> str:
                 return cal["id"]
         token = resp.get("nextPageToken")
         if not token:
-            break
+            return None
+
+
+def get_or_create_calendar(service, timezone: str) -> str:
+    found = find_calendar(service)
+    if found:
+        return found
     created = service.calendars().insert(body={"summary": CALENDAR_NAME, "timeZone": timezone}).execute()
     return created["id"]
 

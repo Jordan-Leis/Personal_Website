@@ -1,0 +1,32 @@
+:root {
+  --orange: #e95420; --orange-hover: #f08763;
+  --win-bg: #1e1e1e; --win-header: #2b2b2b; --win-border: rgba(255, 255, 255, 0.08);
+  --fg: #f7f7f7; --fg-dim: #c0bfbc; --fg-muted: #9a9996;
+  --term-bg: #300a24; --term-green: #8ae234; --term-blue: #729fcf; --term-yellow: #fce94f; --term-red: #ef2929;
+  --page-bg: #161616;
+  --font-ui: 'Ubuntu', 'Noto Sans', system-ui, sans-serif;
+  --font-mono: 'Ubuntu Mono', 'DejaVu Sans Mono', monospace;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--page-bg); color: var(--fg); font-family: var(--font-ui); font-size: 14px; }
+button, input, select, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; }
+.btn { background: #3a3a3a; border: 1px solid var(--win-border); border-radius: 6px; padding: 6px 12px; }
+.btn.primary { background: var(--orange); border-color: var(--orange); color: #fff; }
+.btn.primary:hover { background: var(--orange-hover); }
+
+#app:has(.gate-card) { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 16px; }
+.gate-card { background: var(--win-header); border: 1px solid var(--win-border); border-radius: 12px; padding: 28px; width: min(380px, 100%); text-align: center; }
+.gate-card h1 { font-size: 20px; margin: 8px 0; }
+.gate-card p { color: var(--fg-dim); margin: 0 0 18px; }
+.gate-brand { font-family: var(--font-mono); color: var(--orange); font-weight: 700; }
+
+.topbar { display: flex; align-items: center; gap: 16px; padding: 8px 16px; background: var(--win-header);
+  border-bottom: 1px solid var(--win-border); flex-wrap: wrap; }
+.brand { font-family: var(--font-mono); color: var(--orange); font-weight: 700; }
+.spacer { flex: 1; }
+.who { color: var(--fg-muted); font-size: 12px; }
+main { padding: 16px; }
+.panel { background: var(--win-bg); border: 1px solid var(--win-border); border-radius: 10px; padding: 12px; margin-bottom: 16px; }
+.panel h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .06em; color: var(--fg-muted); margin: 0 0 8px; font-weight: 500; }
+.mono { font-family: var(--font-mono); }

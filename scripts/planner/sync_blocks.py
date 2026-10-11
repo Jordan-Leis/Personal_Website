@@ -12,10 +12,12 @@ import datetime as dt
 from zoneinfo import ZoneInfo
 
 from . import reconcile
+from .mirror import mirror
 from .blocks import generate, load_rules, weekly_summary
 from .config import load_env
 from .gcal import calendar_service
 from .sources import fetch_ics, google_busy
+from .supa import Supabase
 
 
 def main(argv=None):
@@ -54,14 +56,25 @@ def main(argv=None):
 
     if not service:
         return
-    cal_id = reconcile.get_or_create_calendar(service, rules["timezone"]) if args.apply else None
+    if args.apply:
+        cal_id = reconcile.get_or_create_calendar(service, rules["timezone"])
+    else:
+        cal_id = reconcile.find_calendar(service)
     events = reconcile.list_block_events(service, cal_id, *window) if cal_id else []
     _, changes = reconcile.plan_changes(blocks, events, today)
     print(f"changes: create {len(changes.create)}, update {len(changes.update)}, delete {len(changes.delete)}"
           + ("" if args.apply else " (dry run)"))
-    if args.apply and changes:
+    if not args.apply:
+        return
+    if changes:
         reconcile.apply_changes(service, cal_id, changes, rules["timezone"])
         print("applied")
+
+    if env.get("SUPABASE_URL") and env.get("SUPABASE_SERVICE_KEY"):
+        term = (dt.datetime.combine(rules["term"]["start"], dt.time(0), tz), window[1])
+        all_blocks = reconcile.list_block_events(service, cal_id, *term)
+        db = Supabase(env["SUPABASE_URL"], env["SUPABASE_SERVICE_KEY"])
+        print("mirrored:", mirror(db, all_blocks, busy, window[0], window[1]))
 
 
 if __name__ == "__main__":

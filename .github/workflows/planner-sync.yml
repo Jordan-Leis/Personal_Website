@@ -42,4 +42,6 @@ jobs:
           GOOGLE_REFRESH_TOKEN: ${{ secrets.GOOGLE_REFRESH_TOKEN }}
           PORTAL_ICS_URL: ${{ secrets.PORTAL_ICS_URL }}
           OUTLOOK_ICS_URL: ${{ secrets.OUTLOOK_ICS_URL }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
         run: python -m scripts.planner.sync_blocks --apply
