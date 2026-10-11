@@ -119,7 +119,7 @@ export class Model {
 
   // ---------- calendar ----------
   blocksOn(d) { return this.blocks.filter((b) => b.date === d); }
-  eventsOn(d) { return this.events.filter((e) => dayOf(e.start_at) === d); }
+  eventsOn(d) { return this.events.filter((e) => !e.ignored && dayOf(e.start_at) === d); }
   dueOn(d) { return this.tasks.filter((t) => t.status !== "done" && t.due_at && dayOf(t.due_at) === d); }
   blockLabel(b) {
     if (b.kind !== "work") return KIND_LABEL[b.kind];

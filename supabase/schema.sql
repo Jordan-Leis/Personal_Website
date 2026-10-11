@@ -120,6 +120,10 @@ create table if not exists public.calendar_events (
   updated_at    timestamptz not null default now()
 );
 create index if not exists calendar_events_start_idx on public.calendar_events (start_at);
+-- Ignored events (e.g. classes the feed still lists during reading week) stay in the
+-- mirror for transparency but don't count as busy and are hidden in the planner.
+alter table public.calendar_events add column if not exists ignored boolean not null default false;
+alter table public.calendar_events add column if not exists ignore_reason text;
 
 -- ---------- email detection (written by the sync job) ----------
 create table if not exists public.email_scans (

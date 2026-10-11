@@ -4,7 +4,7 @@ from __future__ import annotations
 import datetime as dt
 import hashlib
 
-from .blocks import Busy
+from .blocks import Busy, ignore_reason
 from .reconcile import event_to_block
 from .supa import Supabase
 
@@ -26,13 +26,15 @@ def block_rows(events: list[dict]) -> list[dict]:
     return rows
 
 
-def event_rows(busy: list[Busy]) -> list[dict]:
+def event_rows(busy: list[Busy], rules: dict) -> list[dict]:
     rows = {}
     for b in busy:
+        reason = ignore_reason(b, rules)
         rows[busy_id(b)] = {
             "id": busy_id(b), "source": b.source, "title": b.title,
             "start_at": b.start.isoformat(), "end_at": b.end.isoformat(),
             "auto_added": b.title.startswith("[Auto]"),
+            "ignored": reason is not None, "ignore_reason": reason,
         }
     return list(rows.values())
 
@@ -45,13 +47,14 @@ def _stale(db: Supabase, table: str, id_col: str, time_col: str, start: dt.datet
     return [r[id_col] for r in existing if r[id_col] not in keep]
 
 
-def mirror(db: Supabase, block_events: list[dict], busy: list[Busy], start: dt.datetime, end: dt.datetime) -> dict:
+def mirror(db: Supabase, block_events: list[dict], busy: list[Busy], rules: dict, start: dt.datetime, end: dt.datetime) -> dict:
     """Upsert everything in [start, end) and delete rows in that window that no longer exist."""
-    blocks, events = block_rows(block_events), event_rows(busy)
+    blocks, events = block_rows(block_events), event_rows(busy, rules)
     db.upsert("blocks", blocks, "key")
     db.upsert("calendar_events", events, "id")
     stale_blocks = _stale(db, "blocks", "key", "start_at", start, end, {r["key"] for r in blocks})
     stale_events = _stale(db, "calendar_events", "id", "start_at", start, end, {r["id"] for r in events})
     db.delete_in("blocks", "key", stale_blocks)
     db.delete_in("calendar_events", "id", stale_events)
-    return {"blocks": len(blocks), "events": len(events), "removed": len(stale_blocks) + len(stale_events)}
+    return {"blocks": len(blocks), "events": len(events), "ignored": sum(r["ignored"] for r in events),
+            "removed": len(stale_blocks) + len(stale_events)}

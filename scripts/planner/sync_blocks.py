@@ -74,7 +74,7 @@ def main(argv=None):
         term = (dt.datetime.combine(rules["term"]["start"], dt.time(0), tz), window[1])
         all_blocks = reconcile.list_block_events(service, cal_id, *term)
         db = Supabase(env["SUPABASE_URL"], env["SUPABASE_SERVICE_KEY"])
-        print("mirrored:", mirror(db, all_blocks, busy, window[0], window[1]))
+        print("mirrored:", mirror(db, all_blocks, busy, rules, window[0], window[1]))
         print("tasks:", tasks_writer.run(db, service, cal_id, all_blocks, dt.datetime.now(tz)))
 
 
