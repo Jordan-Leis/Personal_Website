@@ -189,3 +189,12 @@ export class Model {
   replacePlacement(row) { this.placements = this.placements.map((p) => (p.id === row.id ? row : p)); }
   removePlacement(id) { this.placements = this.placements.filter((p) => p.id !== id); }
 }
+
+export function ago(iso) {
+  if (!iso) return "never";
+  const min = Math.round((Date.now() - new Date(iso)) / 60000);
+  if (min < 1) return "just now";
+  if (min < 60) return `${min} min ago`;
+  const h = Math.round(min / 60);
+  return h < 24 ? `${h} h ago` : `${Math.round(h / 24)} d ago`;
+}

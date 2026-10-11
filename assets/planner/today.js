@@ -1,6 +1,7 @@
 // /to-do: the combined view. Board on the left, the selected day's timeline on the right.
 import { requireMember, signOut } from "./auth.js";
 import * as db from "./data.js";
+import { mountSync } from "./sync-button.js";
 import { prepareImage } from "./proof-upload.js";
 import { approvalsHTML, handleApprovalClick } from "./approvals.js";
 import {
@@ -29,6 +30,7 @@ app.innerHTML = `
       <button class="btn" data-action="next" aria-label="Next day">›</button>
     </div>
     <div class="spacer"></div>
+    <span class="syncbox" id="syncbox"></span>
     <span class="counter" id="counter"></span>
     <span class="who">● ${esc(session.user.email)}</span>
     <button class="btn" data-action="signout">Sign out</button>
@@ -64,6 +66,8 @@ async function act(fn) {
     await reload();
   }
 }
+
+function mountSyncSoon() { mountSync($("syncbox"), { toast, onSynced: () => reload() }); }
 
 async function reload() {
   m.set(await db.loadAll());
@@ -674,3 +678,4 @@ setInterval(() => !document.hidden && (renderTimeline(), renderCounter()), 60000
 
 await reload();
 if (params.get("task") && m.task(params.get("task"))) openDrawer(params.get("task"));
+mountSyncSoon();

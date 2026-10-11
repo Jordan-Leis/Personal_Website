@@ -89,6 +89,8 @@ def main(argv=None):
         print("tasks:", tasks_writer.run(db, service, cal_id, all_blocks, dt.datetime.now(tz)))
     portal = [b for b in busy if b.source == "portal"]
     print("uw classes:", uw_classes.sync(service, portal, approved, *window, rules["timezone"]))
+    if db:
+        db.upsert("sync_state", [{"key": "last_sync", "value": dt.datetime.now(tz).isoformat()}], "key")
 
 
 if __name__ == "__main__":

@@ -38,6 +38,12 @@ jobs:
           test -f _site/CNAME
           test -f _site/cracked-profiles/privacy/index.html
           test -f _site/blog/index.html
+          test -f _site/to-do/index.html
+          test -f _site/schedule/index.html
+          test -f _site/assets/planner/today.js
+          test -f _site/privacy-policy/index.html
+          test -f _site/tos/index.html
+          test ! -e _site/supabase
           if grep -q '{{\|{%' _site/index.html; then echo "Liquid leaked into index.html"; exit 1; fi
           # The mirrored awards site (synced by sync-awards-database.yml). Only
           # assert once it exists, so this check still passes on branches cut

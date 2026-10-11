@@ -1,6 +1,7 @@
 // /schedule: the week view. Every source on one grid, plus the email "Needs your pick" queue.
 import { requireMember, signOut } from "./auth.js";
 import * as db from "./data.js";
+import { mountSync } from "./sync-button.js";
 import { esc, todayStr, addDays, dayOf, minOf, fmtTime, fmtDay, Model, KIND_LABEL } from "./model.js";
 import { approvalsHTML, handleApprovalClick } from "./approvals.js";
 
@@ -30,6 +31,7 @@ app.innerHTML = `
       <button class="btn" data-action="next" aria-label="Next week">›</button>
     </div>
     <div class="spacer"></div>
+    <span class="syncbox" id="syncbox"></span>
     <span class="counter" id="counter"></span>
     <span class="who">● ${esc(session.user.email)}</span>
     <button class="btn" data-action="signout">Sign out</button>
@@ -63,6 +65,8 @@ function toast(msg, isError = false) {
   clearTimeout(toast.timer);
   toast.timer = setTimeout(() => (t.className = "toast"), isError ? 6000 : 2500);
 }
+
+function mountSyncSoon() { mountSync($("syncbox"), { toast, onSynced: () => reload() }); }
 
 async function reload() {
   const [data, reviews] = await Promise.all([db.loadAll(), db.loadReviewItems()]);
@@ -261,3 +265,4 @@ try {
 } catch (err) {
   toast(err.message, true);
 }
+mountSyncSoon();

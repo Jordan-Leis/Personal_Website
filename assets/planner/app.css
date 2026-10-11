@@ -206,3 +206,4 @@ pre.gdesc { background: #111; padding: 8px; border-radius: 6px; font-family: var
 .spread-row.late { border-color: var(--term-yellow); }
 .spread-row select { background: #111; border: 1px solid #333; border-radius: 6px; padding: 3px 6px; color-scheme: dark; }
 .daycol .ev.ignored { opacity: .35; text-decoration: line-through; }
+.syncbox { display: flex; align-items: center; gap: 8px; }

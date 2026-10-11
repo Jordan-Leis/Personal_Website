@@ -74,3 +74,16 @@ export const ignoreEvent = (event, decidedBy) =>
     event_key: event.id, source: event.source, title: event.title, start_at: event.start_at, end_at: event.end_at,
     reason: "ignored by hand", status: "approved", decided_by: decidedBy, decided_at: new Date().toISOString(),
   }).then(must);
+
+// "Sync now": asks the sync-now edge function to start the GitHub workflow.
+export async function syncNow() {
+  const { error } = await supabase.functions.invoke("sync-now", { method: "POST" });
+  if (!error) return;
+  let message = error.message;
+  try { message = (await error.context.json()).error || message; } catch { /* not JSON */ }
+  throw new Error(message);
+}
+export async function lastSync() {
+  const { data } = await supabase.from("sync_state").select("value").eq("key", "last_sync").maybeSingle();
+  return data?.value || null;
+}

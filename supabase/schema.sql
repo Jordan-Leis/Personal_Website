@@ -227,3 +227,8 @@ alter table public.event_overrides enable row level security;
 drop policy if exists member_all on public.event_overrides;
 create policy member_all on public.event_overrides for all to authenticated
   using (public.is_member()) with check (public.is_member());
+
+-- Members may read sync_state (e.g. last_sync, shown as "synced 3 min ago"); only the
+-- service role writes it.
+drop policy if exists member_read on public.sync_state;
+create policy member_read on public.sync_state for select to authenticated using (public.is_member());
