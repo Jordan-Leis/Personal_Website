@@ -59,3 +59,7 @@ export const place = (task_id, block_key) =>
   supabase.from("placements").insert({ task_id, block_key }).select().single().then(must);
 export const updatePlacement = (id, patch) => supabase.from("placements").update(patch).eq("id", id).select().single().then(must);
 export const deletePlacement = (id) => supabase.from("placements").delete().eq("id", id).then(must);
+
+export const loadReviewItems = () =>
+  supabase.from("review_items").select("*").eq("status", "open").order("received_at", { ascending: false }).then(must);
+export const updateReviewItem = (id, patch) => supabase.from("review_items").update(patch).eq("id", id).select().single().then(must);

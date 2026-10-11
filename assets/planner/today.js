@@ -11,7 +11,12 @@ const app = document.getElementById("app");
 const session = await requireMember(app);
 
 const m = new Model();
-const view = { date: todayStr(), openTask: null, log: [], urls: {}, pending: null };
+// Deep links from /schedule: /to-do/?date=YYYY-MM-DD&task=<id>
+const params = new URLSearchParams(location.search);
+const view = {
+  date: /^\d{4}-\d{2}-\d{2}$/.test(params.get("date") || "") ? params.get("date") : todayStr(),
+  openTask: null, log: [], urls: {}, pending: null,
+};
 
 app.innerHTML = `
   <div class="topbar">
@@ -484,3 +489,4 @@ setInterval(() => !document.hidden && !view.pending && reload().catch(() => {}),
 setInterval(() => !document.hidden && (renderTimeline(), renderCounter()), 60000);
 
 await reload();
+if (params.get("task") && m.task(params.get("task"))) openDrawer(params.get("task"));
