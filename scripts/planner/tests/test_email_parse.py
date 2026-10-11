@@ -166,3 +166,15 @@ Please call us to book your phone appointment."""
 def test_same_invite_inline_and_attached_counts_once():
     d = decide(mail("invite", calendars=[ICS, ICS]), NOW)
     assert len(d.events) == 1
+
+
+def test_flattened_confirmation_still_matches():
+    text = "You're confirmed for your interview. Please see the details below. Date:\r\nThu, Oct 22, 2026 Time: 3:00 PM EDT - 3:30 PM EDT Meeting Link:\r\nhttps://meet.google.com/abc-defg-hij\r\n"
+    d = decide(mail(text, "Interview Confirmation - Test Company"), NOW)
+    assert d.stage == "template"
+    assert (d.events[0].start, d.events[0].end) == (at(22, 15), at(22, 15, 30))
+
+
+def test_two_dates_in_a_confirmation_is_not_auto_added():
+    text = "You're confirmed. Date: Thu, Oct 22, 2026 Time: 3:00 PM ET. Backup date: Fri, Oct 23, 2026"
+    assert decide(mail(text, "Interview Confirmation"), NOW).stage != "template"

@@ -257,16 +257,18 @@ def tpl_date_time_fields(e: Email) -> list[Proposed]:
     """Recruiter confirmations with 'Date: …' and 'Time: …' lines (e.g. Ashby/Greenhouse-style)."""
     if not CONFIRM.search(e.subject + "\n" + e.text):
         return []
-    flat = e.text.replace("*", "")
-    dates = re.findall(r"(?im)^\s*date\s*:\s*(.+)$", flat)
-    times = re.findall(r"(?im)^\s*time\s*:\s*(.+)$", flat)
+    # Labels may be on their own lines or flattened into one paragraph (reflowed forwards).
+    flat = re.sub(r"\s+", " ", e.text.replace("*", ""))
+    dates = [m.end() for m in re.finditer(r"\bdate\s*:\s*", flat, re.I)]
+    times = [m.end() for m in re.finditer(r"\btime\s*:\s*", flat, re.I)]
     if len(dates) != 1 or len(times) != 1:
         return []
-    dm = DATE_RE.search(dates[0])
-    t = parse_times(times[0])
+    date_text, time_text = flat[dates[0]:dates[0] + 40], flat[times[0]:times[0] + 45]
+    dm = DATE_RE.match(date_text.lstrip())
+    t = parse_times(time_text)
     if not dm or not t or not (d := _date(dm, e.received.date())):
         return []
-    tz = parse_tz(times[0])
+    tz = parse_tz(time_text)
     start = _combine(d, t[0], tz)
     end = _combine(d, t[1], tz) if t[1] else start + dt.timedelta(minutes=30)
     return [Proposed(clean_subject(e.subject), start, end, meeting_link(flat))]
