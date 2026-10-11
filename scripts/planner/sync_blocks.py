@@ -11,7 +11,7 @@ import argparse
 import datetime as dt
 from zoneinfo import ZoneInfo
 
-from . import reconcile
+from . import reconcile, tasks_writer
 from .mirror import mirror
 from .blocks import generate, load_rules, weekly_summary
 from .config import load_env
@@ -75,6 +75,7 @@ def main(argv=None):
         all_blocks = reconcile.list_block_events(service, cal_id, *term)
         db = Supabase(env["SUPABASE_URL"], env["SUPABASE_SERVICE_KEY"])
         print("mirrored:", mirror(db, all_blocks, busy, window[0], window[1]))
+        print("tasks:", tasks_writer.run(db, service, cal_id, all_blocks, dt.datetime.now(tz)))
 
 
 if __name__ == "__main__":

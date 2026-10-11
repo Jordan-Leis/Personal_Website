@@ -10,31 +10,6 @@
 </head>
 <body>
   <div id="app"></div>
-  <script type="module">
-    import { supabase, requireMember, signOut } from "/assets/planner/auth.js";
-
-    const app = document.getElementById("app");
-    const session = await requireMember(app);
-    app.innerHTML = `
-      <div class="topbar"><span class="brand">jordanleis.com/to-do</span><div class="spacer"></div>
-        <span class="who">● ${session.user.email}</span><button class="btn" id="signout">Sign out</button></div>
-      <main><div class="panel"><h2>Connection check</h2><div id="status" class="mono">loading…</div></div></main>`;
-    document.getElementById("signout").onclick = signOut;
-
-    // Phase 2 smoke check: confirms sign-in, RLS and the calendar mirror end to end.
-    const today = new Date().toLocaleDateString("en-CA", { timeZone: "America/Toronto" });
-    const [blocks, events, tasks] = await Promise.all([
-      supabase.from("blocks").select("key,kind,start_at,end_at").eq("date", today).order("start_at"),
-      supabase.from("calendar_events").select("id", { count: "exact", head: true }),
-      supabase.from("tasks").select("id", { count: "exact", head: true }),
-    ]);
-    const fmt = (s) => new Date(s).toLocaleTimeString("en-CA", { hour: "numeric", minute: "2-digit", timeZone: "America/Toronto" });
-    const err = blocks.error || events.error || tasks.error;
-    document.getElementById("status").innerHTML = err
-      ? `error: ${err.message}`
-      : `blocks today (${today}): ${blocks.data.length}<br>` +
-        blocks.data.map((b) => `&nbsp;&nbsp;${b.kind} ${fmt(b.start_at)}–${fmt(b.end_at)}`).join("<br>") +
-        `<br>calendar events mirrored: ${events.count}<br>tasks: ${tasks.count}`;
-  </script>
+  <script type="module" src="/assets/planner/today.js"></script>
 </body>
 </html>

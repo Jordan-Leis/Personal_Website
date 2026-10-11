@@ -37,6 +37,12 @@ class Supabase:
                 headers={"Prefer": "resolution=merge-duplicates,return=minimal"}, timeout=60,
             ))
 
+    def update(self, table: str, params: dict, patch: dict) -> None:
+        self._check(self.session.patch(
+            f"{self.base}/{table}", params=params, json=patch,
+            headers={"Prefer": "return=minimal"}, timeout=30,
+        ))
+
     def delete_in(self, table: str, column: str, values: list[str]) -> None:
         for i in range(0, len(values), 100):
             quoted = ",".join(f'"{v}"' for v in values[i:i + 100])
