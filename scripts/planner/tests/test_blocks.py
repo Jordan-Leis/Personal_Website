@@ -86,12 +86,32 @@ def test_lab_morning_left_to_lab():
     assert min(b.start for b in blocks) == at(LAB_WED, "11:20")
 
 
-def test_reading_week_classes_ignored_but_personal_events_kept():
+def test_reading_week_classes_are_busy_until_an_ignore_is_approved():
+    from scripts.planner.mirror import busy_id
+    from scripts.planner.overrides import effective_busy, new_suggestions
+
     day = dt.date(2026, 10, 14)
-    busy = [cls(day, "13:00", "14:20"), cls(day, "15:00", "16:00", source="google")]
-    work = spans(generate_day(day, busy, RULES), "work")
+    lecture, personal = cls(day, "13:00", "14:20"), cls(day, "15:00", "16:00", source="google")
+    # Suggested, not applied: the lecture still blocks time.
+    suggestions = new_suggestions([lecture, personal], RULES, set())
+    assert [s["event_key"] for s in suggestions] == [busy_id(lecture)]
+    assert suggestions[0]["status"] == "suggested" and suggestions[0]["reason"] == "reading week"
+    work = spans(generate_day(day, [lecture, personal], RULES), "work")
+    assert not any(s < "14:20" and e > "13:00" for _, s, e in work)
+    # Once approved, it frees up.
+    approved = {busy_id(lecture): "reading week"}
+    work = spans(generate_day(day, effective_busy([lecture, personal], approved), RULES), "work")
     assert ("work", "12:45", "14:45") in work
     assert not any(s < "16:00" and e > "15:00" for _, s, e in work)
+
+
+def test_known_overrides_are_not_resuggested():
+    from scripts.planner.mirror import busy_id
+    from scripts.planner.overrides import new_suggestions
+
+    lecture = cls(dt.date(2026, 10, 14), "13:00", "14:20")
+    assert new_suggestions([lecture], RULES, {busy_id(lecture)}) == []
+    assert new_suggestions([cls(dt.date(2026, 10, 21), "13:00", "14:20")], RULES, set()) == []
 
 
 def test_dst_fall_back_week_keeps_local_times():

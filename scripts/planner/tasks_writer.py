@@ -33,14 +33,15 @@ def describe(lines: list[str]) -> str:
     return "Tasks:\n" + "\n".join(lines) + "\n\n" + FOOTER
 
 
-def task_line(task: dict, outcome: str, subtasks: list[dict]) -> str:
+def task_line(task: dict, outcome: str, subtasks: list[dict], project: dict | None = None) -> str:
     extras = []
     if subtasks:
         extras.append(f"{sum(s['done'] for s in subtasks)}/{len(subtasks)} subtasks")
     if task.get("due_at") and task["status"] != "done":
         due = dt.datetime.fromisoformat(task["due_at"])
         extras.append("due " + due.strftime("%a %b %-d" + (" %-I:%M %p" if task.get("due_has_time") else "")))
-    return f"{ICONS.get(outcome, '☐')} {task['title']}" + (f"  ({', '.join(extras)})" if extras else "")
+    title = task["title"] + (f" · {project['title']}" if project else "")
+    return f"{ICONS.get(outcome, '☐')} {title}" + (f"  ({', '.join(extras)})" if extras else "")
 
 
 def plan_descriptions(events: list[dict], placements: list[dict], tasks: dict, subtasks: list[dict]) -> list[tuple[str, str]]:
@@ -59,7 +60,10 @@ def plan_descriptions(events: list[dict], placements: list[dict], tasks: dict, s
         if props["kind"] not in ("work", "self"):
             continue
         ps = sorted(by_block.get(props["blockKey"], []), key=lambda p: p["placed_at"])
-        lines = [task_line(tasks[p["task_id"]], p["outcome"], subs_by_task.get(p["task_id"], [])) for p in ps]
+        lines = [
+            task_line(tasks[p["task_id"]], p["outcome"], subs_by_task.get(p["task_id"], []), tasks.get(tasks[p["task_id"]].get("parent_id")))
+            for p in ps
+        ]
         desired = describe(lines)
         if (e.get("description") or "") != desired:
             changes.append((e["id"], desired))
@@ -67,7 +71,7 @@ def plan_descriptions(events: list[dict], placements: list[dict], tasks: dict, s
 
 
 def run(db: Supabase, service, calendar_id: str, block_events: list[dict], now: dt.datetime) -> dict:
-    tasks = {t["id"]: t for t in db.select("tasks", {"select": "id,title,status,due_at,due_has_time"})}
+    tasks = {t["id"]: t for t in db.select("tasks", {"select": "id,title,status,due_at,due_has_time,parent_id"})}
     placements = db.select("placements", {"select": "id,task_id,block_key,outcome,placed_at"})
     subtasks = db.select("subtasks", {"select": "task_id,done"})
     block_ends = {

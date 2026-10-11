@@ -46,3 +46,11 @@ def test_unchanged_moved_and_meal_blocks_are_skipped():
 
 def test_emptied_block_resets_to_default():
     assert plan_descriptions([ev("e1", "k1", description=describe(["☐ Old"]))], [], TASKS, []) == [("e1", DEFAULT_DESCRIPTION)]
+
+
+def test_project_parts_name_their_project():
+    tasks = {**TASKS,
+             "p": {"id": "p", "title": "Apply to 100 Cycle 2 jobs", "status": "in_progress", "due_at": None},
+             "c": {"id": "c", "title": "Apply to 10 jobs (3/10)", "status": "in_progress", "due_at": None, "parent_id": "p"}}
+    changes = plan_descriptions([ev("e1", "k1")], [pl("1", "c", "k1")], tasks, [])
+    assert changes[0][1].startswith("Tasks:\n☐ Apply to 10 jobs (3/10) · Apply to 100 Cycle 2 jobs")

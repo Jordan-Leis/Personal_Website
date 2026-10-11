@@ -201,3 +201,29 @@ create policy proofs_owner_all on storage.objects for all to authenticated
 
 -- Replaced by is_member(); policies above no longer reference it.
 drop function if exists public.is_owner();
+
+-- ---------- projects: a task made of parts (one level deep) ----------
+alter table public.tasks add column if not exists parent_id uuid references public.tasks (id) on delete cascade;
+create index if not exists tasks_parent_idx on public.tasks (parent_id);
+
+-- ---------- event overrides: ignore an event only with approval ----------
+-- The sync job may *suggest* ignores (e.g. classes the feed lists during reading
+-- week); only rows with status 'approved' stop an event counting as busy. Nothing
+-- is ever deleted from a source calendar.
+create table if not exists public.event_overrides (
+  event_key   text primary key,               -- mirror id: hash of source + title + start + end
+  source      text not null,
+  title       text not null default '',
+  start_at    timestamptz not null,
+  end_at      timestamptz not null,
+  reason      text not null default '',
+  status      text not null default 'suggested' check (status in ('suggested', 'approved', 'dismissed')),
+  decided_by  text,
+  decided_at  timestamptz,
+  created_at  timestamptz not null default now()
+);
+create index if not exists event_overrides_status_idx on public.event_overrides (status, start_at);
+alter table public.event_overrides enable row level security;
+drop policy if exists member_all on public.event_overrides;
+create policy member_all on public.event_overrides for all to authenticated
+  using (public.is_member()) with check (public.is_member());

@@ -11,7 +11,7 @@ import argparse
 import datetime as dt
 from zoneinfo import ZoneInfo
 
-from . import reconcile, tasks_writer
+from . import overrides, reconcile, tasks_writer, uw_classes
 from .mirror import mirror
 from .blocks import generate, load_rules, weekly_summary
 from .config import load_env
@@ -46,7 +46,13 @@ def main(argv=None):
         counts["google"] = len(primary)
     print("busy events:", counts, "" if service else "(no Google token yet: primary calendar skipped)")
 
-    blocks = generate(busy, rules, first, last)
+    db = Supabase(env["SUPABASE_URL"], env["SUPABASE_SERVICE_KEY"]) if env.get("SUPABASE_SERVICE_KEY") else None
+    approved: dict[str, str] = {}
+    if db:
+        approved, suggested = overrides.sync(db, busy, rules, write=args.apply)
+        print(f"overrides: {len(approved)} approved ignores, {suggested} new suggestions")
+
+    blocks = generate(overrides.effective_busy(busy, approved), rules, first, last)
     for monday, hours in weekly_summary(blocks):
         print(f"week of {monday}: " + "  ".join(f"{k} {hours.get(k, 0):.1f}h" for k in ("work", "self", "lunch", "dinner")))
     if args.days:
@@ -70,12 +76,13 @@ def main(argv=None):
         reconcile.apply_changes(service, cal_id, changes, rules["timezone"])
         print("applied")
 
-    if env.get("SUPABASE_URL") and env.get("SUPABASE_SERVICE_KEY"):
+    if db:
         term = (dt.datetime.combine(rules["term"]["start"], dt.time(0), tz), window[1])
         all_blocks = reconcile.list_block_events(service, cal_id, *term)
-        db = Supabase(env["SUPABASE_URL"], env["SUPABASE_SERVICE_KEY"])
-        print("mirrored:", mirror(db, all_blocks, busy, rules, window[0], window[1]))
+        print("mirrored:", mirror(db, all_blocks, busy, approved, window[0], window[1]))
         print("tasks:", tasks_writer.run(db, service, cal_id, all_blocks, dt.datetime.now(tz)))
+    portal = [b for b in busy if b.source == "portal"]
+    print("uw classes:", uw_classes.sync(service, portal, approved, *window, rules["timezone"]))
 
 
 if __name__ == "__main__":

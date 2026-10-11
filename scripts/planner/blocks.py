@@ -96,17 +96,16 @@ def _place_meal(day, spec, search_minutes, intervals, tz):
     return None
 
 
-def ignore_reason(busy: Busy, rules: dict) -> str | None:
-    """Why this event doesn't count as busy (an approved ignore range), or None."""
+def suggest_ignore_reason(busy: Busy, rules: dict) -> str | None:
+    """Why this event looks ignorable (it falls in a declared break), or None.
+
+    Only a suggestion: an event stops counting as busy once its override is approved.
+    """
     day = busy.start.date()
     for r in rules.get("ignore_ranges", []):
         if r.get("source") == busy.source and _to_date(r["start"]) <= day <= _to_date(r["end"]):
             return r.get("reason", "ignored")
     return None
-
-
-def _is_ignored(busy: Busy, rules: dict) -> bool:
-    return ignore_reason(busy, rules) is not None
 
 
 def generate_day(day: dt.date, busy: list[Busy], rules: dict) -> list[Block]:
@@ -119,7 +118,7 @@ def generate_day(day: dt.date, busy: list[Busy], rules: dict) -> list[Block]:
     intervals = [
         (b.start.astimezone(tz), b.end.astimezone(tz))
         for b in busy
-        if b.start.astimezone(tz).date() == day and not _is_ignored(b, rules)
+        if b.start.astimezone(tz).date() == day
     ]
     blocks: list[Block] = []
 

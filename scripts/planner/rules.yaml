@@ -5,7 +5,9 @@ term:
   start: 2026-10-12
   end: 2026-11-30
 
-# Classes from these sources are ignored in these date ranges (the feed still lists them).
+# Declared breaks. Classes the feed still lists in these ranges are *suggested* for
+# ignoring in the planner's "Needs your approval" panel; they only stop counting as
+# busy once approved there.
 ignore_ranges:
   - { source: portal, start: 2026-10-12, end: 2026-10-18, reason: reading week }
 

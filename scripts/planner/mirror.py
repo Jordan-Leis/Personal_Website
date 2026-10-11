@@ -4,7 +4,7 @@ from __future__ import annotations
 import datetime as dt
 import hashlib
 
-from .blocks import Busy, ignore_reason
+from .blocks import Busy
 from .reconcile import event_to_block
 from .supa import Supabase
 
@@ -26,10 +26,10 @@ def block_rows(events: list[dict]) -> list[dict]:
     return rows
 
 
-def event_rows(busy: list[Busy], rules: dict) -> list[dict]:
+def event_rows(busy: list[Busy], ignored: dict[str, str]) -> list[dict]:
     rows = {}
     for b in busy:
-        reason = ignore_reason(b, rules)
+        reason = ignored.get(busy_id(b))
         rows[busy_id(b)] = {
             "id": busy_id(b), "source": b.source, "title": b.title,
             "start_at": b.start.isoformat(), "end_at": b.end.isoformat(),
@@ -47,9 +47,9 @@ def _stale(db: Supabase, table: str, id_col: str, time_col: str, start: dt.datet
     return [r[id_col] for r in existing if r[id_col] not in keep]
 
 
-def mirror(db: Supabase, block_events: list[dict], busy: list[Busy], rules: dict, start: dt.datetime, end: dt.datetime) -> dict:
+def mirror(db: Supabase, block_events: list[dict], busy: list[Busy], ignored: dict[str, str], start: dt.datetime, end: dt.datetime) -> dict:
     """Upsert everything in [start, end) and delete rows in that window that no longer exist."""
-    blocks, events = block_rows(block_events), event_rows(busy, rules)
+    blocks, events = block_rows(block_events), event_rows(busy, ignored)
     db.upsert("blocks", blocks, "key")
     db.upsert("calendar_events", events, "id")
     stale_blocks = _stale(db, "blocks", "key", "start_at", start, end, {r["key"] for r in blocks})
