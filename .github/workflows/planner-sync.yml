@@ -12,7 +12,12 @@ on:
   schedule:
     # Every 10 minutes, offset from :00 to dodge GitHub's on-the-hour congestion.
     - cron: '3-59/10 * * * *'
-  workflow_dispatch: {}
+  workflow_dispatch:
+    inputs:
+      rescan_days:
+        description: 'One-off Gmail backfill: also rescan this many days (1-60). Leave empty normally.'
+        required: false
+        default: ''
 
 concurrency:
   group: planner-sync
@@ -45,4 +50,8 @@ jobs:
           OUTLOOK_ICS_URL: ${{ secrets.OUTLOOK_ICS_URL }}
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
-        run: python -m scripts.planner.sync_blocks --apply
+          RESCAN_DAYS: ${{ inputs.rescan_days }}
+        run: |
+          args=(--apply)
+          if [ -n "$RESCAN_DAYS" ]; then args+=(--rescan-days "$RESCAN_DAYS"); fi
+          python -m scripts.planner.sync_blocks "${args[@]}"
