@@ -6,6 +6,16 @@ const must = ({ data, error }) => {
   return data;
 };
 
+// PostgREST returns at most 1000 rows per request; page through so the newest rows aren't cut off.
+async function pageAll(build) {
+  const rows = [];
+  for (let from = 0; ; from += 1000) {
+    const page = must(await build().range(from, from + 999));
+    rows.push(...page);
+    if (page.length < 1000) return { data: rows, error: null };
+  }
+}
+
 export async function loadAll() {
   const since = new Date(Date.now() - 30 * 864e5).toISOString();
   const [tasks, subtasks, proofs, placements, blocks, events, overrides] = await Promise.all([
@@ -13,8 +23,8 @@ export async function loadAll() {
     supabase.from("subtasks").select("*").order("sort_order").order("created_at"),
     supabase.from("task_proofs").select("*").order("created_at"),
     supabase.from("placements").select("*").order("placed_at"),
-    supabase.from("blocks").select("*").order("start_at"),
-    supabase.from("calendar_events").select("*").order("start_at"),
+    pageAll(() => supabase.from("blocks").select("*").order("start_at").order("key")),
+    pageAll(() => supabase.from("calendar_events").select("*").order("start_at").order("id")),
     supabase.from("event_overrides").select("*").neq("status", "dismissed").order("start_at"),
   ]);
   return {

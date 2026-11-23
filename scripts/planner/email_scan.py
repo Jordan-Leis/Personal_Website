@@ -1,8 +1,9 @@
 """Scan new Gmail messages and put confirmed interviews and meetings on the primary calendar.
 
 Read-only on Gmail. Events it creates are titled "[Auto] …" and tagged with
-extendedProperties.private.plannerSource = "email-auto", so it only ever cancels its own.
-Output is counts only (Actions logs are public).
+extendedProperties.private.plannerSource = "email-auto", so it only ever updates or cancels
+its own. An updated invitation (same UID) patches the existing [Auto] event.
+Output is counts and error class names only (Actions logs are public).
 """
 from __future__ import annotations
 
@@ -23,6 +24,8 @@ SOURCE = "email-auto"
 SKIP_LABELS = {"SENT", "DRAFT", "SPAM", "TRASH", "CHAT", "CATEGORY_PROMOTIONS", "CATEGORY_SOCIAL", "CATEGORY_FORUMS"}
 FILTER = "-in:sent -in:chats -category:promotions -category:social -category:forums"
 OWN_ADDRESSES = ("jordan.jay.leis@gmail.com",)
+RETRY_KEY = "gmail_retry_ids"
+MAX_ATTEMPTS = 3  # a message that keeps failing is retried on this many later runs, then dropped
 
 
 def gmail_service(env):
@@ -42,17 +45,29 @@ def _list(gmail, query: str, cap: int = 300) -> list[str]:
     return ids[:cap]
 
 
-def new_message_ids(gmail, db: Supabase) -> tuple[list[str], str]:
+def fallback_days(last_sync: str | None, now: dt.datetime) -> int:
+    """How far back to rescan when the stored history id has expired: since the last sync, 3-30 days."""
+    try:
+        since = dt.datetime.fromisoformat(last_sync)
+    except (TypeError, ValueError):
+        return 14
+    return min(30, max(3, (now - since).days + 1))
+
+
+def _state(db: Supabase) -> dict:
+    return {r["key"]: r["value"] for r in db.select("sync_state", {"select": "key,value"})}
+
+
+def new_message_ids(gmail, state: dict, now: dt.datetime) -> tuple[list[str], str]:
     """Message ids added since the last run, and the history id to resume from next time."""
     resume = gmail.users().getProfile(userId="me").execute(num_retries=5)["historyId"]
-    state = db.select("sync_state", {"select": "value", "key": "eq.gmail_history_id"})
-    if not state:
+    if "gmail_history_id" not in state:
         return _list(gmail, f"newer_than:14d {FILTER}"), resume
     ids, token = [], None
     try:
         while True:
             resp = gmail.users().history().list(
-                userId="me", startHistoryId=state[0]["value"], historyTypes=["messageAdded"], pageToken=token,
+                userId="me", startHistoryId=state["gmail_history_id"], historyTypes=["messageAdded"], pageToken=token,
             ).execute(num_retries=5)
             for h in resp.get("history", []):
                 ids += [a["message"]["id"] for a in h.get("messagesAdded", [])]
@@ -62,7 +77,8 @@ def new_message_ids(gmail, db: Supabase) -> tuple[list[str], str]:
     except HttpError as err:
         if err.resp.status != 404:
             raise
-        ids = _list(gmail, f"newer_than:3d {FILTER}")  # history expired: rescan recent mail
+        # History expired (e.g. the job didn't run for a while): rescan everything since the last sync.
+        ids = _list(gmail, f"newer_than:{fallback_days(state.get('last_sync'), now)}d {FILTER}", cap=1000)
     return list(dict.fromkeys(ids)), resume
 
 
@@ -118,14 +134,16 @@ def _same_start_exists(cal, start: dt.datetime, end: dt.datetime) -> bool:
     return False
 
 
-def _uid_exists(cal, uid: str) -> bool:
-    return bool(cal.events().list(calendarId="primary", iCalUID=uid, showDeleted=False).execute(num_retries=5).get("items"))
+def _by_uid(cal, uid: str) -> list[dict]:
+    items = cal.events().list(calendarId="primary", iCalUID=uid, showDeleted=False).execute(num_retries=5).get("items", [])
+    return [e for e in items if e.get("status") != "cancelled"]
 
 
-def create_event(cal, ev: Proposed, email: Email) -> str | None:
-    """Create an [Auto] event unless the calendar already has it. Returns the new event id."""
-    if (ev.uid and _uid_exists(cal, ev.uid)) or _same_start_exists(cal, ev.start, ev.end):
-        return None
+def _ours(event: dict) -> bool:
+    return event.get("extendedProperties", {}).get("private", {}).get("plannerSource") == SOURCE
+
+
+def event_body(ev: Proposed, email: Email) -> dict:
     tz = ZoneInfo(TZ)
     body = {
         "summary": f"[Auto] {ev.title}",
@@ -142,16 +160,53 @@ def create_event(cal, ev: Proposed, email: Email) -> str | None:
     }
     if ev.rrule:
         body["recurrence"] = [ev.rrule]
+    return body
+
+
+def patch_for(existing: dict, body: dict) -> dict:
+    """The fields of an [Auto] event that an updated invitation changes (description is left alone)."""
+    patch = {}
+    if existing.get("summary") != body["summary"]:
+        patch["summary"] = body["summary"]
+    for k in ("start", "end"):
+        old = existing.get(k, {}).get("dateTime")
+        if not old or dt.datetime.fromisoformat(old) != dt.datetime.fromisoformat(body[k]["dateTime"]):
+            patch[k] = body[k]
+    if (existing.get("location") or "") != (body.get("location") or ""):
+        patch["location"] = body.get("location") or ""
+    if (existing.get("recurrence") or []) != (body.get("recurrence") or []):
+        patch["recurrence"] = body.get("recurrence") or []
+    return patch
+
+
+def upsert_event(cal, ev: Proposed, email: Email) -> tuple[str | None, str | None]:
+    """Create an [Auto] event, or patch ours when an invite with the same UID changed.
+
+    Returns (event id, "created" | "updated"), or (None, None) when there is nothing to do:
+    the calendar already has it unchanged, or the UID belongs to an event we didn't create.
+    """
+    body = event_body(ev, email)
+    if ev.uid:
+        live = _by_uid(cal, ev.uid)
+        if live:
+            mine = [e for e in live if _ours(e)]
+            patch = patch_for(mine[0], body) if mine else {}
+            if not patch:
+                return None, None
+            cal.events().patch(calendarId="primary", eventId=mine[0]["id"], body=patch).execute(num_retries=5)
+            return mine[0]["id"], "updated"
+    if _same_start_exists(cal, ev.start, ev.end):
+        return None, None
     if ev.uid:
         body["iCalUID"] = ev.uid
-        return cal.events().import_(calendarId="primary", body=body).execute(num_retries=5)["id"]
-    return cal.events().insert(calendarId="primary", body=body).execute(num_retries=5)["id"]
+        return cal.events().import_(calendarId="primary", body=body).execute(num_retries=5)["id"], "created"
+    return cal.events().insert(calendarId="primary", body=body).execute(num_retries=5)["id"], "created"
 
 
 def cancel_events(cal, uid: str) -> int:
     n = 0
     for e in cal.events().list(calendarId="primary", iCalUID=uid).execute(num_retries=5).get("items", []):
-        if e.get("extendedProperties", {}).get("private", {}).get("plannerSource") == SOURCE and e.get("status") != "cancelled":
+        if _ours(e) and e.get("status") != "cancelled":
             cal.events().delete(calendarId="primary", eventId=e["id"]).execute(num_retries=5)
             n += 1
     return n
@@ -175,21 +230,46 @@ def add_accepted_reviews(db: Supabase, cal) -> int:
         start = dt.datetime.fromisoformat(r["chosen_start"])
         end = dt.datetime.fromisoformat(r["chosen_end"]) if r.get("chosen_end") else start + dt.timedelta(hours=1)
         email = Email(r["gmail_message_id"], r["sender"], r["subject"], "", start)
-        create_event(cal, Proposed(clean_subject(r["subject"]), start, end), email)
+        upsert_event(cal, Proposed(clean_subject(r["subject"]), start, end), email)
         db.update("review_items", {"id": f"eq.{r['id']}"}, {"status": "added"})
         added += 1
     return added
 
 
-def run(env: dict, db: Supabase, cal, now: dt.datetime) -> dict:
+def is_gone(err: Exception) -> bool:
+    """The message was deleted after it was listed (drafts, trashed mail): skip it, don't retry."""
+    return isinstance(err, HttpError) and err.resp.status in (404, 410)
+
+
+def error_key(err: Exception) -> str:
+    """Class name plus HTTP status: enough to diagnose, nothing private (logs are public)."""
+    return type(err).__name__ + (str(err.resp.status) if isinstance(err, HttpError) else "")
+
+
+def next_retry(previous: dict[str, int], failed: set[str]) -> tuple[dict[str, int], int]:
+    """({message id: attempts} to retry next run, number given up on)."""
+    attempts = {mid: previous.get(mid, 0) + 1 for mid in failed}
+    keep = {mid: n for mid, n in attempts.items() if n <= MAX_ATTEMPTS}
+    return keep, len(attempts) - len(keep)
+
+
+def run(env: dict, db: Supabase, cal, now: dt.datetime, rescan_days: int | None = None) -> dict:
     gmail = gmail_service(env)
-    counts = {"messages": 0, "ics": 0, "template": 0, "review": 0, "created": 0, "cancelled": 0, "errors": 0}
-    ids, resume = new_message_ids(gmail, db)
+    counts = {"messages": 0, "ics": 0, "template": 0, "review": 0, "created": 0, "updated": 0,
+              "cancelled": 0, "gone": 0, "errors": 0}
+    errors_by: dict[str, int] = {}
+    state = _state(db)
+    ids, resume = new_message_ids(gmail, state, now)
+    retry_prev = state.get(RETRY_KEY) or {}
+    if rescan_days:
+        ids += _list(gmail, f"newer_than:{rescan_days}d {FILTER}", cap=2000)
+    ids = list(dict.fromkeys(ids + list(retry_prev)))
     seen = set()
     for i in range(0, len(ids), 100):
         chunk = ids[i:i + 100]
         quoted = ",".join(f'"{x}"' for x in chunk)
         seen |= {r["gmail_message_id"] for r in db.select("email_scans", {"select": "gmail_message_id", "gmail_message_id": f"in.({quoted})"})}
+    failed: set[str] = set()
     for mid in ids:
         if mid in seen:
             continue
@@ -202,18 +282,26 @@ def run(env: dict, db: Supabase, cal, now: dt.datetime) -> dict:
             d = decide(email, now)
             first_id = None
             for ev in d.events:
-                eid = create_event(cal, ev, email)
-                if eid:
-                    counts["created"] += 1
+                eid, action = upsert_event(cal, ev, email)
+                if action:
+                    counts[action] += 1
                     first_id = first_id or eid
             for uid in d.cancel_uids:
                 counts["cancelled"] += cancel_events(cal, uid)
             if d.stage in counts:
                 counts[d.stage] += 1
             _record(db, email, d, first_id)
-        except Exception:
-            counts["errors"] += 1  # retried next run; no details logged (public logs)
-    if not counts["errors"]:
-        db.upsert("sync_state", [{"key": "gmail_history_id", "value": resume}], "key")
+        except Exception as err:
+            if is_gone(err):
+                counts["gone"] += 1
+                continue
+            failed.add(mid)
+            errors_by[error_key(err)] = errors_by.get(error_key(err), 0) + 1
+    # Always move on: failures are retried from the list below instead of holding the cursor back.
+    retry, dropped = next_retry(retry_prev, failed)
+    db.upsert("sync_state", [{"key": "gmail_history_id", "value": resume}, {"key": RETRY_KEY, "value": retry}], "key")
+    counts.update(errors=len(failed), retrying=len(retry), dropped=dropped)
+    if errors_by:
+        counts["errors_by"] = errors_by
     counts["picked"] = add_accepted_reviews(db, cal)
     return counts

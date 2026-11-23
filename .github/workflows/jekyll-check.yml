@@ -71,7 +71,8 @@ jobs:
   # contains Liquid and needs Jekyll, and the atlas is static in the same tree.
   browser:
     needs: build
-    runs-on: ubuntu-latest
+    # Pinned: ubuntu-latest moved to 26.04, which Playwright 1.58 can't install Chromium on.
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -92,3 +93,16 @@ jobs:
           name: browser-results
           path: test-results
           if-no-files-found: ignore
+
+  # Unit tests for the planner sync (block rules, reconcile, email parsing/scan). No network.
+  planner:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: scripts/planner/requirements.txt
+      - run: pip install -r scripts/planner/requirements.txt pytest
+      - run: python -m pytest -q scripts/planner/tests

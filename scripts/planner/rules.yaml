@@ -1,9 +1,12 @@
 # Block rules for the "Work Blocks" calendar. Times are local (America/Toronto), HH:MM.
 timezone: America/Toronto
 
+# Blocks roll forward horizon_days from today, never before start and never after end.
+# end is optional: drop it to keep rolling. Fall 2026 stops after the last exam (ECE 313, Dec 18).
 term:
   start: 2026-10-12
-  end: 2026-11-30
+  end: 2026-12-18
+  horizon_days: 45
 
 # Declared breaks. Classes the feed still lists in these ranges are *suggested* for
 # ignoring in the planner's "Needs your approval" panel; they only stop counting as
