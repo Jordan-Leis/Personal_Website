@@ -55,6 +55,27 @@ def _to_date(value) -> dt.date:
     return value if isinstance(value, dt.date) else dt.date.fromisoformat(str(value))
 
 
+DEFAULT_HORIZON_DAYS = 45
+
+
+def block_window(rules: dict, today: dt.date) -> tuple[dt.date, dt.date] | None:
+    """(first, last) dates to generate blocks for, inclusive, or None once past term.end.
+
+    Blocks roll forward horizon_days from the first day, never before term.start and never
+    after term.end (optional). Without horizon_days, term.end alone bounds the window.
+    """
+    term = rules["term"]
+    first = max(today, _to_date(term["start"]))
+    end = _to_date(term["end"]) if term.get("end") else None
+    if "horizon_days" in term or end is None:
+        last = first + dt.timedelta(days=int(term.get("horizon_days", DEFAULT_HORIZON_DAYS)))
+        if end:
+            last = min(last, end)
+    else:
+        last = end
+    return (first, last) if first <= last else None
+
+
 def _at(day: dt.date, hhmm: str, tz: ZoneInfo) -> dt.datetime:
     h, m = map(int, hhmm.split(":"))
     return dt.datetime.combine(day, dt.time(h, m), tzinfo=tz)

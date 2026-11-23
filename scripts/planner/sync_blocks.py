@@ -3,6 +3,7 @@
     python -m scripts.planner.sync_blocks            # dry run: summary only
     python -m scripts.planner.sync_blocks --days     # dry run with a per-day listing (local use only)
     python -m scripts.planner.sync_blocks --apply    # write to the "Work Blocks" calendar
+    python -m scripts.planner.sync_blocks --apply --rescan-days 30   # also backfill 30 days of Gmail
 
 Output contains counts and times only (never event titles), so it is safe in public CI logs,
 except --days, which is meant for local runs.
@@ -13,7 +14,7 @@ from zoneinfo import ZoneInfo
 
 from . import email_scan, overrides, reconcile, tasks_writer, uw_classes
 from .mirror import mirror
-from .blocks import generate, load_rules, weekly_summary
+from .blocks import block_window, generate, load_rules, weekly_summary
 from .config import load_env
 from .gcal import calendar_service
 from .sources import fetch_ics, google_busy
@@ -26,20 +27,31 @@ def main(argv=None):
     parser.add_argument("--days", action="store_true")
     parser.add_argument("--today", type=dt.date.fromisoformat, help="pretend today is this date")
     parser.add_argument("--no-email", action="store_true", help="skip the Gmail scan")
+    parser.add_argument("--rescan-days", type=int, choices=range(1, 61), metavar="1-60",
+                        help="also rescan this many days of Gmail (one-off backfill, e.g. after an outage)")
     args = parser.parse_args(argv)
 
     env, rules = load_env(), load_rules()
     tz = ZoneInfo(rules["timezone"])
     today = args.today or dt.datetime.now(tz).date()
-    first, last = max(today, rules["term"]["start"]), rules["term"]["end"]
-    window = (dt.datetime.combine(first, dt.time(0), tz), dt.datetime.combine(last + dt.timedelta(days=1), dt.time(0), tz))
+    span = block_window(rules, today)
 
     service = calendar_service(env)
     db = Supabase(env["SUPABASE_URL"], env["SUPABASE_SERVICE_KEY"]) if env.get("SUPABASE_SERVICE_KEY") else None
 
     # Email first, so an interview found now already counts as busy below.
     if args.apply and service and db and not args.no_email:
-        print("email:", email_scan.run(env, db, service, dt.datetime.now(tz)))
+        print("email:", email_scan.run(env, db, service, dt.datetime.now(tz), rescan_days=args.rescan_days))
+
+    if span is None:
+        # Past term.end: keep scanning email, but leave the calendars alone until the rules move on.
+        print(f"no blocks: past term end {rules['term']['end']}")
+        if args.apply and db:
+            _mark_synced(db, tz)
+        return
+    first, last = span
+    print(f"blocks: {first} to {last}")
+    window = (dt.datetime.combine(first, dt.time(0), tz), dt.datetime.combine(last + dt.timedelta(days=1), dt.time(0), tz))
 
     busy = fetch_ics(env["PORTAL_ICS_URL"], "portal", *window, tz)
     counts = {"portal": len(busy)}
@@ -90,7 +102,11 @@ def main(argv=None):
     portal = [b for b in busy if b.source == "portal"]
     print("uw classes:", uw_classes.sync(service, portal, approved, *window, rules["timezone"]))
     if db:
-        db.upsert("sync_state", [{"key": "last_sync", "value": dt.datetime.now(tz).isoformat()}], "key")
+        _mark_synced(db, tz)
+
+
+def _mark_synced(db: Supabase, tz: ZoneInfo) -> None:
+    db.upsert("sync_state", [{"key": "last_sync", "value": dt.datetime.now(tz).isoformat()}], "key")
 
 
 if __name__ == "__main__":
